@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
+import { formatPrice } from '../lib/formatPrice'
 import type { ProductListItem } from '../types'
-
-function formatPrice(value: number) {
-  return `$${value.toFixed(2)}`
-}
 
 export default function ProductCard({ product }: { product: ProductListItem }) {
   const hasDiscount = product.discountPercent > 0

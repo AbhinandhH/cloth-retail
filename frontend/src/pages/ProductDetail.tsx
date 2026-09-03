@@ -2,11 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchProductBySlug } from '../api/products'
 import { getErrorMessage } from '../api/client'
+import { formatPrice } from '../lib/formatPrice'
 import type { ProductDetail as ProductDetailType, ProductVariant } from '../types'
-
-function formatPrice(value: number) {
-  return `$${value.toFixed(2)}`
-}
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>()
