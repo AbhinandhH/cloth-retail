@@ -1,0 +1,38 @@
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+/**
+ * Placeholder landing page after a successful admin login.
+ * Admin CRUD/product-management screens are out of scope for this pass —
+ * this just confirms the auth flow works and gives a way to sign out.
+ */
+export default function AdminHome() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/admin/login', { replace: true })
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-xl">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 text-lg font-bold text-white">
+          A
+        </span>
+        <h1 className="mt-4 text-xl font-semibold text-white">Admin Portal</h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Signed in as <span className="text-zinc-200">{user?.fullName ?? user?.email}</span>.
+        </p>
+        <p className="mt-1 text-sm text-zinc-500">Admin dashboard and product management are coming in a later phase.</p>
+        <button
+          onClick={handleLogout}
+          className="mt-6 w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
+        >
+          Log out
+        </button>
+      </div>
+    </div>
+  )
+}

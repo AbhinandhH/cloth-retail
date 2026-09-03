@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: clothing-retail-backend
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:clothing_retail}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:clothing_retail}
+    password: ${DB_PASSWORD:clothing_retail}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    # Local-dev fallback only. MUST be overridden via the JWT_SECRET env var in any
+    # non-local environment - this default is public (it's in source control).
+    secret: ${JWT_SECRET:c2FtcGxlLWxvY2FsLWRldi1vbmx5LWp3dC1zZWNyZXQtZG8tbm90LXVzZS1pbi1wcm9kLTEyMzQ1Njc4OTA=}
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 30
+  admin-bootstrap:
+    email: ${ADMIN_BOOTSTRAP_EMAIL:admin@clothingretail.local}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:ChangeMe123!}
+  cors:
+    allowed-origin: http://localhost:5173
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  jwt:
+    secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQtdGhhdC1pcy1sb25nLWVub3VnaC1mb3ItaG1hYy0yNTY=
+  admin-bootstrap:
+    email: admin@clothingretail.local
+    password: ChangeMe123!
