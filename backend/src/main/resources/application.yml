@@ -40,7 +40,9 @@ app:
     email: ${ADMIN_BOOTSTRAP_EMAIL:admin@clothingretail.local}
     password: ${ADMIN_BOOTSTRAP_PASSWORD:ChangeMe123!}
   cors:
-    allowed-origin: http://localhost:5173
+    # Comma-separated list. LAN IP added so the storefront can be tested from a phone
+    # on the same network - update/override via CORS_ALLOWED_ORIGIN if the IP changes.
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173,http://172.20.10.3:5173}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:./uploads}
 
