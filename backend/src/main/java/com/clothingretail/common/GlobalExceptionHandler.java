@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -119,6 +120,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Malformed request body",
                 path(request));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    // Spring's ResponseEntityExceptionHandler already handles
+    // MaxUploadSizeExceededException internally (calling this protected method) -
+    // adding a separate @ExceptionHandler for it would conflict ("ambiguous
+    // @ExceptionHandler method") with the inherited mapping, so it's overridden
+    // here instead, same as the other ResponseEntityExceptionHandler hooks below.
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ApiError body = ApiError.of(
+                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase(),
+                "Uploaded file exceeds the maximum allowed size",
+                path(request));
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(body);
     }
 
     @Override

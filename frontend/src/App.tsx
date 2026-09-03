@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
 import AdminHome from './pages/AdminHome'
+import AdminConfiguration from './pages/AdminConfiguration'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 
@@ -19,6 +20,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminHome />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/configuration"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminConfiguration />
           </RequireAuth>
         }
       />

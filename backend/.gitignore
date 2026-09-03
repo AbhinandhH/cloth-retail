@@ -4,3 +4,7 @@ target/
 .idea/
 *.iml
 .DS_Store
+
+# Local storage for app.media.upload-dir (default ./uploads) - uploaded media
+# must never be committed.
+/uploads/

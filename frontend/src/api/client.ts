@@ -112,3 +112,19 @@ export function getFieldErrors(err: unknown): Record<string, string> {
   }
   return {}
 }
+
+// The backend's origin (no trailing /api), derived from the configured API
+// base URL. Media URLs returned by the upload endpoint (e.g. "/media/x.png")
+// are relative to this origin, not the frontend's own origin.
+const backendOrigin = baseURL.replace(/\/api\/?$/, '')
+
+export function getBackendOrigin() {
+  return backendOrigin
+}
+
+/** Resolve a possibly-relative media URL (from SiteConfiguration/upload responses) against the backend origin. */
+export function toMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url
+  return `${backendOrigin}${url.startsWith('/') ? '' : '/'}${url}`
+}

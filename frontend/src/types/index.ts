@@ -97,3 +97,55 @@ export interface Color {
   name: string
   hexCode: string
 }
+
+export interface Theme {
+  id: number | string
+  name: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string | null
+  backgroundColor: string
+  textColor: string
+  displayOrder?: number
+}
+
+/** The color set embedded in SiteConfiguration — same shape as Theme minus id/displayOrder. */
+export interface ThemeColors {
+  name: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string | null
+  backgroundColor: string
+  textColor: string
+}
+
+export interface SiteConfiguration {
+  theme: ThemeColors | null
+  businessName: string | null
+  tagline: string | null
+  logoUrl: string | null
+  faviconUrl: string | null
+  contactEmail: string | null
+  contactPhone: string | null
+  instagramUrl: string | null
+  whatsappNumber: string | null
+  facebookUrl: string | null
+  footerText: string | null
+  loginBackgroundImageUrl: string | null
+  loginPromoImageUrl: string | null
+  loginPromoText: string | null
+  registrationImageUrl: string | null
+}
+
+/**
+ * GET /admin/configuration response shape. The actual backend field is
+ * `activeTheme` (a nested Theme object with `id`) — also accepting
+ * `activeThemeId`/`theme` here since those were the originally-contracted
+ * possibilities; see getActiveThemeId() in api/configuration.ts, which reads
+ * whichever of the three is present.
+ */
+export interface AdminSiteConfiguration extends Omit<SiteConfiguration, 'theme'> {
+  activeThemeId?: number | string | null
+  activeTheme?: (ThemeColors & { id?: number | string }) | null
+  theme?: (ThemeColors & { id?: number | string }) | null
+}

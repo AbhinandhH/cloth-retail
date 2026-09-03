@@ -63,7 +63,9 @@ public class SecurityConfig {
                                 "/api/sub-categories/**",
                                 "/api/sizes",
                                 "/api/colors",
-                                "/api/vendors")
+                                "/api/vendors",
+                                "/api/configuration",
+                                "/media/**")
                         .permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",

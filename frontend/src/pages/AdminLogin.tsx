@@ -2,11 +2,15 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getErrorMessage, getFieldErrors } from '../api/client'
+import { useSiteConfig } from '../context/SiteConfigContext'
+import { getErrorMessage, getFieldErrors, toMediaUrl } from '../api/client'
 
 export default function AdminLogin() {
   const { loginAsAdmin } = useAuth()
+  const { config } = useSiteConfig()
   const navigate = useNavigate()
+
+  const backgroundUrl = toMediaUrl(config?.loginBackgroundImageUrl)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,7 +35,10 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div
+      className="flex min-h-screen items-center justify-center bg-zinc-950 px-4"
+      style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+    >
       <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
         <div className="mb-6 text-center">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 text-lg font-bold text-white">

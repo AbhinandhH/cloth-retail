@@ -21,6 +21,11 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
 server:
   port: 8080
 
@@ -36,6 +41,8 @@ app:
     password: ${ADMIN_BOOTSTRAP_PASSWORD:ChangeMe123!}
   cors:
     allowed-origin: http://localhost:5173
+  media:
+    upload-dir: ${MEDIA_UPLOAD_DIR:./uploads}
 
 springdoc:
   swagger-ui:
