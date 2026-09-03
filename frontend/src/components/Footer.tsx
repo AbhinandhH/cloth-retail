@@ -17,7 +17,10 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-zinc-200 bg-zinc-50">
-      <div className="h-1 w-full bg-[var(--brand-primary,#18181b)]" />
+      <div className="flex h-1 w-full">
+        <div className="w-1/2 bg-[var(--brand-primary,#18181b)]" />
+        <div className="w-1/2 bg-[var(--brand-secondary,#18181b)]" />
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">

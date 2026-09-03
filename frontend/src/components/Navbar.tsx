@@ -65,7 +65,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/register"
-                className="rounded-full bg-[var(--brand-primary,#18181b)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90"
+                className="rounded-full bg-[var(--brand-primary,#18181b)] px-4 py-1.5 text-sm font-medium text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90"
               >
                 Sign up
               </Link>

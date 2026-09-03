@@ -41,7 +41,7 @@ export default function AdminLogin() {
     >
       <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
         <div className="mb-6 text-center">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--brand-primary,#e11d48)] text-lg font-bold text-white">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--brand-primary,#e11d48)] text-lg font-bold text-white ring-2 ring-offset-2 ring-offset-zinc-900 ring-[var(--brand-secondary,#e11d48)]">
             A
           </span>
           <h1 className="mt-4 text-xl font-semibold text-white">Admin Portal</h1>
@@ -90,7 +90,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-[var(--brand-primary,#e11d48)] py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            className="w-full rounded-lg bg-[var(--brand-primary,#e11d48)] py-2.5 text-sm font-semibold text-white ring-2 ring-offset-2 ring-offset-zinc-900 ring-[var(--brand-secondary,#e11d48)] hover:opacity-90 disabled:opacity-60"
           >
             {submitting ? 'Signing in…' : 'Sign in to Admin Portal'}
           </button>
