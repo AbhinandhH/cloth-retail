@@ -48,13 +48,13 @@ export default function Register() {
   }
 
   return (
-    <div className={hasPromo ? 'flex min-h-[70vh] flex-col md:flex-row' : 'min-h-[70vh]'}>
+    <div className={hasPromo ? 'flex min-h-[70dvh] flex-col md:flex-row' : 'min-h-[70dvh]'}>
       {hasPromo && (
         <div className="hidden items-center justify-center bg-zinc-900 p-10 md:flex md:w-1/2">
           <img src={promoUrl!} alt="" className="max-h-[60vh] w-full max-w-sm rounded-lg object-cover" />
         </div>
       )}
-      <div className={hasPromo ? 'flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 md:w-1/2' : 'mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-12 sm:px-6'}>
+      <div className={hasPromo ? 'flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 md:w-1/2' : 'mx-auto flex min-h-[70dvh] max-w-md flex-col justify-center px-4 py-12 sm:px-6'}>
         <div className={hasPromo ? 'mx-auto w-full max-w-md' : ''}>
       <h1 className="text-2xl font-semibold text-zinc-900">Create an account</h1>
       <p className="mt-1 text-sm text-zinc-500">Join us to start shopping.</p>

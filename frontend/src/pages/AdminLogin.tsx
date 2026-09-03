@@ -36,7 +36,7 @@ export default function AdminLogin() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-zinc-950 px-4"
+      className="flex min-h-dvh items-center justify-center bg-zinc-950 px-4"
       style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
     >
       <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">

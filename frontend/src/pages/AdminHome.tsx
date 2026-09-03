@@ -16,7 +16,7 @@ export default function AdminHome() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-zinc-950 px-4">
       <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-xl">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 text-lg font-bold text-white">
           A
