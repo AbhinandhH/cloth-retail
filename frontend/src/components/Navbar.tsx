@@ -2,22 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSiteConfig } from '../context/SiteConfigContext'
-import { toMediaUrl } from '../api/client'
-
-function BrandMark({ businessName, logoUrl }: { businessName: string | null | undefined; logoUrl: string | null | undefined }) {
-  const resolvedLogo = toMediaUrl(logoUrl)
-  if (resolvedLogo) {
-    return <img src={resolvedLogo} alt={businessName ?? 'Logo'} className="h-9 w-auto object-contain" />
-  }
-  if (businessName) {
-    return <span className="text-xl font-bold tracking-tight text-zinc-900">{businessName}</span>
-  }
-  return (
-    <span className="text-xl font-bold tracking-tight text-zinc-900">
-      THREAD<span className="text-[var(--brand-primary,#e11d48)]">CO</span>
-    </span>
-  )
-}
+import BrandMark from './BrandMark'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
