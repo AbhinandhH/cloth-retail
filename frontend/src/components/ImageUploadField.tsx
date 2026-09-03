@@ -7,8 +7,8 @@ interface ImageUploadFieldProps {
   label: string
   /** Current stored value (relative or absolute URL), or null/undefined if unset. */
   value: string | null | undefined
-  /** Called with the uploaded file's URL (as returned by the upload API, relative) once the upload succeeds. */
-  onUploaded: (url: string) => void
+  /** Called with the uploaded file's URL once an upload succeeds, or `null` when the user removes the current image. */
+  onUploaded: (url: string | null) => void
   helpText?: string
 }
 
@@ -42,6 +42,12 @@ export default function ImageUploadField({ label, value, onUploaded, helpText }:
 
   const previewUrl = toMediaUrl(value)
 
+  const handleRemove = () => {
+    setError(null)
+    if (inputRef.current) inputRef.current.value = ''
+    onUploaded(null)
+  }
+
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-zinc-900">
@@ -68,6 +74,15 @@ export default function ImageUploadField({ label, value, onUploaded, helpText }:
           />
           {uploading && <p className="mt-1 text-xs text-zinc-500">Uploading…</p>}
           {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+          {!uploading && previewUrl && (
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="mt-1 text-xs font-medium text-rose-600 hover:text-rose-700"
+            >
+              Remove image
+            </button>
+          )}
         </div>
       </div>
     </div>
