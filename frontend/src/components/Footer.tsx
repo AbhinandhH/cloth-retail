@@ -17,13 +17,14 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-zinc-200 bg-zinc-50">
+      <div className="h-1 w-full bg-[var(--brand-primary,#18181b)]" />
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
             <span className="text-lg font-bold tracking-tight text-zinc-900">
               {businessName ?? (
                 <>
-                  THREAD<span className="text-rose-600">CO</span>
+                  THREAD<span className="text-[var(--brand-primary,#e11d48)]">CO</span>
                 </>
               )}
             </span>

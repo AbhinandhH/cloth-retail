@@ -94,7 +94,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-60"
+              className="w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
               {submitting ? 'Logging in…' : 'Log in'}
             </button>

@@ -14,7 +14,7 @@ function BrandMark({ businessName, logoUrl }: { businessName: string | null | un
   }
   return (
     <span className="text-xl font-bold tracking-tight text-zinc-900">
-      THREAD<span className="text-rose-600">CO</span>
+      THREAD<span className="text-[var(--brand-primary,#e11d48)]">CO</span>
     </span>
   )
 }
@@ -65,7 +65,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/register"
-                className="rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-700"
+                className="rounded-full bg-[var(--brand-primary,#18181b)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90"
               >
                 Sign up
               </Link>
