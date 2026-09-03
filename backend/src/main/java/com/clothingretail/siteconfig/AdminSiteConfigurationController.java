@@ -20,41 +20,19 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 public class AdminSiteConfigurationController {
 
-    private final SiteConfigurationRepository siteConfigurationRepository;
+    private final SiteConfigurationService siteConfigurationService;
 
-    public AdminSiteConfigurationController(SiteConfigurationRepository siteConfigurationRepository) {
-        this.siteConfigurationRepository = siteConfigurationRepository;
+    public AdminSiteConfigurationController(SiteConfigurationService siteConfigurationService) {
+        this.siteConfigurationService = siteConfigurationService;
     }
 
     @GetMapping
     public SiteConfigurationAdminResponse get() {
-        return SiteConfigurationMapper.toAdminResponse(loadSingleton());
+        return siteConfigurationService.getAdmin();
     }
 
     @PutMapping
     public SiteConfigurationAdminResponse update(@Valid @RequestBody SiteConfigurationUpdateRequest request) {
-        SiteConfiguration config = loadSingleton();
-        config.setBusinessName(request.businessName());
-        config.setTagline(request.tagline());
-        config.setLogoUrl(request.logoUrl());
-        config.setFaviconUrl(request.faviconUrl());
-        config.setContactEmail(request.contactEmail());
-        config.setContactPhone(request.contactPhone());
-        config.setInstagramUrl(request.instagramUrl());
-        config.setWhatsappNumber(request.whatsappNumber());
-        config.setFacebookUrl(request.facebookUrl());
-        config.setFooterText(request.footerText());
-        config.setLoginBackgroundImageUrl(request.loginBackgroundImageUrl());
-        config.setLoginPromoImageUrl(request.loginPromoImageUrl());
-        config.setLoginPromoText(request.loginPromoText());
-        config.setRegistrationImageUrl(request.registrationImageUrl());
-        return SiteConfigurationMapper.toAdminResponse(siteConfigurationRepository.save(config));
-    }
-
-    private SiteConfiguration loadSingleton() {
-        return siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Singleton site_configuration row (id=1) is missing - this is a startup-time misconfiguration, "
-                                + "check that V4__init_site_configuration.sql ran"));
+        return siteConfigurationService.update(request);
     }
 }

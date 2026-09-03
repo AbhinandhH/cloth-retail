@@ -1,7 +1,5 @@
 package com.clothingretail.masterdata;
 
-import com.clothingretail.common.ConflictException;
-import com.clothingretail.common.NotFoundException;
 import com.clothingretail.masterdata.dto.ColorAdminRequest;
 import com.clothingretail.masterdata.dto.ColorAdminResponse;
 import jakarta.validation.Valid;
@@ -22,57 +20,35 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminColorController {
 
-    private final ColorRepository repository;
+    private final ColorService colorService;
 
-    public AdminColorController(ColorRepository repository) {
-        this.repository = repository;
+    public AdminColorController(ColorService colorService) {
+        this.colorService = colorService;
     }
 
     @GetMapping
     public List<ColorAdminResponse> list() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+        return colorService.listAdmin();
     }
 
     @GetMapping("/{id}")
     public ColorAdminResponse get(@PathVariable Long id) {
-        return toResponse(find(id));
+        return colorService.getAdmin(id);
     }
 
     @PostMapping
     public ResponseEntity<ColorAdminResponse> create(@Valid @RequestBody ColorAdminRequest request) {
-        if (repository.existsByNameIgnoreCase(request.name())) {
-            throw new ConflictException("A color with this name already exists");
-        }
-        Color color = new Color();
-        apply(color, request);
-        return ResponseEntity.ok(toResponse(repository.save(color)));
+        return ResponseEntity.ok(colorService.create(request));
     }
 
     @PutMapping("/{id}")
     public ColorAdminResponse update(@PathVariable Long id, @Valid @RequestBody ColorAdminRequest request) {
-        Color color = find(id);
-        apply(color, request);
-        return toResponse(repository.save(color));
+        return colorService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        repository.delete(find(id));
+        colorService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Color find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Color not found: " + id));
-    }
-
-    private void apply(Color color, ColorAdminRequest request) {
-        color.setName(request.name());
-        color.setHexCode(request.hexCode());
-        color.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
-        color.setActive(request.active());
-    }
-
-    private ColorAdminResponse toResponse(Color c) {
-        return new ColorAdminResponse(c.getId(), c.getName(), c.getHexCode(), c.getDisplayOrder(), c.isActive());
     }
 }

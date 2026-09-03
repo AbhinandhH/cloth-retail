@@ -1,7 +1,5 @@
 package com.clothingretail.masterdata;
 
-import com.clothingretail.common.ConflictException;
-import com.clothingretail.common.NotFoundException;
 import com.clothingretail.masterdata.dto.MaterialAdminRequest;
 import com.clothingretail.masterdata.dto.MaterialAdminResponse;
 import jakarta.validation.Valid;
@@ -22,56 +20,35 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminMaterialController {
 
-    private final MaterialRepository repository;
+    private final MaterialService materialService;
 
-    public AdminMaterialController(MaterialRepository repository) {
-        this.repository = repository;
+    public AdminMaterialController(MaterialService materialService) {
+        this.materialService = materialService;
     }
 
     @GetMapping
     public List<MaterialAdminResponse> list() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+        return materialService.listAdmin();
     }
 
     @GetMapping("/{id}")
     public MaterialAdminResponse get(@PathVariable Long id) {
-        return toResponse(find(id));
+        return materialService.getAdmin(id);
     }
 
     @PostMapping
     public ResponseEntity<MaterialAdminResponse> create(@Valid @RequestBody MaterialAdminRequest request) {
-        if (repository.existsByNameIgnoreCase(request.name())) {
-            throw new ConflictException("A material with this name already exists");
-        }
-        Material material = new Material();
-        apply(material, request);
-        return ResponseEntity.ok(toResponse(repository.save(material)));
+        return ResponseEntity.ok(materialService.create(request));
     }
 
     @PutMapping("/{id}")
     public MaterialAdminResponse update(@PathVariable Long id, @Valid @RequestBody MaterialAdminRequest request) {
-        Material material = find(id);
-        apply(material, request);
-        return toResponse(repository.save(material));
+        return materialService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        repository.delete(find(id));
+        materialService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Material find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Material not found: " + id));
-    }
-
-    private void apply(Material material, MaterialAdminRequest request) {
-        material.setName(request.name());
-        material.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
-        material.setActive(request.active());
-    }
-
-    private MaterialAdminResponse toResponse(Material m) {
-        return new MaterialAdminResponse(m.getId(), m.getName(), m.getDisplayOrder(), m.isActive());
     }
 }

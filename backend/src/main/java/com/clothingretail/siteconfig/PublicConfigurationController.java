@@ -8,18 +8,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PublicConfigurationController {
 
-    private final SiteConfigurationRepository siteConfigurationRepository;
+    private final SiteConfigurationService siteConfigurationService;
 
-    public PublicConfigurationController(SiteConfigurationRepository siteConfigurationRepository) {
-        this.siteConfigurationRepository = siteConfigurationRepository;
+    public PublicConfigurationController(SiteConfigurationService siteConfigurationService) {
+        this.siteConfigurationService = siteConfigurationService;
     }
 
     @GetMapping("/api/configuration")
     public PublicConfigurationResponse configuration() {
-        SiteConfiguration config = siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Singleton site_configuration row (id=1) is missing - this is a startup-time misconfiguration, "
-                                + "check that V4__init_site_configuration.sql ran"));
-        return SiteConfigurationMapper.toPublicResponse(config);
+        return siteConfigurationService.getPublic();
     }
 }

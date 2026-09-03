@@ -1,7 +1,5 @@
 package com.clothingretail.masterdata;
 
-import com.clothingretail.common.ConflictException;
-import com.clothingretail.common.NotFoundException;
 import com.clothingretail.masterdata.dto.SizeAdminRequest;
 import com.clothingretail.masterdata.dto.SizeAdminResponse;
 import jakarta.validation.Valid;
@@ -22,56 +20,35 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminSizeController {
 
-    private final SizeRepository repository;
+    private final SizeService sizeService;
 
-    public AdminSizeController(SizeRepository repository) {
-        this.repository = repository;
+    public AdminSizeController(SizeService sizeService) {
+        this.sizeService = sizeService;
     }
 
     @GetMapping
     public List<SizeAdminResponse> list() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+        return sizeService.listAdmin();
     }
 
     @GetMapping("/{id}")
     public SizeAdminResponse get(@PathVariable Long id) {
-        return toResponse(find(id));
+        return sizeService.getAdmin(id);
     }
 
     @PostMapping
     public ResponseEntity<SizeAdminResponse> create(@Valid @RequestBody SizeAdminRequest request) {
-        if (repository.existsByNameIgnoreCase(request.name())) {
-            throw new ConflictException("A size with this name already exists");
-        }
-        Size size = new Size();
-        apply(size, request);
-        return ResponseEntity.ok(toResponse(repository.save(size)));
+        return ResponseEntity.ok(sizeService.create(request));
     }
 
     @PutMapping("/{id}")
     public SizeAdminResponse update(@PathVariable Long id, @Valid @RequestBody SizeAdminRequest request) {
-        Size size = find(id);
-        apply(size, request);
-        return toResponse(repository.save(size));
+        return sizeService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        repository.delete(find(id));
+        sizeService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Size find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Size not found: " + id));
-    }
-
-    private void apply(Size size, SizeAdminRequest request) {
-        size.setName(request.name());
-        size.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
-        size.setActive(request.active());
-    }
-
-    private SizeAdminResponse toResponse(Size s) {
-        return new SizeAdminResponse(s.getId(), s.getName(), s.getDisplayOrder(), s.isActive());
     }
 }

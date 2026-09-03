@@ -13,65 +13,52 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Public, read-only master-data lookups used by the storefront for filters
  * and display (categories, sizes, colors, vendors). Active-only, ordered by
- * displayOrder then name.
+ * displayOrder then name - see each *Service#listPublic for the query.
  */
 @RestController
 public class PublicMasterDataController {
 
-    private final CategoryRepository categoryRepository;
-    private final SubCategoryRepository subCategoryRepository;
-    private final SizeRepository sizeRepository;
-    private final ColorRepository colorRepository;
-    private final VendorRepository vendorRepository;
+    private final CategoryService categoryService;
+    private final SubCategoryService subCategoryService;
+    private final SizeService sizeService;
+    private final ColorService colorService;
+    private final VendorService vendorService;
 
     public PublicMasterDataController(
-            CategoryRepository categoryRepository,
-            SubCategoryRepository subCategoryRepository,
-            SizeRepository sizeRepository,
-            ColorRepository colorRepository,
-            VendorRepository vendorRepository) {
-        this.categoryRepository = categoryRepository;
-        this.subCategoryRepository = subCategoryRepository;
-        this.sizeRepository = sizeRepository;
-        this.colorRepository = colorRepository;
-        this.vendorRepository = vendorRepository;
+            CategoryService categoryService,
+            SubCategoryService subCategoryService,
+            SizeService sizeService,
+            ColorService colorService,
+            VendorService vendorService) {
+        this.categoryService = categoryService;
+        this.subCategoryService = subCategoryService;
+        this.sizeService = sizeService;
+        this.colorService = colorService;
+        this.vendorService = vendorService;
     }
 
     @GetMapping("/api/categories")
     public List<CategoryResponse> categories() {
-        return categoryRepository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(c -> new CategoryResponse(c.getId(), c.getName(), c.getSlug()))
-                .toList();
+        return categoryService.listPublic();
     }
 
     @GetMapping("/api/sub-categories")
     public List<SubCategoryResponse> subCategories(@RequestParam(required = false) Long categoryId) {
-        List<SubCategory> subCategories = categoryId != null
-                ? subCategoryRepository.findByCategoryIdAndActiveTrueOrderByDisplayOrderAscNameAsc(categoryId)
-                : subCategoryRepository.findByActiveTrueOrderByDisplayOrderAscNameAsc();
-        return subCategories.stream()
-                .map(sc -> new SubCategoryResponse(sc.getId(), sc.getName(), sc.getSlug(), sc.getCategory().getId()))
-                .toList();
+        return subCategoryService.listPublic(categoryId);
     }
 
     @GetMapping("/api/sizes")
     public List<SizeResponse> sizes() {
-        return sizeRepository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(s -> new SizeResponse(s.getId(), s.getName()))
-                .toList();
+        return sizeService.listPublic();
     }
 
     @GetMapping("/api/colors")
     public List<ColorResponse> colors() {
-        return colorRepository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(c -> new ColorResponse(c.getId(), c.getName(), c.getHexCode()))
-                .toList();
+        return colorService.listPublic();
     }
 
     @GetMapping("/api/vendors")
     public List<VendorResponse> vendors() {
-        return vendorRepository.findByActiveTrueOrderByNameAsc().stream()
-                .map(v -> new VendorResponse(v.getId(), v.getName()))
-                .toList();
+        return vendorService.listPublic();
     }
 }
