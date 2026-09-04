@@ -56,6 +56,11 @@ public class SecurityConfig {
                                 "/api/auth/logout",
                                 "/api/admin/auth/login")
                         .permitAll()
+                        // A real payment gateway calling this has no customer JWT - its security
+                        // boundary is the HMAC signature checked inside PaymentWebhookService,
+                        // not Spring Security. See PaymentController.webhook / MockPaymentGateway.
+                        .requestMatchers(HttpMethod.POST, "/api/payments/webhook")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/products/**",
                                 "/api/categories",

@@ -45,6 +45,15 @@ app:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173,http://172.20.10.3:5173}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:./uploads}
+  order:
+    # Minutes an order's stock reservation is held while awaiting payment before the scheduled
+    # cleanup job (OrderReservationCleanupJob) releases it and cancels the order.
+    reservation-ttl-minutes: ${ORDER_RESERVATION_TTL_MINUTES:15}
+  payment:
+    mock:
+      # Local-dev-only shared secret for MockPaymentGateway's HMAC-SHA256 webhook signing/verification.
+      # Same story as app.jwt.secret above - override via env var in any non-local environment.
+      secret: ${PAYMENT_MOCK_SECRET:c2FtcGxlLWxvY2FsLWRldi1vbmx5LXBheW1lbnQtd2ViaG9vay1zZWNyZXQ=}
 
 springdoc:
   swagger-ui:

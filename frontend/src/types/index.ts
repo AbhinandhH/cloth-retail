@@ -500,3 +500,142 @@ export interface SizeGroupRequest {
   /** Ordered — display order of the group's sizes follows this array's order. */
   sizeIds: (number | string)[];
 }
+
+// --- Customer orders ---------------------------------------------------
+// GET /api/orders (list) and GET /api/orders/{id} (detail). Shared with the
+// Cart/Checkout/Payment flow (PaymentPage navigates to the detail page after
+// a successful simulated payment) — see src/api/orders.ts.
+
+export type OrderStatus =
+  | "PENDING_PAYMENT"
+  | "PAYMENT_PROCESSING"
+  | "PAYMENT_FAILED"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED";
+
+export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | null;
+
+/** One row of GET /api/orders. */
+export interface OrderListItem {
+  id: number | string;
+  orderNumber: string;
+  status: OrderStatus;
+  totalAmount: number;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface OrderItem {
+  id: number | string;
+  productName: string;
+  sku: string;
+  colorName: string;
+  sizeName: string;
+  quantity: number;
+  unitPrice: number;
+  discountPercent: number;
+  lineTotal: number;
+}
+
+export interface OrderShippingAddress {
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+/** GET /api/orders/{id} response. */
+export interface OrderDetail {
+  id: number | string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  items: OrderItem[];
+  subtotal: number;
+  discountTotal: number;
+  shippingCharge: number;
+  totalAmount: number;
+  shippingAddress: OrderShippingAddress;
+  contactName: string;
+  contactPhone: string;
+  reservationExpiresAt: string | null;
+  createdAt: string;
+}
+
+/** POST /api/orders request body. */
+export interface CreateOrderRequest {
+  idempotencyKey: string;
+  shippingAddressId: number | string;
+  contactPhone?: string | null;
+}
+
+// --- Customer addresses --------------------------------------------------
+// /api/customer/addresses — used by CheckoutPage to pick/create a shipping
+// address ahead of order placement.
+
+export interface Address {
+  id: number | string;
+  label: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+export type AddressRequest = Omit<Address, "id">;
+
+// --- Customer cart ---------------------------------------------------------
+// /api/cart — every mutating endpoint returns the full current cart; the
+// frontend never computes totals itself, it always uses what the backend
+// returns.
+
+export interface CartItem {
+  id: number | string;
+  productVariantId: number | string;
+  productName: string;
+  productSlug: string;
+  sku: string;
+  colorName: string;
+  colorHex: string;
+  sizeName: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  discountPercent: number;
+  lineTotal: number;
+  quantity: number;
+  availableQuantity: number;
+  active: boolean;
+}
+
+export interface Cart {
+  id: number | string;
+  items: CartItem[];
+  subtotal: number;
+  discountTotal: number;
+  total: number;
+  itemCount: number;
+}
+
+// --- Customer payments -------------------------------------------------
+// /api/payments — dev/simulation gateway only (see PaymentPage.tsx).
+
+export interface PaymentInitiateResponse {
+  paymentId: number | string;
+  orderId: number | string;
+  amount: number;
+  gatewayReference: string;
+}
+
+export type PaymentOutcome = "SUCCESS" | "FAILURE";
+
+export interface PaymentSimulateResponse {
+  orderId: number | string;
+  orderStatus: OrderStatus;
+  paymentStatus: PaymentStatus;
+}

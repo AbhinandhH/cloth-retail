@@ -6,6 +6,7 @@ import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext'
 import { SiteConfigProvider } from './context/SiteConfigContext'
 import { MasterDataProvider } from './context/MasterDataContext'
+import { CartProvider } from './context/CartContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,11 +15,16 @@ createRoot(document.getElementById('root')!).render(
           both load lazily/publicly and neither depends on auth state. Some
           MasterDataContext lists (brands/materials/vendors) do hit admin-only
           endpoints, but nothing fetches until a consumer mounts, by which
-          point an admin session/token is already in place. */}
+          point an admin session/token is already in place.
+          CartProvider is nested INSIDE AuthProvider (unlike those two) since
+          it reads isAuthenticated/isAuthChecking to decide whether to load —
+          it no-ops for guests and clears on logout. */}
       <SiteConfigProvider>
         <MasterDataProvider>
           <AuthProvider>
-            <App />
+            <CartProvider>
+              <App />
+            </CartProvider>
           </AuthProvider>
         </MasterDataProvider>
       </SiteConfigProvider>

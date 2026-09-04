@@ -21,6 +21,11 @@ import AdminBrands from './pages/AdminBrands'
 import AdminMaterials from './pages/AdminMaterials'
 import AdminVendors from './pages/AdminVendors'
 import AdminDamageReasons from './pages/AdminDamageReasons'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import PaymentPage from './pages/PaymentPage'
+import OrderHistoryPage from './pages/OrderHistoryPage'
+import OrderDetailPage from './pages/OrderDetailPage'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 
@@ -172,6 +177,46 @@ export default function App() {
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/cart"
+          element={
+            <RequireAuth>
+              <CartPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <RequireAuth>
+              <CheckoutPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/checkout/payment/:orderId"
+          element={
+            <RequireAuth>
+              <PaymentPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <RequireAuth>
+              <OrderHistoryPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <RequireAuth>
+              <OrderDetailPage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

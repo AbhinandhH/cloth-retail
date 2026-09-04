@@ -4,11 +4,13 @@ import { fetchProductBySlug } from '../api/products'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import type { ProductDetail as ProductDetailType, ProductVariant } from '../types'
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { isAuthenticated } = useAuth()
+  const { addItem } = useCart()
   const navigate = useNavigate()
   const location = useLocation()
   const [product, setProduct] = useState<ProductDetailType | null>(null)
@@ -18,7 +20,10 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [activeImage, setActiveImage] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+  const [addingToCart, setAddingToCart] = useState(false)
   const [cartNotice, setCartNotice] = useState<string | null>(null)
+  const [cartNoticeIsError, setCartNoticeIsError] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -67,6 +72,9 @@ export default function ProductDetail() {
 
   useEffect(() => {
     setActiveImage(0)
+    setQuantity(1)
+    setCartNotice(null)
+    setCartNoticeIsError(false)
   }, [selectedVariant?.id])
 
   if (loading) {
@@ -103,7 +111,7 @@ export default function ProductDetail() {
   const discountedPrice = hasDiscount ? price * (1 - (variant?.discountPercent ?? 0) / 100) : price
   const inStock = (variant?.stockQuantity ?? 0) > 0
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     // Browsing/viewing a product is always public - only the purchase action
     // itself is auth-gated, per the requirement that Instagram-ad traffic
     // must be able to land directly on a product page without hitting a
@@ -112,7 +120,20 @@ export default function ProductDetail() {
       navigate('/login', { state: { from: location } })
       return
     }
-    setCartNotice('Cart is coming soon — this product is saved for when it launches.')
+    if (!variant) return
+    setAddingToCart(true)
+    setCartNotice(null)
+    setCartNoticeIsError(false)
+    try {
+      await addItem(variant.id, quantity)
+      setCartNotice('Added to cart.')
+      setCartNoticeIsError(false)
+    } catch (err) {
+      setCartNotice(getErrorMessage(err))
+      setCartNoticeIsError(true)
+    } finally {
+      setAddingToCart(false)
+    }
   }
 
   return (
@@ -231,15 +252,54 @@ export default function ProductDetail() {
             </div>
           )}
 
+          {inStock && isAuthenticated && (
+            <div className="mt-8 flex items-center gap-3">
+              <span className="text-sm font-medium text-zinc-900">Qty</span>
+              <div className="flex items-center rounded-md border border-zinc-300">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <span className="min-w-[2rem] text-center text-sm font-medium text-zinc-900">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(variant?.stockQuantity ?? 1, q + 1))}
+                  disabled={quantity >= (variant?.stockQuantity ?? 1)}
+                  className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={!inStock}
-            className="mt-8 w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
+            disabled={!inStock || addingToCart}
+            className="mt-4 w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
           >
-            {inStock ? 'Add to cart' : 'Out of stock'}
+            {!inStock ? 'Out of stock' : addingToCart ? 'Adding…' : 'Add to cart'}
           </button>
-          {cartNotice && <p className="mt-2 text-center text-xs text-zinc-500">{cartNotice}</p>}
+          {cartNotice && (
+            <p className={`mt-2 text-center text-xs ${cartNoticeIsError ? 'text-rose-600' : 'text-zinc-500'}`}>
+              {cartNotice}
+              {!cartNoticeIsError && (
+                <>
+                  {' '}
+                  <Link to="/cart" className="font-medium text-zinc-900 hover:underline">
+                    View cart
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
 
           <div className="mt-8 space-y-4 border-t border-zinc-200 pt-6 text-sm text-zinc-700">
             <p>{product.description}</p>
