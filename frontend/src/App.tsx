@@ -7,6 +7,10 @@ import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
 import AdminHome from './pages/AdminHome'
 import AdminConfiguration from './pages/AdminConfiguration'
+import AdminProductList from './pages/AdminProductList'
+import AdminProductForm from './pages/AdminProductForm'
+import AdminInventoryDashboard from './pages/AdminInventoryDashboard'
+import AdminInventoryHistory from './pages/AdminInventoryHistory'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 
@@ -28,6 +32,46 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminConfiguration />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/products"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminProductList />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/products/new"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminProductForm />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/products/:id"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminProductForm />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/inventory"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminInventoryDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/inventory/history"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminInventoryHistory />
           </RequireAuth>
         }
       />

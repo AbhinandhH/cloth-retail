@@ -149,3 +149,241 @@ export interface AdminSiteConfiguration extends Omit<SiteConfiguration, 'theme'>
   activeTheme?: (ThemeColors & { id?: number | string }) | null
   theme?: (ThemeColors & { id?: number | string }) | null
 }
+
+// --- Admin product management -------------------------------------------
+// NOTE: ProductStatus is declared once, below, alongside PageResponse (both
+// are shared with the inventory/dashboard screens built in parallel).
+
+export interface Brand {
+  id: number | string
+  name: string
+  displayOrder: number
+  active: boolean
+}
+
+export interface Material {
+  id: number | string
+  name: string
+  displayOrder: number
+  active: boolean
+}
+
+export interface SubCategory {
+  id: number | string
+  name: string
+  slug: string
+  categoryId: number | string
+}
+
+export interface AdminProductListItem {
+  id: number | string
+  name: string
+  slug: string
+  baseSku: string | null
+  categoryName: string
+  brandName: string | null
+  status: ProductStatus
+  variantCount: number
+  totalStock: number
+  updatedAt: string
+  /**
+   * Not part of the contracted list DTO (see AdminProductList.tsx notes) — the
+   * backend list response has no image field today. Kept optional so the
+   * thumbnail column upgrades automatically if the backend adds one later;
+   * until then the list falls back to a placeholder.
+   */
+  primaryImageUrl?: string | null
+}
+
+/** Alias kept for readability at call sites — same generic PageResponse used by inventory. */
+export type AdminProductListResponse = PageResponse<AdminProductListItem>
+
+export interface AdminProductImage {
+  id?: number | string
+  url: string
+  displayOrder: number
+  primary: boolean
+}
+
+export interface AdminProductVariant {
+  id?: number | string
+  sku: string
+  sizeId: number | string
+  sizeName: string
+  colorId: number | string
+  colorName: string
+  sellingPrice: number
+  costPrice: number | null
+  discountPercent: number
+  stockQuantity: number
+  reservedQuantity: number
+  damagedQuantity: number
+  availableQuantity: number
+  lowStockThreshold: number | null
+  active: boolean
+  images: AdminProductImage[]
+}
+
+export interface AdminProductDetail {
+  id: number | string
+  categoryId: number | string
+  categoryName: string
+  subCategoryId: number | string | null
+  subCategoryName: string | null
+  brandId: number | string | null
+  brandName: string | null
+  materialId: number | string
+  materialName: string
+  name: string
+  slug: string
+  description: string
+  status: ProductStatus
+  baseSku: string | null
+  baseSellingPrice: number | null
+  baseCostPrice: number | null
+  variants: AdminProductVariant[]
+}
+
+export interface ProductVariantImageRequest {
+  url: string
+  displayOrder: number
+  primary: boolean
+}
+
+export interface ProductVariantRequest {
+  id?: number | string | null
+  sku: string
+  sizeId: number | string
+  colorId: number | string
+  sellingPrice: number
+  costPrice: number | null
+  discountPercent: number
+  stockQuantity: number
+  lowStockThreshold: number | null
+  active: boolean
+  images: ProductVariantImageRequest[]
+}
+
+export interface ProductAdminRequest {
+  categoryId: number | string
+  subCategoryId: number | string | null
+  brandId: number | string | null
+  materialId: number | string
+  name: string
+  slug: string
+  description: string
+  status: ProductStatus
+  baseSku: string | null
+  baseSellingPrice: number | null
+  baseCostPrice: number | null
+  variants: ProductVariantRequest[]
+}
+
+// --- Admin inventory ---
+
+/** Generic paginated response shape used by the admin inventory endpoints. */
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
+export type InventoryTransactionType =
+  | 'PURCHASE_IN'
+  | 'SALE_OUT'
+  | 'RETURN_IN'
+  | 'ADJUSTMENT'
+  | 'CANCEL_REVERSAL'
+  | 'DAMAGE'
+export type DamageReason = 'DEFECTIVE' | 'TRANSIT_DAMAGE' | 'WAREHOUSE_DAMAGE' | 'RETURN_DAMAGE' | 'OTHER'
+
+/** One row of GET /admin/inventory/variants, and the shape embedded in the dashboard's low/out-of-stock lists. */
+export interface InventoryVariantRow {
+  variantId: number | string
+  productId: number | string
+  productName: string
+  productSlug: string
+  sku: string
+  categoryName: string
+  colorName: string
+  colorHex: string
+  sizeName: string
+  sellingPrice: number
+  costPrice: number | null
+  stockQuantity: number
+  reservedQuantity: number
+  damagedQuantity: number
+  availableQuantity: number
+  lowStockThreshold: number | null
+  stockStatus: StockStatus
+  active: boolean
+  productStatus: ProductStatus
+  updatedAt: string
+}
+
+export interface InventoryRecentProduct {
+  id: number | string
+  name: string
+  slug: string
+  status: ProductStatus
+  createdAt: string
+}
+
+export interface InventoryTransactionRow {
+  id: number | string
+  variantId: number | string
+  sku: string
+  productName: string
+  type: InventoryTransactionType
+  quantity: number
+  previousQuantity: number
+  newQuantity: number
+  reason: string | null
+  referenceType: string | null
+  referenceId: number | string | null
+  performedByName: string | null
+  createdAt: string
+}
+
+export interface InventoryDamageRow {
+  id: number | string
+  variantId: number | string
+  sku: string
+  productName: string
+  quantity: number
+  reason: DamageReason
+  notes: string | null
+  reportedByName: string | null
+  createdAt: string
+}
+
+export interface InventoryDashboard {
+  totalProducts: number
+  totalVariants: number
+  totalAvailableStock: number
+  lowStockCount: number
+  outOfStockCount: number
+  totalDamagedStock: number
+  lowStockItems: InventoryVariantRow[]
+  outOfStockItems: InventoryVariantRow[]
+  recentProducts: InventoryRecentProduct[]
+  recentTransactions: InventoryTransactionRow[]
+  recentDamages: InventoryDamageRow[]
+}
+
+export interface StockAdjustResult {
+  variantId: number | string
+  previousQuantity: number
+  newQuantity: number
+  availableQuantity: number
+}
+
+export interface MarkDamagedResult {
+  variantId: number | string
+  damagedQuantity: number
+  availableQuantity: number
+}

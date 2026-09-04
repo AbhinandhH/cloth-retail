@@ -8,12 +8,15 @@ import com.clothingretail.masterdata.SubCategory;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -37,8 +40,8 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "sub_category_id")
     private SubCategory subCategory;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "brand_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "brand_id", nullable = true)
     private Brand brand;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -56,8 +59,21 @@ public class Product extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private boolean active = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ProductStatus status = ProductStatus.ACTIVE;
+
+    // Pure UI-prefill templates for the admin "add variant" form - never resolved or
+    // inherited by any pricing/SKU logic. ProductVariant.sellingPrice/sku remain the
+    // sole authoritative source for a variant.
+    @Column(name = "base_sku", length = 64)
+    private String baseSku;
+
+    @Column(name = "base_selling_price", precision = 10, scale = 2)
+    private BigDecimal baseSellingPrice;
+
+    @Column(name = "base_cost_price", precision = 10, scale = 2)
+    private BigDecimal baseCostPrice;
 
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,0 +1,134 @@
+package com.clothingretail.inventory;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.clothingretail.product.ProductVariant;
+import com.clothingretail.product.ProductVariantRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+/**
+ * Verifies POST /api/admin/inventory/variants/{id}/damage: marking damage increments
+ * damagedQuantity (reducing computed availableQuantity) WITHOUT touching the physical
+ * stockQuantity, and writes both a DamageRecord and a DAMAGE InventoryTransaction
+ * (see StockService.recordDamage).
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class DamageIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
+    private InventoryTransactionRepository inventoryTransactionRepository;
+
+    @Autowired
+    private DamageRecordRepository damageRecordRepository;
+
+    private String adminAccessToken() throws Exception {
+        String loginBody = """
+                {"email":"admin@clothingretail.local","password":"ChangeMe123!"}
+                """;
+        MvcResult result = mockMvc.perform(post("/api/admin/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
+        return json.get("accessToken").asText();
+    }
+
+    @Test
+    void damageReducesAvailableQuantityButNotStockQuantity() throws Exception {
+        ProductVariant variant = productVariantRepository.findBySku("MCS-BLU-M").orElseThrow();
+        int stockBefore = variant.getStockQuantity();
+        int damagedBefore = variant.getDamagedQuantity();
+        int availableBefore = variant.getAvailableQuantity();
+
+        String body = """
+                {"quantity":3,"reason":"TRANSIT_DAMAGE","notes":"Torn during shipping"}
+                """;
+        MvcResult result = mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
+        assertThat(json.get("damagedQuantity").asInt()).isEqualTo(damagedBefore + 3);
+        assertThat(json.get("availableQuantity").asInt()).isEqualTo(availableBefore - 3);
+
+        ProductVariant after = productVariantRepository.findById(variant.getId()).orElseThrow();
+        assertThat(after.getStockQuantity()).isEqualTo(stockBefore);
+        assertThat(after.getDamagedQuantity()).isEqualTo(damagedBefore + 3);
+        assertThat(after.getAvailableQuantity()).isEqualTo(availableBefore - 3);
+    }
+
+    @Test
+    void damageWritesDamageRecordAndInventoryTransaction() throws Exception {
+        ProductVariant variant = productVariantRepository.findBySku("MCS-BLU-L").orElseThrow();
+        int damagedBefore = variant.getDamagedQuantity();
+
+        String body = """
+                {"quantity":2,"reason":"WAREHOUSE_DAMAGE","notes":"Water damage on shelf"}
+                """;
+        mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+
+        List<DamageRecord> damageRecords = damageRecordRepository.findAll().stream()
+                .filter(d -> d.getProductVariant().getId().equals(variant.getId()))
+                .toList();
+        assertThat(damageRecords).isNotEmpty();
+        DamageRecord record = damageRecords.get(damageRecords.size() - 1);
+        assertThat(record.getQuantity()).isEqualTo(2);
+        assertThat(record.getReason()).isEqualTo(DamageReason.WAREHOUSE_DAMAGE);
+        assertThat(record.getNotes()).isEqualTo("Water damage on shelf");
+
+        List<InventoryTransaction> transactions = inventoryTransactionRepository.findByProductVariantId(variant.getId());
+        InventoryTransaction last = transactions.get(transactions.size() - 1);
+        assertThat(last.getType()).isEqualTo(InventoryTransactionType.DAMAGE);
+        assertThat(last.getQuantity()).isEqualTo(2);
+        assertThat(last.getPreviousQuantity()).isEqualTo(damagedBefore);
+        assertThat(last.getNewQuantity()).isEqualTo(damagedBefore + 2);
+    }
+
+    @Test
+    void damageRejectsQuantityExceedingAvailable() throws Exception {
+        ProductVariant variant = productVariantRepository.findBySku("MCS-GRN-XL").orElseThrow();
+        int available = variant.getAvailableQuantity();
+
+        String body = """
+                {"quantity":%d,"reason":"OTHER","notes":"Too much"}
+                """.formatted(available + 1);
+        mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        ProductVariant after = productVariantRepository.findById(variant.getId()).orElseThrow();
+        assertThat(after.getAvailableQuantity()).isEqualTo(available);
+    }
+}

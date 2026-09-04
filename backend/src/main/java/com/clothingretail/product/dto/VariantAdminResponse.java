@@ -12,6 +12,11 @@ public record VariantAdminResponse(
         String colorName,
         BigDecimal sellingPrice,
         BigDecimal discountPercent,
+        BigDecimal costPrice,
         int stockQuantity,
+        int reservedQuantity,
+        int damagedQuantity,
+        int availableQuantity,
+        Integer lowStockThreshold,
         boolean active,
         List<String> images) {}

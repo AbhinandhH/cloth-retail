@@ -34,7 +34,7 @@ public final class ProductSpecifications {
             List<Predicate> predicates = new ArrayList<>();
 
             if (activeOnly) {
-                predicates.add(cb.isTrue(root.get("active")));
+                predicates.add(cb.equal(root.get("status"), ProductStatus.ACTIVE));
             }
             if (categoryId != null) {
                 predicates.add(cb.equal(root.get("category").get("id"), categoryId));
@@ -57,6 +57,30 @@ public final class ProductSpecifications {
             if (maxPrice != null) {
                 Join<Object, Object> join = root.join("variants", JoinType.INNER);
                 predicates.add(cb.lessThanOrEqualTo(join.get("sellingPrice"), maxPrice));
+            }
+            if (q != null && !q.isBlank()) {
+                String pattern = "%" + q.trim().toLowerCase() + "%";
+                Join<Object, Object> join = root.join("variants", JoinType.LEFT);
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("name")), pattern),
+                        cb.like(cb.lower(join.get("sku")), pattern)));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /** Filter dimensions for the admin product listing - deliberately simpler than the storefront filter above. */
+    public static Specification<Product> adminFilter(String q, Long categoryId, ProductStatus status) {
+        return (root, query, cb) -> {
+            query.distinct(true);
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
             }
             if (q != null && !q.isBlank()) {
                 String pattern = "%" + q.trim().toLowerCase() + "%";

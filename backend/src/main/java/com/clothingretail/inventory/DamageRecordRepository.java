@@ -2,9 +2,8 @@ package com.clothingretail.inventory;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface PurchaseItemRepository extends JpaRepository<PurchaseItem, Long> {
-    List<PurchaseItem> findByPurchaseId(Long purchaseId);
-
+public interface DamageRecordRepository extends JpaRepository<DamageRecord, Long>, JpaSpecificationExecutor<DamageRecord> {
     boolean existsByProductVariantIdIn(List<Long> productVariantIds);
 }

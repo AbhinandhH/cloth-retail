@@ -1,5 +1,7 @@
 package com.clothingretail.product.dto;
 
+import com.clothingretail.product.ProductStatus;
+import java.math.BigDecimal;
 import java.util.List;
 
 public record ProductAdminResponse(
@@ -15,5 +17,8 @@ public record ProductAdminResponse(
         String name,
         String slug,
         String description,
-        boolean active,
+        ProductStatus status,
+        String baseSku,
+        BigDecimal baseSellingPrice,
+        BigDecimal baseCostPrice,
         List<VariantAdminResponse> variants) {}

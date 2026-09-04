@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,26 @@ public class ProductVariant extends BaseEntity {
     @Column(name = "stock_quantity", nullable = false)
     private int stockQuantity = 0;
 
+    /** Brand new field, not derived from anything - the vendor's cost for this specific variant. */
+    @Column(name = "cost_price", precision = 10, scale = 2)
+    private BigDecimal costPrice;
+
+    /** Nothing writes this yet (cart/checkout reservation doesn't exist) - that's correct for now. */
+    @Column(name = "reserved_quantity", nullable = false)
+    private int reservedQuantity = 0;
+
+    /** Increased only by {@code StockService.recordDamage} - never reduces stockQuantity. */
+    @Column(name = "damaged_quantity", nullable = false)
+    private int damagedQuantity = 0;
+
+    /** Null means "use the system default of 5" wherever it's evaluated. */
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @Column(nullable = false)
     private boolean active = true;
 
@@ -65,5 +86,10 @@ public class ProductVariant extends BaseEntity {
     public void addImage(ProductImage image) {
         image.setProductVariant(this);
         images.add(image);
+    }
+
+    /** Computed, never persisted: the physical count minus what's reserved and what's damaged. */
+    public int getAvailableQuantity() {
+        return Math.max(0, stockQuantity - reservedQuantity - damagedQuantity);
     }
 }

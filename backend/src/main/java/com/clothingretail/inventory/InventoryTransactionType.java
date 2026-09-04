@@ -6,5 +6,7 @@ public enum InventoryTransactionType {
     SALE_OUT,
     RETURN_IN,
     ADJUSTMENT,
-    CANCEL_REVERSAL
+    CANCEL_REVERSAL,
+    /** Affects damagedQuantity (not stockQuantity) - see {@link com.clothingretail.inventory.StockService#recordDamage}. */
+    DAMAGE
 }
