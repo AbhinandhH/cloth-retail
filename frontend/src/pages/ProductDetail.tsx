@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { fetchProductBySlug } from '../api/products'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import { useAuth } from '../context/AuthContext'
 import type { ProductDetail as ProductDetailType, ProductVariant } from '../types'
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [product, setProduct] = useState<ProductDetailType | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -14,6 +18,7 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [activeImage, setActiveImage] = useState(0)
+  const [cartNotice, setCartNotice] = useState<string | null>(null)
 
   useEffect(() => {
     if (!slug) return
@@ -97,6 +102,18 @@ export default function ProductDetail() {
   const price = variant?.sellingPrice ?? 0
   const discountedPrice = hasDiscount ? price * (1 - (variant?.discountPercent ?? 0) / 100) : price
   const inStock = (variant?.stockQuantity ?? 0) > 0
+
+  const handleAddToCart = () => {
+    // Browsing/viewing a product is always public - only the purchase action
+    // itself is auth-gated, per the requirement that Instagram-ad traffic
+    // must be able to land directly on a product page without hitting a
+    // login wall. An unauthenticated tap sends them to login and back here.
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } })
+      return
+    }
+    setCartNotice('Cart is coming soon — this product is saved for when it launches.')
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -215,12 +232,14 @@ export default function ProductDetail() {
           )}
 
           <button
-            disabled
-            title="Cart coming soon"
-            className="mt-8 w-full cursor-not-allowed rounded-lg bg-zinc-300 py-3 text-sm font-semibold text-zinc-500"
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            className="mt-8 w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
           >
-            Add to cart — coming soon
+            {inStock ? 'Add to cart' : 'Out of stock'}
           </button>
+          {cartNotice && <p className="mt-2 text-center text-xs text-zinc-500">{cartNotice}</p>}
 
           <div className="mt-8 space-y-4 border-t border-zinc-200 pt-6 text-sm text-zinc-700">
             <p>{product.description}</p>

@@ -14,3 +14,12 @@ body {
 }
 
 /* Simple line-clamp fallback utility not needed with tailwind's line-clamp core plugin, kept minimal */
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

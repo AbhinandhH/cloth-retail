@@ -3,7 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import { fetchCategories, fetchColors, fetchProducts, fetchSizes } from '../api/products'
 import { getErrorMessage } from '../api/client'
 import ProductCard from '../components/ProductCard'
-import FilterSelect from '../components/FilterSelect'
+import FilterFields from '../components/FilterFields'
+import FilterSheet from '../components/FilterSheet'
+import type { FilterValues } from '../components/FilterFields'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import type { Category, Color, ProductListItem, Size } from '../types'
 
@@ -21,6 +23,7 @@ export default function Home() {
   const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   // Local text input state, decoupled from the URL so typing feels instant;
   // the debounced value is what actually drives the URL/query.
@@ -88,6 +91,23 @@ export default function Home() {
     setSearchParams(next, { replace: true })
   }
 
+  // Commits every filter field in one URLSearchParams update (used by the mobile
+  // sheet's "Show results") — calling updateFilter() five times in a row would each
+  // read the same stale `searchParams` closure and clobber each other's changes.
+  const applyFilters = (values: FilterValues) => {
+    const next = new URLSearchParams(searchParams)
+    for (const [key, value] of Object.entries(values)) {
+      if (value) next.set(key, value)
+      else next.delete(key)
+    }
+    next.delete('page')
+    setSearchParams(next)
+    setFilterSheetOpen(false)
+  }
+
+  const filterValues: FilterValues = { categoryId, sizeId, colorId, minPrice, maxPrice }
+  const activeFilterCount = Object.values(filterValues).filter(Boolean).length
+
   const goToPage = (nextPage: number) => {
     const next = new URLSearchParams(searchParams)
     if (nextPage > 0) next.set('page', String(nextPage))
@@ -114,80 +134,61 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Search */}
-      <div className="mb-4">
-        <label htmlFor="search" className="sr-only">Search products</label>
-        <input
-          id="search"
-          type="search"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search by name or SKU…"
-          className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-        />
+      {/* Search + mobile filter trigger */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex-1">
+          <label htmlFor="search" className="sr-only">Search products</label>
+          <input
+            id="search"
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by name or SKU…"
+            className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setFilterSheetOpen(true)}
+          className="relative flex h-[42px] shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 px-3.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 lg:hidden"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M6 8h12M10 12h4" />
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[var(--brand-primary,#18181b)] text-[10px] font-semibold text-white">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
-        {/* Filters */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
-          <details className="rounded-lg border border-zinc-200 lg:border-0" open>
-            <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-zinc-900 lg:hidden">
-              Filters
-            </summary>
-            <div className="space-y-5 px-4 pb-4 lg:p-0">
-              <FilterSelect
-                label="Category"
-                value={categoryId}
-                onChange={(v) => updateFilter('categoryId', v)}
-                options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
-              />
-              <FilterSelect
-                label="Size"
-                value={sizeId}
-                onChange={(v) => updateFilter('sizeId', v)}
-                options={sizes.map((s) => ({ value: String(s.id), label: s.name }))}
-              />
-              <FilterSelect
-                label="Color"
-                value={colorId}
-                onChange={(v) => updateFilter('colorId', v)}
-                options={colors.map((c) => ({ value: String(c.id), label: c.name }))}
-              />
-              <div>
-                <p className="mb-2 text-sm font-medium text-zinc-900">Price</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    placeholder="Min"
-                    value={minPrice}
-                    onChange={(e) => updateFilter('minPrice', e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none"
-                  />
-                  <span className="text-zinc-400">–</span>
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    placeholder="Max"
-                    value={maxPrice}
-                    onChange={(e) => updateFilter('maxPrice', e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+      <FilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        categories={categories}
+        sizes={sizes}
+        colors={colors}
+        committed={filterValues}
+        onApply={applyFilters}
+      />
 
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm font-medium text-rose-600 hover:text-rose-700"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          </details>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+        {/* Desktop filter sidebar — mobile uses the FilterSheet above instead */}
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+          <FilterFields
+            categories={categories}
+            sizes={sizes}
+            colors={colors}
+            values={filterValues}
+            onChange={(key, value) => updateFilter(key, value)}
+          />
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="mt-5 text-sm font-medium text-rose-600 hover:text-rose-700">
+              Clear all filters
+            </button>
+          )}
         </aside>
 
         {/* Results */}
@@ -205,7 +206,7 @@ export default function Home() {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-zinc-100" />
               ))}
@@ -220,7 +221,7 @@ export default function Home() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
