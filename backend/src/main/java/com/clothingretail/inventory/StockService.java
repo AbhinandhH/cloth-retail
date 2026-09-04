@@ -26,16 +26,19 @@ public class StockService {
     private final ProductVariantRepository productVariantRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final DamageRecordRepository damageRecordRepository;
+    private final DamageReasonRepository damageReasonRepository;
     private final UserRepository userRepository;
 
     public StockService(
             ProductVariantRepository productVariantRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
             DamageRecordRepository damageRecordRepository,
+            DamageReasonRepository damageReasonRepository,
             UserRepository userRepository) {
         this.productVariantRepository = productVariantRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
         this.damageRecordRepository = damageRecordRepository;
+        this.damageReasonRepository = damageReasonRepository;
         this.userRepository = userRepository;
     }
 
@@ -72,6 +75,10 @@ public class StockService {
         ProductVariant variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new NotFoundException("Product variant not found: " + variantId));
 
+        DamageReason reason = damageReasonRepository.findById(request.reasonId())
+                .filter(DamageReason::isActive)
+                .orElseThrow(() -> new NotFoundException("Damage reason not found: " + request.reasonId()));
+
         int quantity = request.quantity();
         if (quantity > variant.getAvailableQuantity()) {
             throw new BadRequestException(
@@ -88,7 +95,7 @@ public class StockService {
         DamageRecord record = new DamageRecord();
         record.setProductVariant(variant);
         record.setQuantity(quantity);
-        record.setReason(request.reason());
+        record.setReason(reason);
         record.setNotes(request.notes());
         record.setReportedBy(reportedBy);
         damageRecordRepository.save(record);
@@ -99,7 +106,7 @@ public class StockService {
         transaction.setQuantity(quantity);
         transaction.setPreviousQuantity(previousDamaged);
         transaction.setNewQuantity(newDamaged);
-        transaction.setReason(request.reason().name());
+        transaction.setReason(reason.getName());
         transaction.setPerformedBy(reportedBy);
         transaction.setReferenceType("DAMAGE_RECORD");
         inventoryTransactionRepository.save(transaction);

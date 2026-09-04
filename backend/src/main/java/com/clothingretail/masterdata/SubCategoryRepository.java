@@ -9,4 +9,6 @@ public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> 
     List<SubCategory> findByCategoryIdAndActiveTrueOrderByDisplayOrderAscNameAsc(Long categoryId);
 
     boolean existsBySlugIgnoreCase(String slug);
+
+    long countByCategoryId(Long categoryId);
 }

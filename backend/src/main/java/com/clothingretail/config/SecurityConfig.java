@@ -65,6 +65,7 @@ public class SecurityConfig {
                                 "/api/sizes",
                                 "/api/colors",
                                 "/api/vendors",
+                                "/api/damage-reasons",
                                 "/api/configuration",
                                 "/media/**")
                         .permitAll()

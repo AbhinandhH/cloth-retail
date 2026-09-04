@@ -43,6 +43,17 @@ class DamageIntegrationTest {
     @Autowired
     private DamageRecordRepository damageRecordRepository;
 
+    @Autowired
+    private DamageReasonRepository damageReasonRepository;
+
+    private Long reasonIdByCode(String code) {
+        return damageReasonRepository.findAll().stream()
+                .filter(r -> code.equals(r.getCode()))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+    }
+
     private String adminAccessToken() throws Exception {
         String loginBody = """
                 {"email":"admin@clothingretail.local","password":"ChangeMe123!"}
@@ -64,8 +75,8 @@ class DamageIntegrationTest {
         int availableBefore = variant.getAvailableQuantity();
 
         String body = """
-                {"quantity":3,"reason":"TRANSIT_DAMAGE","notes":"Torn during shipping"}
-                """;
+                {"quantity":3,"reasonId":%d,"notes":"Torn during shipping"}
+                """.formatted(reasonIdByCode("TRANSIT_DAMAGE"));
         MvcResult result = mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
                         .header("Authorization", "Bearer " + adminAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,8 +100,8 @@ class DamageIntegrationTest {
         int damagedBefore = variant.getDamagedQuantity();
 
         String body = """
-                {"quantity":2,"reason":"WAREHOUSE_DAMAGE","notes":"Water damage on shelf"}
-                """;
+                {"quantity":2,"reasonId":%d,"notes":"Water damage on shelf"}
+                """.formatted(reasonIdByCode("WAREHOUSE_DAMAGE"));
         mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
                         .header("Authorization", "Bearer " + adminAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,7 +114,7 @@ class DamageIntegrationTest {
         assertThat(damageRecords).isNotEmpty();
         DamageRecord record = damageRecords.get(damageRecords.size() - 1);
         assertThat(record.getQuantity()).isEqualTo(2);
-        assertThat(record.getReason()).isEqualTo(DamageReason.WAREHOUSE_DAMAGE);
+        assertThat(record.getReason().getCode()).isEqualTo("WAREHOUSE_DAMAGE");
         assertThat(record.getNotes()).isEqualTo("Water damage on shelf");
 
         List<InventoryTransaction> transactions = inventoryTransactionRepository.findByProductVariantId(variant.getId());
@@ -120,8 +131,8 @@ class DamageIntegrationTest {
         int available = variant.getAvailableQuantity();
 
         String body = """
-                {"quantity":%d,"reason":"OTHER","notes":"Too much"}
-                """.formatted(available + 1);
+                {"quantity":%d,"reasonId":%d,"notes":"Too much"}
+                """.formatted(available + 1, reasonIdByCode("OTHER"));
         mockMvc.perform(post("/api/admin/inventory/variants/" + variant.getId() + "/damage")
                         .header("Authorization", "Bearer " + adminAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)

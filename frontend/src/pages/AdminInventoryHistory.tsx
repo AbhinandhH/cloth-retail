@@ -416,7 +416,7 @@ function DamagesPanel() {
                     <p className="text-xs text-zinc-400">{d.sku}</p>
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-right font-semibold text-rose-600">-{d.quantity}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-zinc-600">{d.reason.replace('_', ' ')}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-zinc-600">{d.reason}</td>
                   <td className="max-w-xs truncate px-3 py-2 text-zinc-600" title={d.notes ?? undefined}>
                     {d.notes ?? '—'}
                   </td>

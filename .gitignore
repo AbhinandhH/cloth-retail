@@ -23,6 +23,9 @@ frontend/.env
 *.iml
 .DS_Store
 
+# Claude Code local settings (per-machine permission grants, not app config)
+.claude/settings.local.json
+
 # Logs
 *.log
 npm-debug.log*

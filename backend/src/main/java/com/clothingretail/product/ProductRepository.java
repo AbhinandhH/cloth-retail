@@ -8,4 +8,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findBySlugAndStatus(String slug, ProductStatus status);
 
     boolean existsBySlugIgnoreCase(String slug);
+
+    long countByCategoryId(Long categoryId);
+
+    long countBySubCategoryId(Long subCategoryId);
+
+    long countByBrandId(Long brandId);
+
+    long countByMaterialId(Long materialId);
 }

@@ -1,30 +1,52 @@
 package com.clothingretail.masterdata;
 
+import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.masterdata.dto.CategoryAdminRequest;
 import com.clothingretail.masterdata.dto.CategoryAdminResponse;
 import com.clothingretail.masterdata.dto.CategoryResponse;
+import com.clothingretail.product.ProductRepository;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryRepository repository;
+    private final SubCategoryRepository subCategoryRepository;
+    private final ProductRepository productRepository;
+    private final AuditorNameResolver auditorNameResolver;
 
-    public CategoryService(CategoryRepository repository) {
+    public CategoryService(
+            CategoryRepository repository,
+            SubCategoryRepository subCategoryRepository,
+            ProductRepository productRepository,
+            AuditorNameResolver auditorNameResolver) {
         this.repository = repository;
+        this.subCategoryRepository = subCategoryRepository;
+        this.productRepository = productRepository;
+        this.auditorNameResolver = auditorNameResolver;
     }
 
-    public List<CategoryAdminResponse> listAdmin() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<CategoryAdminResponse> listAdmin(String q, Boolean active) {
+        List<Category> categories = repository.findAll().stream()
+                .filter(c -> matchesQuery(c, q))
+                .filter(c -> active == null || c.isActive() == active)
+                .toList();
+        Map<Long, String> names = auditorNameResolver.resolveNames(
+                categories.stream().flatMap(c -> Stream.of(c.getCreatedBy(), c.getUpdatedBy())).toList());
+        return categories.stream().map(c -> toResponse(c, names)).toList();
     }
 
     public CategoryAdminResponse getAdmin(Long id) {
-        return toResponse(find(id));
+        Category category = find(id);
+        return toResponse(category, auditorNameResolver.resolveNames(category.getCreatedBy(), category.getUpdatedBy()));
     }
 
     public List<CategoryResponse> listPublic() {
@@ -40,24 +62,40 @@ public class CategoryService {
         }
         Category category = new Category();
         apply(category, request);
-        return toResponse(repository.save(category));
+        Category saved = repository.save(category);
+        return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public CategoryAdminResponse update(Long id, CategoryAdminRequest request) {
         Category category = find(id);
         apply(category, request);
-        return toResponse(repository.save(category));
+        Category saved = repository.save(category);
+        return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public void delete(Long id) {
         Category category = find(id);
+        long productCount = productRepository.countByCategoryId(id);
+        if (productCount > 0) {
+            throw new ConflictException(
+                    "This category is currently used by " + productCount + " products and cannot be deleted. Deactivate it instead.");
+        }
+        long subCategoryCount = subCategoryRepository.countByCategoryId(id);
+        if (subCategoryCount > 0) {
+            throw new ConflictException(
+                    "This category has " + subCategoryCount + " sub-categories and cannot be deleted. Deactivate it instead.");
+        }
         repository.delete(category);
     }
 
     private Category find(Long id) {
         return repository.findById(id).orElseThrow(() -> new NotFoundException("Category not found: " + id));
+    }
+
+    private boolean matchesQuery(Category category, String q) {
+        return !StringUtils.hasText(q) || category.getName().toLowerCase().contains(q.toLowerCase());
     }
 
     private void apply(Category category, CategoryAdminRequest request) {
@@ -67,7 +105,16 @@ public class CategoryService {
         category.setActive(request.active());
     }
 
-    private CategoryAdminResponse toResponse(Category c) {
-        return new CategoryAdminResponse(c.getId(), c.getName(), c.getSlug(), c.getDisplayOrder(), c.isActive());
+    private CategoryAdminResponse toResponse(Category c, Map<Long, String> names) {
+        return new CategoryAdminResponse(
+                c.getId(),
+                c.getName(),
+                c.getSlug(),
+                c.getDisplayOrder(),
+                c.isActive(),
+                names.get(c.getCreatedBy()),
+                names.get(c.getUpdatedBy()),
+                c.getCreatedAt(),
+                c.getUpdatedAt());
     }
 }

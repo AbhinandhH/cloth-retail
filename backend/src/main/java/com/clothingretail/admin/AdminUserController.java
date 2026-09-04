@@ -27,4 +27,5 @@ public class AdminUserController {
     public ResponseEntity<UserSummary> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
         return ResponseEntity.ok(authService.createAdmin(request));
     }
+
 }

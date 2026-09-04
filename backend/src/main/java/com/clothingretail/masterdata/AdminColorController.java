@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,8 +28,9 @@ public class AdminColorController {
     }
 
     @GetMapping
-    public List<ColorAdminResponse> list() {
-        return colorService.listAdmin();
+    public List<ColorAdminResponse> list(
+            @RequestParam(required = false) String q, @RequestParam(required = false) Boolean active) {
+        return colorService.listAdmin(q, active);
     }
 
     @GetMapping("/{id}")

@@ -55,7 +55,8 @@ export function adjustStock(variantId: number | string, payload: AdjustStockPayl
 
 export interface MarkDamagedPayload {
   quantity: number
-  reason: string
+  /** The DamageReason master's id — was a `reason` enum string, now `reasonId`. */
+  reasonId: number
   notes?: string | null
 }
 

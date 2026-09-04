@@ -2,23 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchCategories, fetchColors, fetchSizes } from '../api/products'
 import { fetchInventoryDashboard, fetchInventoryVariants } from '../api/adminInventory'
 import type { VariantQuery } from '../api/adminInventory'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { useCategories, useColors, useSizes } from '../context/MasterDataContext'
 import StockAdjustmentModal from '../components/StockAdjustmentModal'
 import MarkDamagedModal from '../components/MarkDamagedModal'
-import type {
-  Category,
-  Color,
-  InventoryDashboard,
-  InventoryVariantRow,
-  ProductStatus,
-  Size,
-  StockStatus,
-} from '../types'
+import type { InventoryDashboard, InventoryVariantRow, ProductStatus, StockStatus } from '../types'
 
 const PAGE_SIZE = 20
 
@@ -91,16 +83,10 @@ export default function AdminInventoryDashboard() {
 }
 
 function AdminInventoryDashboardContent() {
-  // --- Filter option lists (public read endpoints) ---
-  const [categories, setCategories] = useState<Category[]>([])
-  const [sizes, setSizes] = useState<Size[]>([])
-  const [colors, setColors] = useState<Color[]>([])
-
-  useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]))
-    fetchSizes().then(setSizes).catch(() => setSizes([]))
-    fetchColors().then(setColors).catch(() => setColors([]))
-  }, [])
+  // --- Filter option lists (public read endpoints, via MasterDataContext) ---
+  const { data: categories } = useCategories()
+  const { data: sizes } = useSizes()
+  const { data: colors } = useColors()
 
   // --- Dashboard summary ---
   const [dashboard, setDashboard] = useState<InventoryDashboard | null>(null)

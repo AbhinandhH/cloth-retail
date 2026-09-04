@@ -2,15 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { markDamaged } from '../api/adminInventory'
 import { getErrorMessage } from '../api/client'
-import type { DamageReason, InventoryVariantRow } from '../types'
-
-const DAMAGE_REASONS: { value: DamageReason; label: string }[] = [
-  { value: 'DEFECTIVE', label: 'Defective' },
-  { value: 'TRANSIT_DAMAGE', label: 'Transit damage' },
-  { value: 'WAREHOUSE_DAMAGE', label: 'Warehouse damage' },
-  { value: 'RETURN_DAMAGE', label: 'Return damage' },
-  { value: 'OTHER', label: 'Other' },
-]
+import { useDamageReasons } from '../context/MasterDataContext'
+import type { InventoryVariantRow } from '../types'
 
 interface MarkDamagedModalProps {
   /** The variant being marked damaged, or null to keep the modal closed/unmounted. */
@@ -25,8 +18,10 @@ interface MarkDamagedModalProps {
  * mechanics as FilterSheet, adapted to a centered card instead of a bottom sheet.
  */
 export default function MarkDamagedModal({ variant, onClose, onSuccess }: MarkDamagedModalProps) {
+  const { data: damageReasons } = useDamageReasons()
+
   const [quantity, setQuantity] = useState('')
-  const [reason, setReason] = useState<DamageReason>(DAMAGE_REASONS[0].value)
+  const [reasonId, setReasonId] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,12 +31,20 @@ export default function MarkDamagedModal({ variant, onClose, onSuccess }: MarkDa
   useEffect(() => {
     if (open) {
       setQuantity('')
-      setReason(DAMAGE_REASONS[0].value)
       setNotes('')
       setError(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, variant?.variantId])
+
+  // Default to the first fetched reason once the list arrives (it isn't
+  // known synchronously on open since the list is lazy-loaded on first use).
+  useEffect(() => {
+    if (open && !reasonId && damageReasons.length > 0) {
+      setReasonId(String(damageReasons[0].id))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, damageReasons])
 
   useEffect(() => {
     if (!open) return
@@ -57,7 +60,7 @@ export default function MarkDamagedModal({ variant, onClose, onSuccess }: MarkDa
   const parsedQuantity = quantity.trim() === '' ? null : Number(quantity)
   const isValidQuantity = parsedQuantity !== null && Number.isInteger(parsedQuantity) && parsedQuantity > 0
   const exceedsAvailable = isValidQuantity && (parsedQuantity as number) > variant.availableQuantity
-  const canSubmit = isValidQuantity && !exceedsAvailable && !saving
+  const canSubmit = isValidQuantity && !exceedsAvailable && Boolean(reasonId) && !saving
 
   const handleClose = () => {
     if (saving) return
@@ -70,7 +73,11 @@ export default function MarkDamagedModal({ variant, onClose, onSuccess }: MarkDa
     setSaving(true)
     setError(null)
     try {
-      await markDamaged(variant.variantId, { quantity: parsedQuantity, reason, notes: notes.trim() || null })
+      await markDamaged(variant.variantId, {
+        quantity: parsedQuantity,
+        reasonId: Number(reasonId),
+        notes: notes.trim() || null,
+      })
       onSuccess()
       onClose()
     } catch (err) {
@@ -139,13 +146,15 @@ export default function MarkDamagedModal({ variant, onClose, onSuccess }: MarkDa
               </label>
               <select
                 id="damage-reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value as DamageReason)}
-                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                value={reasonId}
+                onChange={(e) => setReasonId(e.target.value)}
+                disabled={damageReasons.length === 0}
+                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:bg-zinc-100 disabled:text-zinc-400"
               >
-                {DAMAGE_REASONS.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
+                {damageReasons.length === 0 && <option value="">Loading reasons…</option>}
+                {damageReasons.map((r) => (
+                  <option key={r.id} value={String(r.id)}>
+                    {r.name}
                   </option>
                 ))}
               </select>

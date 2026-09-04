@@ -5,8 +5,6 @@ import com.clothingretail.common.BaseEntity;
 import com.clothingretail.product.ProductVariant;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -37,8 +35,9 @@ public class DamageRecord extends BaseEntity {
     @Column(nullable = false)
     private int quantity;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    // EAGER: tiny reference table read in DTO mapping outside any open transaction.
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "damage_reason_id", nullable = false)
     private DamageReason reason;
 
     @Column(columnDefinition = "TEXT")

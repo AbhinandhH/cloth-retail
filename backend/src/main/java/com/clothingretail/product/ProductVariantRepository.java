@@ -13,6 +13,10 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     boolean existsBySkuIgnoreCase(String sku);
 
+    long countBySizeId(Long sizeId);
+
+    long countByColorId(Long colorId);
+
     /** Sum of computed available quantity (stock - reserved - damaged, floored at 0) across all variants. */
     @Query("SELECT COALESCE(SUM(CASE WHEN (v.stockQuantity - v.reservedQuantity - v.damagedQuantity) > 0 "
             + "THEN (v.stockQuantity - v.reservedQuantity - v.damagedQuantity) ELSE 0 END), 0) FROM ProductVariant v")

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchCategories } from '../api/products'
 import * as adminProductsApi from '../api/adminProducts'
 import { getErrorMessage, toMediaUrl } from '../api/client'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { useCategories } from '../context/MasterDataContext'
 import ConfirmDialog from '../components/ConfirmDialog'
 import SelectField from '../components/SelectField'
-import type { AdminProductListItem, Category, ProductStatus } from '../types'
+import type { AdminProductListItem, ProductStatus } from '../types'
 
 const PAGE_SIZE = 20
 
@@ -38,7 +38,7 @@ export default function AdminProductList() {
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
 
-  const [categories, setCategories] = useState<Category[]>([])
+  const { data: categories } = useCategories()
   const [products, setProducts] = useState<AdminProductListItem[]>([])
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
@@ -58,10 +58,6 @@ export default function AdminProductList() {
   const [deleteTarget, setDeleteTarget] = useState<AdminProductListItem | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
-
-  useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]))
-  }, [])
 
   // Reset to page 0 whenever a filter changes.
   useEffect(() => {

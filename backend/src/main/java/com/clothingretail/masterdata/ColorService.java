@@ -1,30 +1,47 @@
 package com.clothingretail.masterdata;
 
+import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.masterdata.dto.ColorAdminRequest;
 import com.clothingretail.masterdata.dto.ColorAdminResponse;
 import com.clothingretail.masterdata.dto.ColorResponse;
+import com.clothingretail.product.ProductVariantRepository;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
 public class ColorService {
 
     private final ColorRepository repository;
+    private final ProductVariantRepository productVariantRepository;
+    private final AuditorNameResolver auditorNameResolver;
 
-    public ColorService(ColorRepository repository) {
+    public ColorService(
+            ColorRepository repository, ProductVariantRepository productVariantRepository, AuditorNameResolver auditorNameResolver) {
         this.repository = repository;
+        this.productVariantRepository = productVariantRepository;
+        this.auditorNameResolver = auditorNameResolver;
     }
 
-    public List<ColorAdminResponse> listAdmin() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<ColorAdminResponse> listAdmin(String q, Boolean active) {
+        List<Color> colors = repository.findAll().stream()
+                .filter(c -> matchesQuery(c, q))
+                .filter(c -> active == null || c.isActive() == active)
+                .toList();
+        Map<Long, String> names = auditorNameResolver.resolveNames(
+                colors.stream().flatMap(c -> Stream.of(c.getCreatedBy(), c.getUpdatedBy())).toList());
+        return colors.stream().map(c -> toResponse(c, names)).toList();
     }
 
     public ColorAdminResponse getAdmin(Long id) {
-        return toResponse(find(id));
+        Color color = find(id);
+        return toResponse(color, auditorNameResolver.resolveNames(color.getCreatedBy(), color.getUpdatedBy()));
     }
 
     public List<ColorResponse> listPublic() {
@@ -40,23 +57,35 @@ public class ColorService {
         }
         Color color = new Color();
         apply(color, request);
-        return toResponse(repository.save(color));
+        Color saved = repository.save(color);
+        return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public ColorAdminResponse update(Long id, ColorAdminRequest request) {
         Color color = find(id);
         apply(color, request);
-        return toResponse(repository.save(color));
+        Color saved = repository.save(color);
+        return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public void delete(Long id) {
-        repository.delete(find(id));
+        Color color = find(id);
+        long usageCount = productVariantRepository.countByColorId(id);
+        if (usageCount > 0) {
+            throw new ConflictException(
+                    "This color is currently used by " + usageCount + " product variants and cannot be deleted. Deactivate it instead.");
+        }
+        repository.delete(color);
     }
 
     private Color find(Long id) {
         return repository.findById(id).orElseThrow(() -> new NotFoundException("Color not found: " + id));
+    }
+
+    private boolean matchesQuery(Color color, String q) {
+        return !StringUtils.hasText(q) || color.getName().toLowerCase().contains(q.toLowerCase());
     }
 
     private void apply(Color color, ColorAdminRequest request) {
@@ -66,7 +95,16 @@ public class ColorService {
         color.setActive(request.active());
     }
 
-    private ColorAdminResponse toResponse(Color c) {
-        return new ColorAdminResponse(c.getId(), c.getName(), c.getHexCode(), c.getDisplayOrder(), c.isActive());
+    private ColorAdminResponse toResponse(Color c, Map<Long, String> names) {
+        return new ColorAdminResponse(
+                c.getId(),
+                c.getName(),
+                c.getHexCode(),
+                c.getDisplayOrder(),
+                c.isActive(),
+                names.get(c.getCreatedBy()),
+                names.get(c.getUpdatedBy()),
+                c.getCreatedAt(),
+                c.getUpdatedAt());
     }
 }

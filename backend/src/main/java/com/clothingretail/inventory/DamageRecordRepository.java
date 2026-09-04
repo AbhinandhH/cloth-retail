@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface DamageRecordRepository extends JpaRepository<DamageRecord, Long>, JpaSpecificationExecutor<DamageRecord> {
     boolean existsByProductVariantIdIn(List<Long> productVariantIds);
+
+    long countByReasonId(Long reasonId);
 }

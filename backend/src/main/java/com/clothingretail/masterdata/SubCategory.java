@@ -1,6 +1,6 @@
 package com.clothingretail.masterdata;
 
-import com.clothingretail.common.BaseEntity;
+import com.clothingretail.common.AuditableMasterEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class SubCategory extends BaseEntity {
+public class SubCategory extends AuditableMasterEntity {
 
     // EAGER: this is a tiny reference table and callers (DTO mapping in
     // controllers) read category name/slug outside any open transaction.

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { fetchCategories, fetchColors, fetchSizes } from '../api/products'
 import * as adminProductsApi from '../api/adminProducts'
+import * as adminMastersApi from '../api/adminMasters'
 import { getErrorMessage, getFieldErrors, toMediaUrl } from '../api/client'
+import { useCategories, useColors } from '../context/MasterDataContext'
 import ImageUploadField from '../components/ImageUploadField'
 import SelectField from '../components/SelectField'
 import TextField from '../components/TextField'
@@ -12,7 +13,6 @@ import type {
   AdminProductDetail,
   AdminProductVariant,
   Brand,
-  Category,
   Color,
   Material,
   ProductAdminRequest,
@@ -149,13 +149,18 @@ export default function AdminProductForm() {
   const [loading, setLoading] = useState(!isNew)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  // Master data for selects.
-  const [categories, setCategories] = useState<Category[]>([])
+  // Master data for selects. Categories/colors come from the shared cache;
+  // brands/materials stay on their existing admin-only endpoints (no public
+  // equivalent exists, and this form is admin-only anyway).
+  const { data: categories } = useCategories()
+  const { data: colors } = useColors()
   const [subCategories, setSubCategories] = useState<SubCategory[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
+  // Category-scoped sizes (GET /categories/{id}/available-sizes) — refetched
+  // whenever the selected category changes, see the effect below.
   const [sizes, setSizes] = useState<Size[]>([])
-  const [colors, setColors] = useState<Color[]>([])
+  const [sizesLoading, setSizesLoading] = useState(false)
 
   // Details tab state.
   const [name, setName] = useState('')
@@ -177,11 +182,9 @@ export default function AdminProductForm() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-  // Load master data once.
+  // Load brand/material master data once (admin-only lists, stay on their
+  // existing adminProducts.ts endpoints — see the deviation note above).
   useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]))
-    fetchSizes().then(setSizes).catch(() => setSizes([]))
-    fetchColors().then(setColors).catch(() => setColors([]))
     adminProductsApi.fetchBrands().then(setBrands).catch(() => setBrands([]))
     adminProductsApi.fetchMaterials().then(setMaterials).catch(() => setMaterials([]))
   }, [])
@@ -200,6 +203,33 @@ export default function AdminProductForm() {
       })
       .catch(() => {
         if (!cancelled) setSubCategories([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [categoryId])
+
+  // Available sizes are scoped to the selected category — refetched whenever
+  // it changes. The backend always returns *something* here (either the
+  // category's scoped sizes or a full fallback list), so this only renders
+  // empty before any category is chosen.
+  useEffect(() => {
+    if (!categoryId) {
+      setSizes([])
+      return
+    }
+    let cancelled = false
+    setSizesLoading(true)
+    adminMastersApi
+      .fetchAvailableSizesForCategory(categoryId)
+      .then((list) => {
+        if (!cancelled) setSizes(list)
+      })
+      .catch(() => {
+        if (!cancelled) setSizes([])
+      })
+      .finally(() => {
+        if (!cancelled) setSizesLoading(false)
       })
     return () => {
       cancelled = true
@@ -497,6 +527,10 @@ export default function AdminProductForm() {
         {/* Variants tab */}
         {activeTab === 'variants' && (
           <section className="mt-6">
+            {!categoryId && (
+              <p className="mb-3 text-xs text-amber-600">Select a category in the Details tab to see available sizes.</p>
+            )}
+            {categoryId && sizesLoading && <p className="mb-3 text-xs text-zinc-500">Loading available sizes…</p>}
             <div className="overflow-x-auto rounded-lg border border-zinc-200">
               <table className="min-w-full divide-y divide-zinc-200 text-sm">
                 <thead className="bg-zinc-50">

@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { fetchCategories, fetchColors, fetchProducts, fetchSizes } from '../api/products'
+import { fetchProducts } from '../api/products'
 import { getErrorMessage } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import FilterFields from '../components/FilterFields'
 import FilterSheet from '../components/FilterSheet'
 import type { FilterValues } from '../components/FilterFields'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import type { Category, Color, ProductListItem, Size } from '../types'
+import { useCategories, useColors, useSizes } from '../context/MasterDataContext'
+import type { ProductListItem } from '../types'
 
 const PAGE_SIZE = 20
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const [categories, setCategories] = useState<Category[]>([])
-  const [sizes, setSizes] = useState<Size[]>([])
-  const [colors, setColors] = useState<Color[]>([])
+  const { data: categories } = useCategories()
+  const { data: sizes } = useSizes()
+  const { data: colors } = useColors()
 
   const [products, setProducts] = useState<ProductListItem[]>([])
   const [totalPages, setTotalPages] = useState(0)
@@ -37,13 +38,6 @@ export default function Home() {
   const minPrice = searchParams.get('minPrice') ?? ''
   const maxPrice = searchParams.get('maxPrice') ?? ''
   const q = searchParams.get('q') ?? ''
-
-  // Load filter option lists once.
-  useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]))
-    fetchSizes().then(setSizes).catch(() => setSizes([]))
-    fetchColors().then(setColors).catch(() => setColors([]))
-  }, [])
 
   // Push the debounced search text into the URL (resetting to page 0).
   useEffect(() => {

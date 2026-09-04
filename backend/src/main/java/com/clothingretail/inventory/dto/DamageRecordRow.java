@@ -1,6 +1,5 @@
 package com.clothingretail.inventory.dto;
 
-import com.clothingretail.inventory.DamageReason;
 import java.time.Instant;
 
 public record DamageRecordRow(
@@ -9,7 +8,8 @@ public record DamageRecordRow(
         String sku,
         String productName,
         int quantity,
-        DamageReason reason,
+        Long reasonId,
+        String reasonName,
         String notes,
         String reportedByName,
         Instant createdAt) {}

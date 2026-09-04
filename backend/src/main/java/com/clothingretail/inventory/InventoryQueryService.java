@@ -193,7 +193,8 @@ public class InventoryQueryService {
                 v.getSku(),
                 v.getProduct().getName(),
                 d.getQuantity(),
-                d.getReason(),
+                d.getReason().getId(),
+                d.getReason().getName(),
                 d.getNotes(),
                 d.getReportedBy() != null ? d.getReportedBy().getFullName() : null,
                 d.getCreatedAt());
