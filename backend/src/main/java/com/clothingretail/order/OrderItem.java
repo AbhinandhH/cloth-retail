@@ -60,4 +60,8 @@ public class OrderItem extends BaseEntity {
 
     @Column(name = "line_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal lineTotal;
+
+    /** Snapshot of the variant's primary image URL at order-creation time - same resolution as ProductService's primary-image logic. Nullable: a variant may have no images. */
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 }

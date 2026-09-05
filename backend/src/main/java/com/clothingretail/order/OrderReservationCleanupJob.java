@@ -24,10 +24,15 @@ public class OrderReservationCleanupJob {
 
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final OrderStatusHistoryService orderStatusHistoryService;
 
-    public OrderReservationCleanupJob(OrderRepository orderRepository, ProductVariantRepository productVariantRepository) {
+    public OrderReservationCleanupJob(
+            OrderRepository orderRepository,
+            ProductVariantRepository productVariantRepository,
+            OrderStatusHistoryService orderStatusHistoryService) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
+        this.orderStatusHistoryService = orderStatusHistoryService;
     }
 
     @Scheduled(fixedDelay = 60000)
@@ -47,6 +52,8 @@ public class OrderReservationCleanupJob {
                 productVariantRepository.releaseReservation(variant.getId(), item.getQuantity());
             }
             order.setStatus(OrderStatus.CANCELLED);
+            orderStatusHistoryService.record(
+                    order, OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED, null, "Reservation expired");
             log.info("Released expired reservation and cancelled order {} ({})", order.getId(), order.getOrderNumber());
         }
         orderRepository.saveAll(expired);

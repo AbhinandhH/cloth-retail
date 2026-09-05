@@ -29,7 +29,7 @@ public class PaymentController {
     @PostMapping("/initiate")
     @PreAuthorize("hasRole('CUSTOMER')")
     public PaymentInitiateResponse initiate(Authentication authentication, @Valid @RequestBody InitiatePaymentRequest request) {
-        return paymentService.initiate(userId(authentication), request.orderId());
+        return paymentService.initiate(userId(authentication), request.orderId(), request.paymentMethod());
     }
 
     @PostMapping("/mock/simulate")

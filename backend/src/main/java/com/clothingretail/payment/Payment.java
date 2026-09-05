@@ -41,4 +41,8 @@ public class Payment extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
+
+    /** Customer-supplied at initiation time, defaulting to "UPI" when omitted - see PaymentService.initiate. */
+    @Column(name = "payment_method", length = 30)
+    private String paymentMethod;
 }

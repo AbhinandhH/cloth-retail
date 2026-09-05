@@ -66,4 +66,17 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     /** Lightweight scalar read used to snapshot stockQuantity immediately around a decrement, for the audit trail. */
     @Query("SELECT v.stockQuantity FROM ProductVariant v WHERE v.id = :id")
     int getStockQuantity(@Param("id") Long id);
+
+    /**
+     * Atomically reverses a previously-fulfilled sale on order cancellation: the physical stock
+     * count goes back up by {@code qty} - the mirror image of {@link #decrementStockOnSale}. Used
+     * only when the order being cancelled had already reached a status where stock was actually
+     * decremented (CONFIRMED/PROCESSING/PACKED) - see AdminOrderService. No condition needed,
+     * same reasoning as {@link #releaseReservation}: the caller only ever restores exactly what
+     * it knows this order's item previously took.
+     */
+    @Modifying
+    @Query("UPDATE ProductVariant v SET v.stockQuantity = v.stockQuantity + :qty, v.version = v.version + 1 "
+            + "WHERE v.id = :id")
+    int restoreStockOnCancellation(@Param("id") Long id, @Param("qty") int qty);
 }

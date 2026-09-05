@@ -7,6 +7,7 @@ import com.clothingretail.customer.CustomerProfileRepository;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;
+import com.clothingretail.order.OrderStatusHistoryService;
 import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
@@ -22,6 +23,7 @@ public class PaymentService {
     private final PaymentGateway paymentGateway;
     private final MockPaymentGateway mockPaymentGateway;
     private final PaymentWebhookService paymentWebhookService;
+    private final OrderStatusHistoryService orderStatusHistoryService;
 
     public PaymentService(
             PaymentRepository paymentRepository,
@@ -29,17 +31,19 @@ public class PaymentService {
             CustomerProfileRepository customerProfileRepository,
             PaymentGateway paymentGateway,
             MockPaymentGateway mockPaymentGateway,
-            PaymentWebhookService paymentWebhookService) {
+            PaymentWebhookService paymentWebhookService,
+            OrderStatusHistoryService orderStatusHistoryService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.paymentGateway = paymentGateway;
         this.mockPaymentGateway = mockPaymentGateway;
         this.paymentWebhookService = paymentWebhookService;
+        this.orderStatusHistoryService = orderStatusHistoryService;
     }
 
     @Transactional
-    public PaymentInitiateResponse initiate(Long userId, Long orderId) {
+    public PaymentInitiateResponse initiate(Long userId, Long orderId, String paymentMethod) {
         CustomerProfile profile = resolveProfile(userId);
         Order order = orderRepository.findById(orderId)
                 .filter(o -> o.getCustomerProfile().getId().equals(profile.getId()))
@@ -56,12 +60,19 @@ public class PaymentService {
         payment.setStatus(PaymentStatus.PENDING);
         payment.setGatewayReference(initiation.gatewayReference());
         payment.setAmount(order.getTotalAmount());
+        payment.setPaymentMethod(hasText(paymentMethod) ? paymentMethod : "UPI");
         payment = paymentRepository.save(payment);
 
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.PAYMENT_PROCESSING);
         orderRepository.save(order);
+        orderStatusHistoryService.record(order, previousStatus, OrderStatus.PAYMENT_PROCESSING, null, null);
 
         return new PaymentInitiateResponse(payment.getId(), order.getId(), order.getTotalAmount(), payment.getGatewayReference());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     /**

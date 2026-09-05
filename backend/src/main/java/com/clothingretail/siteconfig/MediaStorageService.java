@@ -28,7 +28,8 @@ public class MediaStorageService {
             "image/png", "png",
             "image/jpeg", "jpg",
             "image/webp", "webp",
-            "image/svg+xml", "svg");
+            "image/svg+xml", "svg",
+            "image/heic", "heic");
 
     private final Path uploadDir;
 

@@ -11,6 +11,7 @@ import com.clothingretail.customer.AddressRepository;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.CustomerProfileRepository;
 import com.clothingretail.order.dto.CreateOrderRequest;
+import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ class OrderCreationService {
     private final CartRepository cartRepository;
     private final ProductVariantRepository productVariantRepository;
     private final OrderRepository orderRepository;
+    private final OrderStatusHistoryService orderStatusHistoryService;
     private final int reservationTtlMinutes;
 
     OrderCreationService(
@@ -52,12 +55,14 @@ class OrderCreationService {
             CartRepository cartRepository,
             ProductVariantRepository productVariantRepository,
             OrderRepository orderRepository,
+            OrderStatusHistoryService orderStatusHistoryService,
             @Value("${app.order.reservation-ttl-minutes:15}") int reservationTtlMinutes) {
         this.customerProfileRepository = customerProfileRepository;
         this.addressRepository = addressRepository;
         this.cartRepository = cartRepository;
         this.productVariantRepository = productVariantRepository;
         this.orderRepository = orderRepository;
+        this.orderStatusHistoryService = orderStatusHistoryService;
         this.reservationTtlMinutes = reservationTtlMinutes;
     }
 
@@ -129,6 +134,7 @@ class OrderCreationService {
             item.setUnitPrice(unitPrice);
             item.setDiscountPercent(discountPercent);
             item.setLineTotal(lineTotal);
+            item.setImageUrl(primaryImageUrl(variant));
             order.addItem(item);
 
             subtotal = subtotal.add(unitPrice.multiply(BigDecimal.valueOf(quantity)));
@@ -146,11 +152,22 @@ class OrderCreationService {
         // surfaces here, inside this transaction, and propagates as a DataIntegrityViolationException
         // to OrderService.createOrder's catch block.
         Order saved = orderRepository.save(order);
+        // previousStatus is null - this is the order's first-ever status row.
+        orderStatusHistoryService.record(saved, null, OrderStatus.PENDING_PAYMENT, null, null);
 
         cart.getItems().clear();
         cartRepository.save(cart);
 
         return saved;
+    }
+
+    /** Same resolution ProductService.toSummary() uses for a product's primary image, applied to a single variant: lowest displayOrder, or null if it has no images. */
+    private String primaryImageUrl(ProductVariant variant) {
+        return variant.getImages().stream()
+                .sorted(Comparator.comparing(ProductImage::getDisplayOrder))
+                .map(ProductImage::getUrl)
+                .findFirst()
+                .orElse(null);
     }
 
     private String generateOrderNumber() {

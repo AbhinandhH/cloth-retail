@@ -1,5 +1,6 @@
 package com.clothingretail.payment;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,6 +14,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     /** Most recently created payment attempt for an order, if any - used to report Order.paymentStatus. */
     Optional<Payment> findFirstByOrderIdOrderByIdDesc(Long orderId);
+
+    /**
+     * Batched "latest payment per order" lookup for the admin order list/dashboard rows: one
+     * query for a whole page of order ids (each order effectively only ever has one payment
+     * attempt in this codebase, but this is written to be correct even if that changes), instead
+     * of one {@link #findFirstByOrderIdOrderByIdDesc} call per row - which would be N+1. See
+     * AdminOrderQueryService.
+     */
+    @Query("SELECT p FROM Payment p WHERE p.id IN "
+            + "(SELECT MAX(p2.id) FROM Payment p2 WHERE p2.order.id IN :orderIds GROUP BY p2.order.id)")
+    List<Payment> findLatestByOrderIds(@Param("orderIds") List<Long> orderIds);
 
     /**
      * Atomically claims this payment for processing: only succeeds while it's still PENDING, so

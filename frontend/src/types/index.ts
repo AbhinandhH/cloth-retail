@@ -572,6 +572,151 @@ export interface CreateOrderRequest {
   contactPhone?: string | null;
 }
 
+// --- Admin orders ---------------------------------------------------------
+// /api/admin/orders — the admin Order Dashboard + List screen. Distinct from
+// the customer-facing OrderStatus/OrderListItem/OrderDetail above (which only
+// cover the 6 statuses a customer can see); the admin contract exposes the
+// full 11-value order status lifecycle plus richer list/summary fields.
+
+export type AdminOrderStatus =
+  | "PENDING_PAYMENT"
+  | "PAYMENT_PROCESSING"
+  | "PAYMENT_FAILED"
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "PACKED"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "RETURNED"
+  | "REFUNDED";
+
+/** Row shape shared by GET /admin/orders (list) and dashboard.recentOrders. */
+export interface AdminOrderSummary {
+  id: number | string;
+  orderNumber: string;
+  customerName: string;
+  customerContact: string;
+  status: AdminOrderStatus;
+  paymentStatus: PaymentStatus;
+  itemCount: number;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /admin/orders/dashboard response. */
+export interface AdminOrderDashboardData {
+  totalOrders: number;
+  pendingCount: number;
+  processingCount: number;
+  packedCount: number;
+  shippedCount: number;
+  deliveredCount: number;
+  cancelledCount: number;
+  paymentFailedCount: number;
+  recentOrders: AdminOrderSummary[];
+}
+
+// --- Admin order detail --------------------------------------------------
+// GET /admin/orders/{id} and its mutating actions (status/cancel/notes/
+// shipment/refund) — the admin Order Detail screen. See AdminOrderDetail.tsx
+// and api/adminOrders.ts.
+
+/** One line item on GET /admin/orders/{id} — distinct from the customer-facing OrderItem (adds imageUrl). */
+export interface AdminOrderLineItem {
+  id: number | string;
+  productName: string;
+  sku: string;
+  colorName: string;
+  sizeName: string;
+  imageUrl: string | null;
+  quantity: number;
+  unitPrice: number;
+  discountPercent: number;
+  lineTotal: number;
+}
+
+export interface AdminOrderCustomer {
+  name: string;
+  phone: string;
+  email: string;
+}
+
+/** Independent of AdminOrderStatus/PaymentStatus — the admin payment sub-object's own status. */
+export type AdminOrderPaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
+
+export interface AdminOrderPayment {
+  id: number | string;
+  status: AdminOrderPaymentStatus;
+  method: string;
+  amount: number;
+  gatewayReference: string | null;
+  failureReason: string | null;
+  createdAt: string;
+}
+
+/** Refund status is not a fixed contracted enum — rendered as free text (e.g. "COMPLETED"). */
+export interface AdminOrderRefund {
+  id: number | string;
+  amount: number;
+  status: string;
+  reference: string | null;
+  reason?: string | null;
+  createdAt: string;
+}
+
+export interface AdminOrderShipment {
+  id?: number | string;
+  provider: string | null;
+  trackingNumber: string | null;
+  shipmentDate: string | null;
+  deliveryDate: string | null;
+  notes: string | null;
+}
+
+/** PUT /admin/orders/{id}/shipment request body — all fields nullable. */
+export type AdminOrderShipmentRequest = Omit<AdminOrderShipment, "id">;
+
+export interface AdminOrderStatusHistoryEntry {
+  previousStatus: AdminOrderStatus | null;
+  newStatus: AdminOrderStatus;
+  /** null for system-driven transitions — render as "System". */
+  changedByName: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface AdminOrderNote {
+  id: number | string;
+  note: string;
+  adminName: string;
+  createdAt: string;
+}
+
+/** GET /admin/orders/{id} response, and the shape returned (refreshed) by every mutating status/cancel action. */
+export interface AdminOrderDetail {
+  id: number | string;
+  orderNumber: string;
+  status: AdminOrderStatus;
+  /** Drives which status-transition buttons render — never hardcode the transition graph client-side. */
+  availableNextStatuses: AdminOrderStatus[];
+  items: AdminOrderLineItem[];
+  subtotal: number;
+  discountTotal: number;
+  shippingCharge: number;
+  totalAmount: number;
+  customer: AdminOrderCustomer;
+  shippingAddress: OrderShippingAddress;
+  payment: AdminOrderPayment | null;
+  refund: AdminOrderRefund | null;
+  shipment: AdminOrderShipment | null;
+  statusHistory: AdminOrderStatusHistoryEntry[];
+  notes: AdminOrderNote[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Customer addresses --------------------------------------------------
 // /api/customer/addresses — used by CheckoutPage to pick/create a shipping
 // address ahead of order placement.

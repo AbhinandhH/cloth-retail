@@ -1,6 +1,7 @@
 package com.clothingretail.payment;
 
 import com.clothingretail.order.Order;
+import java.math.BigDecimal;
 
 /**
  * Boundary to whatever actually moves money. {@link #verifySignature} is the security boundary
@@ -14,4 +15,7 @@ public interface PaymentGateway {
 
     /** Verifies that {@code signature} is a valid signature of {@code payload}, produced by this gateway. */
     boolean verifySignature(String payload, String signature);
+
+    /** Starts a refund of {@code amount} against a previously-successful {@code payment}. */
+    RefundInitiation refund(Payment payment, BigDecimal amount);
 }

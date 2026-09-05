@@ -9,6 +9,7 @@ import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderItem;
 import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;
+import com.clothingretail.order.OrderStatusHistoryService;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,7 @@ public class PaymentWebhookService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final OrderStatusHistoryService orderStatusHistoryService;
     // See MockPaymentGateway for why this is a plain unmanaged instance rather than an injected
     // bean: Spring's auto-configured JSON binder here is Jackson 3 (tools.jackson.*), not this
     // classic com.fasterxml.jackson ObjectMapper.
@@ -43,12 +45,14 @@ public class PaymentWebhookService {
             PaymentRepository paymentRepository,
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
-            InventoryTransactionRepository inventoryTransactionRepository) {
+            InventoryTransactionRepository inventoryTransactionRepository,
+            OrderStatusHistoryService orderStatusHistoryService) {
         this.paymentGateway = paymentGateway;
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.orderStatusHistoryService = orderStatusHistoryService;
     }
 
     @Transactional
@@ -106,14 +110,18 @@ public class PaymentWebhookService {
         }
 
         Order order = orderRepository.findById(orderId).orElseThrow();
+        OrderStatus previousStatus = order.getStatus();
+        OrderStatus newOrderStatus;
         if (newStatus == PaymentStatus.SUCCESS) {
             fulfilReservations(order);
-            order.setStatus(OrderStatus.CONFIRMED);
+            newOrderStatus = OrderStatus.CONFIRMED;
         } else {
             releaseReservations(order);
-            order.setStatus(OrderStatus.PAYMENT_FAILED);
+            newOrderStatus = OrderStatus.PAYMENT_FAILED;
         }
+        order.setStatus(newOrderStatus);
         orderRepository.save(order);
+        orderStatusHistoryService.record(order, previousStatus, newOrderStatus, null, null);
 
         Payment resolved = paymentRepository.findById(payment.getId()).orElseThrow();
         return toResult(resolved);

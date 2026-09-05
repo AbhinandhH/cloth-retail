@@ -21,6 +21,8 @@ import AdminBrands from './pages/AdminBrands'
 import AdminMaterials from './pages/AdminMaterials'
 import AdminVendors from './pages/AdminVendors'
 import AdminDamageReasons from './pages/AdminDamageReasons'
+import AdminOrderDashboard from './pages/AdminOrderDashboard'
+import AdminOrderDetail from './pages/AdminOrderDetail'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
@@ -167,6 +169,22 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminDamageReasons />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminOrderDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/orders/:id"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminOrderDetail />
           </RequireAuth>
         }
       />
