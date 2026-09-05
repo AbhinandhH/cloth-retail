@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/*
+ * Design-system tokens. Genuinely static values only — the runtime brand
+ * colors (--brand-primary/secondary/accent/background/text) are injected at
+ * runtime by SiteConfigContext via document.documentElement.style and must
+ * NEVER be declared here as @theme colors: @theme compiles to fixed values
+ * at build time, which would silently freeze admin-configured branding.
+ */
+@theme {
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+
+  /* Fluid hero/section-heading sizes Tailwind's default scale doesn't cover. */
+  --text-hero: clamp(2.5rem, 6vw + 1rem, 5rem);
+  --text-hero--line-height: 1.05;
+  --text-display: clamp(1.75rem, 3vw + 1rem, 2.75rem);
+  --text-display--line-height: 1.15;
+
+  /* Soft, low-contrast elevation — deliberately subtler than Tailwind's
+     default shadow-lg/xl, per the "avoid excessive shadows" brief. */
+  --shadow-soft: 0 1px 2px rgb(24 24 27 / 0.04), 0 2px 10px rgb(24 24 27 / 0.05);
+  --shadow-elevated: 0 8px 30px rgb(24 24 27 / 0.10), 0 2px 8px rgb(24 24 27 / 0.06);
+}
+
 :root {
   color-scheme: light;
 }
@@ -13,13 +35,75 @@ body {
   background: #fafafa;
 }
 
-/* Simple line-clamp fallback utility not needed with tailwind's line-clamp core plugin, kept minimal */
-
+/* --- Animation system -----------------------------------------------------
+ * A small, fixed vocabulary of GPU-only (transform/opacity) keyframes plus a
+ * scroll-reveal utility pair driven by the useInView hook (adds/removes
+ * `is-visible`). Every animation on the customer app should come from this
+ * list rather than one-off per-component keyframes, and everything here is
+ * neutralized under prefers-reduced-motion.
+ */
 @keyframes sheet-slide-up {
-  from {
-    transform: translateY(100%);
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes drawer-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes drawer-slide-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out both;
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    transform: translateY(0);
+  .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

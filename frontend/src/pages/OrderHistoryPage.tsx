@@ -7,13 +7,21 @@ import type { OrderListItem, OrderStatus } from '../types'
 
 const PAGE_SIZE = 10
 
+// Mirrors the full 11-value backend OrderStatus (see types/index.ts) — every
+// value the customer endpoints can actually return needs a label/badge here,
+// not just the pre-fulfillment subset.
 const STATUS_LABEL: Record<OrderStatus, string> = {
   PENDING_PAYMENT: 'Pending payment',
   PAYMENT_PROCESSING: 'Processing payment',
   PAYMENT_FAILED: 'Payment failed',
   CONFIRMED: 'Confirmed',
+  PROCESSING: 'Processing',
+  PACKED: 'Packed',
+  SHIPPED: 'Shipped',
+  DELIVERED: 'Delivered',
   CANCELLED: 'Cancelled',
-  COMPLETED: 'Completed',
+  RETURNED: 'Returned',
+  REFUNDED: 'Refunded',
 }
 
 const STATUS_BADGE: Record<OrderStatus, string> = {
@@ -21,8 +29,13 @@ const STATUS_BADGE: Record<OrderStatus, string> = {
   PAYMENT_PROCESSING: 'bg-amber-50 text-amber-700 border-amber-200',
   PAYMENT_FAILED: 'bg-rose-50 text-rose-700 border-rose-200',
   CONFIRMED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  PROCESSING: 'bg-sky-50 text-sky-700 border-sky-200',
+  PACKED: 'bg-sky-50 text-sky-700 border-sky-200',
+  SHIPPED: 'bg-violet-50 text-violet-700 border-violet-200',
+  DELIVERED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   CANCELLED: 'bg-rose-50 text-rose-700 border-rose-200',
-  COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  RETURNED: 'bg-amber-50 text-amber-700 border-amber-200',
+  REFUNDED: 'bg-zinc-100 text-zinc-700 border-zinc-200',
 }
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {

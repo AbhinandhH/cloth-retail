@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
+
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
  * for path traversal or to collide with/overwrite another upload.
  */
 @Service
+@Log4j2
 public class MediaStorageService {
 
     private static final Map<String, String> ALLOWED_CONTENT_TYPES = Map.of(

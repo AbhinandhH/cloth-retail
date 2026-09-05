@@ -506,13 +506,23 @@ export interface SizeGroupRequest {
 // Cart/Checkout/Payment flow (PaymentPage navigates to the detail page after
 // a successful simulated payment) — see src/api/orders.ts.
 
+// Mirrors the backend's single OrderStatus enum exactly (11 values) — the
+// customer endpoints (GET /api/orders, GET /api/orders/{id}) serialize the
+// same unfiltered enum admin does, with no customer-specific subset. This
+// used to be a stale 6-value type (including a since-removed COMPLETED) that
+// left PROCESSING/PACKED/SHIPPED/DELIVERED/RETURNED/REFUNDED unhandled.
 export type OrderStatus =
   | "PENDING_PAYMENT"
   | "PAYMENT_PROCESSING"
   | "PAYMENT_FAILED"
   | "CONFIRMED"
+  | "PROCESSING"
+  | "PACKED"
+  | "SHIPPED"
+  | "DELIVERED"
   | "CANCELLED"
-  | "COMPLETED";
+  | "RETURNED"
+  | "REFUNDED";
 
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | null;
 
@@ -573,23 +583,12 @@ export interface CreateOrderRequest {
 }
 
 // --- Admin orders ---------------------------------------------------------
-// /api/admin/orders — the admin Order Dashboard + List screen. Distinct from
-// the customer-facing OrderStatus/OrderListItem/OrderDetail above (which only
-// cover the 6 statuses a customer can see); the admin contract exposes the
-// full 11-value order status lifecycle plus richer list/summary fields.
+// /api/admin/orders — the admin Order Dashboard + List screen. Same
+// underlying status enum as the customer-facing OrderStatus above (both
+// mirror the backend's single OrderStatus) — aliased rather than
+// re-declared so the two can't drift out of sync again.
 
-export type AdminOrderStatus =
-  | "PENDING_PAYMENT"
-  | "PAYMENT_PROCESSING"
-  | "PAYMENT_FAILED"
-  | "CONFIRMED"
-  | "PROCESSING"
-  | "PACKED"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED"
-  | "RETURNED"
-  | "REFUNDED";
+export type AdminOrderStatus = OrderStatus;
 
 /** Row shape shared by GET /admin/orders (list) and dashboard.recentOrders. */
 export interface AdminOrderSummary {
