@@ -1,5 +1,6 @@
 package com.clothingretail.order;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * site (all of them are themselves {@code @Transactional}) - it never starts a second one.
  */
 @Service
+@Log4j2
 public class OrderStatusHistoryService {
 
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
@@ -31,6 +33,8 @@ public class OrderStatusHistoryService {
      */
     @Transactional
     public void record(Order order, OrderStatus previousStatus, OrderStatus newStatus, Long changedBy, String reason) {
+        log.info("[1656] Recording status history for order {}: {} -> {}, changedBy={}, reason={}",
+                order.getId(), previousStatus, newStatus, changedBy, reason);
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
         history.setPreviousStatus(previousStatus);

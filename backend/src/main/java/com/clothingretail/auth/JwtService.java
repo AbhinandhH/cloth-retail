@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
  * </ul>
  */
 @Service
+@Log4j2
 public class JwtService {
 
     private static final String CLAIM_ROLES = "roles";
@@ -61,37 +63,48 @@ public class JwtService {
     public String generateAccessToken(Long userId, String email, Set<RoleName> roles) {
         Instant now = Instant.now();
         List<String> roleNames = roles.stream().map(Enum::name).collect(Collectors.toList());
-        return Jwts.builder()
+        Instant expiresAt = now.plusSeconds(accessTokenTtlSeconds);
+        String token = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim(CLAIM_ROLES, roleNames)
                 .claim(CLAIM_TYPE, TYPE_ACCESS)
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plusSeconds(accessTokenTtlSeconds)))
+                .expiration(Date.from(expiresAt))
                 .signWith(key)
                 .compact();
+        log.info("[1035] Access token generated userId={} email={} roles={} expiresAt={}", userId, email, roleNames, expiresAt);
+        return token;
     }
 
     public String generateRefreshToken(Long userId) {
         Instant now = Instant.now();
-        return Jwts.builder()
+        Instant expiresAt = now.plusSeconds(refreshTokenTtlSeconds);
+        String token = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim(CLAIM_TYPE, TYPE_REFRESH)
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plusSeconds(refreshTokenTtlSeconds)))
+                .expiration(Date.from(expiresAt))
                 .signWith(key)
                 .compact();
+        log.info("[1036] Refresh token generated userId={} expiresAt={}", userId, expiresAt);
+        return token;
     }
 
     /** Parses and signature/expiry-validates a token. Throws {@link JwtException} (or a subtype) if invalid. */
     public Claims parseClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (JwtException | IllegalArgumentException ex) {
+            log.error("[1037] Failed to parse/validate JWT: {}", ex.getMessage());
+            throw ex;
+        }
     }
 
     public boolean isValid(String token) {
@@ -99,6 +112,7 @@ public class JwtService {
             parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
+            log.error("[1038] Token validity check failed: {}", ex.getMessage());
             return false;
         }
     }
@@ -108,27 +122,38 @@ public class JwtService {
             parseClaims(token);
             return false;
         } catch (ExpiredJwtException ex) {
+            log.info("[1039] Token expired, subject={}", ex.getClaims() != null ? ex.getClaims().getSubject() : null);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
+            log.error("[1040] Token expiry check failed, malformed token: {}", ex.getMessage());
             return true;
         }
     }
 
     public Long extractUserId(Claims claims) {
-        return Long.valueOf(claims.getSubject());
+        Long userId = Long.valueOf(claims.getSubject());
+        log.info("[1041] Extracted userId={} from token claims", userId);
+        return userId;
     }
 
     @SuppressWarnings("unchecked")
     public Set<String> extractRoles(Claims claims) {
         Object raw = claims.get(CLAIM_ROLES);
+        Set<String> roles;
         if (raw instanceof List<?> list) {
-            return list.stream().map(String::valueOf).collect(Collectors.toSet());
+            roles = list.stream().map(String::valueOf).collect(Collectors.toSet());
+        } else {
+            roles = Set.of();
         }
-        return Set.of();
+        log.info("[1042] Extracted roles={} from token claims", roles);
+        return roles;
     }
 
     public boolean isRefreshToken(Claims claims) {
-        return TYPE_REFRESH.equals(claims.get(CLAIM_TYPE, String.class));
+        String tokenType = claims.get(CLAIM_TYPE, String.class);
+        boolean isRefresh = TYPE_REFRESH.equals(tokenType);
+        log.info("[1043] Token type check tokenType={} isRefresh={}", tokenType, isRefresh);
+        return isRefresh;
     }
 
     /** SHA-256 hex digest, used so refresh tokens are never persisted in plaintext. */
@@ -136,8 +161,11 @@ public class JwtService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
+            String hex = HexFormat.of().formatHex(hash);
+            log.info("[1044] Token hashed (sha256 hex, not logging raw token)");
+            return hex;
         } catch (NoSuchAlgorithmException e) {
+            log.error("[1045] Token hashing failed, SHA-256 unavailable: {}", e.getMessage());
             throw new IllegalStateException("SHA-256 not available", e);
         }
     }

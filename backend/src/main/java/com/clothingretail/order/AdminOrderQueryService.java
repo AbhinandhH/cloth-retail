@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class AdminOrderQueryService {
 
     private static final int DASHBOARD_RECENT_LIMIT = 10;
@@ -86,13 +88,17 @@ public class AdminOrderQueryService {
             String dir,
             int page,
             int size) {
+        log.info("[1649] Listing admin orders: q={}, orderStatus={}, paymentStatus={}, dateFrom={}, dateTo={}, paymentMethod={}, sort={}, dir={}, page={}, size={}",
+                q, orderStatus, paymentStatus, dateFrom, dateTo, paymentMethod, sort, dir, page, size);
         Pageable pageable = PageRequest.of(page, size, sort(sort, dir));
         var spec = OrderSpecifications.filter(q, orderStatus, paymentStatus, dateFrom, dateTo, paymentMethod);
         Page<Order> orders = orderRepository.findAll(spec, pageable);
+        log.info("[1650] Admin order list result: {} of {} total matched", orders.getNumberOfElements(), orders.getTotalElements());
         return new PageImpl<>(toRows(orders.getContent()), pageable, orders.getTotalElements());
     }
 
     public AdminOrderDashboardResponse dashboard() {
+        log.info("[1651] Building admin order dashboard");
         long totalOrders = orderRepository.count();
         long pendingCount = orderRepository.countByStatus(OrderStatus.CONFIRMED);
         long processingCount = orderRepository.countByStatus(OrderStatus.PROCESSING);
@@ -101,6 +107,8 @@ public class AdminOrderQueryService {
         long deliveredCount = orderRepository.countByStatus(OrderStatus.DELIVERED);
         long cancelledCount = orderRepository.countByStatus(OrderStatus.CANCELLED);
         long paymentFailedCount = orderRepository.countByStatus(OrderStatus.PAYMENT_FAILED);
+        log.info("[1652] Dashboard counts: total={}, confirmed={}, processing={}, packed={}, shipped={}, delivered={}, cancelled={}, paymentFailed={}",
+                totalOrders, pendingCount, processingCount, packedCount, shippedCount, deliveredCount, cancelledCount, paymentFailedCount);
 
         var spec = OrderSpecifications.filter(null, null, null, null, null, null);
         Pageable recentPageable = PageRequest.of(0, DASHBOARD_RECENT_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -119,12 +127,17 @@ public class AdminOrderQueryService {
     }
 
     public AdminOrderDetailResponse detail(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+        log.info("[1653] Fetching admin order detail: orderId={}", orderId);
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> {
+            log.error("[1654] Admin order detail not found: orderId={}", orderId);
+            return new NotFoundException("Order not found: " + orderId);
+        });
         return toDetailResponse(order);
     }
 
     /** Builds the full detail shape for a single, already-loaded order - a handful of O(1) queries scoped to this one order, never a per-row loop. */
     AdminOrderDetailResponse toDetailResponse(Order order) {
+        log.info("[1655] Building detail response for order {}: status={}", order.getId(), order.getStatus());
         List<AdminOrderItemResponse> items = order.getItems().stream().map(this::toItemResponse).toList();
 
         List<OrderStatusHistory> historyRows = orderStatusHistoryRepository.findByOrderIdOrderByIdAsc(order.getId());

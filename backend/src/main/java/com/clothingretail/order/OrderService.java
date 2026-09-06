@@ -14,6 +14,7 @@ import com.clothingretail.payment.Payment;
 import com.clothingretail.payment.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
 import java.util.Optional;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * order" instead of an error.
  */
 @Service
+@Log4j2
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -49,13 +51,17 @@ public class OrderService {
     }
 
     public OrderDetailResponse createOrder(Long userId, CreateOrderRequest request) {
+        log.info("[1612] createOrder requested: userId={}, idempotencyKey={}", userId, request.idempotencyKey());
         Optional<Order> existing = orderRepository.findByIdempotencyKey(request.idempotencyKey());
         if (existing.isPresent()) {
+            log.info("[1613] Idempotency fast-path: existing order {} found for idempotencyKey={}",
+                    existing.get().getId(), request.idempotencyKey());
             return toDetailResponse(requireOwned(existing.get(), userId));
         }
 
         try {
             Order created = orderCreationService.create(userId, request);
+            log.info("[1614] Order create-path succeeded: orderId={}, idempotencyKey={}", created.getId(), request.idempotencyKey());
             return toDetailResponse(created);
         } catch (DataIntegrityViolationException raceLoss) {
             // Someone else's identical request (same idempotency key) won the insert race in the
@@ -63,24 +69,33 @@ public class OrderService {
             // rolled back (nothing we reserved is applied) - fetch and return the winner's order
             // instead of surfacing an error for what is, from the client's point of view, a
             // successful duplicate submission.
+            log.error("[1615] Insert race lost for idempotencyKey={}, userId={} - looking up winner",
+                    request.idempotencyKey(), userId, raceLoss);
             Order winner = orderRepository.findByIdempotencyKey(request.idempotencyKey()).orElseThrow(() -> raceLoss);
+            log.info("[1616] Race winner order {} returned for idempotencyKey={}", winner.getId(), request.idempotencyKey());
             return toDetailResponse(requireOwned(winner, userId));
         }
     }
 
     @Transactional(readOnly = true)
     public PageResponse<OrderSummaryResponse> listOrders(Long userId, int page, int size) {
+        log.info("[1617] Listing orders for userId={}, page={}, size={}", userId, page, size);
         CustomerProfile profile = resolveProfile(userId);
         Page<Order> orders = orderRepository.findByCustomerProfileId(
                 profile.getId(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        log.info("[1618] Listed {} orders (of {} total) for userId={}", orders.getNumberOfElements(), orders.getTotalElements(), userId);
         return PageResponse.of(orders, orders.getContent().stream().map(this::toSummaryResponse).toList());
     }
 
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrder(Long userId, Long orderId) {
+        log.info("[1619] Fetching order {} for userId={}", orderId, userId);
         CustomerProfile profile = resolveProfile(userId);
         Order order = orderRepository.findByIdAndCustomerProfileId(orderId, profile.getId())
-                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+                .orElseThrow(() -> {
+                    log.error("[1620] Order {} not found for userId={}", orderId, userId);
+                    return new NotFoundException("Order not found: " + orderId);
+                });
         return toDetailResponse(order);
     }
 
@@ -90,6 +105,7 @@ public class OrderService {
             // Idempotency keys are client-generated and expected to be unique per client -
             // a collision across two different customers means one of them reused someone
             // else's key, which we refuse rather than leak/return the other customer's order.
+            log.error("[1621] Idempotency key collision: order {} does not belong to userId={}", order.getId(), userId);
             throw new ConflictException("This idempotency key was already used for a different order");
         }
         return order;
@@ -97,7 +113,10 @@ public class OrderService {
 
     private CustomerProfile resolveProfile(Long userId) {
         return customerProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException("Customer profile not found for user: " + userId));
+                .orElseThrow(() -> {
+                    log.error("[1622] Customer profile not found for userId={}", userId);
+                    return new NotFoundException("Customer profile not found for user: " + userId);
+                });
     }
 
     private OrderSummaryResponse toSummaryResponse(Order order) {

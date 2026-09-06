@@ -9,12 +9,14 @@ import com.clothingretail.product.ProductRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class MaterialService {
 
     private final MaterialRepository repository;
@@ -28,6 +30,7 @@ public class MaterialService {
     }
 
     public List<MaterialAdminResponse> listAdmin(String q, Boolean active) {
+        log.info("[1427] Listing materials query={} active={}", q, active);
         List<Material> materials = repository.findAll().stream()
                 .filter(m -> matchesQuery(m, q))
                 .filter(m -> active == null || m.isActive() == active)
@@ -38,13 +41,16 @@ public class MaterialService {
     }
 
     public MaterialAdminResponse getAdmin(Long id) {
+        log.info("[1428] Fetching material id={}", id);
         Material material = find(id);
         return toResponse(material, auditorNameResolver.resolveNames(material.getCreatedBy(), material.getUpdatedBy()));
     }
 
     @Transactional
     public MaterialAdminResponse create(MaterialAdminRequest request) {
+        log.info("[1429] Creating material name={} displayOrder={} active={}", request.name(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
+            log.error("[1430] Cannot create material - name={} already exists", request.name());
             throw new ConflictException("A material with this name already exists");
         }
         Material material = new Material();
@@ -55,6 +61,7 @@ public class MaterialService {
 
     @Transactional
     public MaterialAdminResponse update(Long id, MaterialAdminRequest request) {
+        log.info("[1431] Updating material id={} name={} displayOrder={} active={}", id, request.name(), request.displayOrder(), request.active());
         Material material = find(id);
         apply(material, request);
         Material saved = repository.save(material);
@@ -63,9 +70,11 @@ public class MaterialService {
 
     @Transactional
     public void delete(Long id) {
+        log.info("[1432] Deleting material id={}", id);
         Material material = find(id);
         long usageCount = productRepository.countByMaterialId(id);
         if (usageCount > 0) {
+            log.error("[1433] Cannot delete material id={} - {} products depend on it", id, usageCount);
             throw new ConflictException(
                     "This material is currently used by " + usageCount + " products and cannot be deleted. Deactivate it instead.");
         }
@@ -73,7 +82,10 @@ public class MaterialService {
     }
 
     private Material find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Material not found: " + id));
+        return repository.findById(id).orElseThrow(() -> {
+            log.error("[1434] Material not found id={}", id);
+            return new NotFoundException("Material not found: " + id);
+        });
     }
 
     private boolean matchesQuery(Material material, String q) {

@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { fetchMyOrders } from '../api/orders'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import BackButton from '../components/BackButton'
+import EmptyState from '../components/EmptyState'
+import ErrorState from '../components/ErrorState'
+import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
 import type { OrderListItem, OrderStatus } from '../types'
 
 const PAGE_SIZE = 10
@@ -52,6 +56,37 @@ function formatDate(value: string) {
   return d.toLocaleDateString('en-IN', { dateStyle: 'medium' })
 }
 
+function BagIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.75}
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+      />
+    </svg>
+  )
+}
+
+function OrderCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-soft sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <SkeletonText width="w-32" />
+          <SkeletonText width="w-40" className="h-3" />
+          <SkeletonBlock className="mt-2 h-5 w-24 rounded-full" />
+        </div>
+        <div className="shrink-0 space-y-2 text-right">
+          <SkeletonText width="w-16" />
+          <SkeletonText width="w-12" className="h-3" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<OrderListItem[]>([])
   const [page, setPage] = useState(0)
@@ -93,50 +128,57 @@ export default function OrderHistoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">My orders</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {loading ? 'Loading…' : `${totalElements} order${totalElements === 1 ? '' : 's'}`}
-        </p>
+      <div className="flex items-center gap-1">
+        <BackButton className="-ml-2" />
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-zinc-900 sm:text-3xl">My orders</h1>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            {loading ? 'Loading…' : `${totalElements} order${totalElements === 1 ? '' : 's'}`}
+          </p>
+        </div>
       </div>
 
-      {error && (
-        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>
-      )}
-
       {loading ? (
-        <div className="mt-4 space-y-3">
+        <div className="mt-6 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-zinc-100" />
+            <OrderCardSkeleton key={i} />
           ))}
         </div>
+      ) : error ? (
+        <ErrorState message={error} onRetry={load} />
       ) : orders.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-zinc-300 px-4 py-16 text-center">
-          <p className="text-zinc-500">No orders yet.</p>
-          <Link to="/" className="mt-3 inline-block text-sm font-medium text-zinc-900 underline">
-            Start shopping
-          </Link>
-        </div>
+        <EmptyState
+          icon={<BagIcon />}
+          title="No orders yet"
+          message="Once you place an order, it'll show up here."
+          ctaLabel="Start shopping"
+          ctaTo="/"
+        />
       ) : (
-        <ul className="mt-4 space-y-3">
-          {orders.map((order) => (
-            <li key={order.id}>
+        <ul className="mt-6 space-y-3">
+          {orders.map((order, i) => (
+            <li key={order.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}>
               <Link
                 to={`/orders/${order.id}`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 hover:border-zinc-300 hover:bg-zinc-50"
+                className="flex items-start justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-elevated sm:p-5"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-zinc-900">{order.orderNumber}</p>
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {formatDate(order.createdAt)} &middot; {order.itemCount} item{order.itemCount === 1 ? '' : 's'}
                   </p>
-                  <div className="mt-1.5">
+                  <div className="mt-2">
                     <OrderStatusBadge status={order.status} />
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-semibold text-zinc-900">{formatPrice(order.totalAmount)}</p>
-                  <span className="mt-1 inline-block text-xs text-zinc-400">View &rarr;</span>
+                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-xs font-medium text-zinc-500">
+                    View details
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 </div>
               </Link>
             </li>
@@ -149,7 +191,7 @@ export default function OrderHistoryPage() {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 disabled:opacity-40"
+            className="min-h-[40px] rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-40"
           >
             Prev
           </button>
@@ -157,7 +199,7 @@ export default function OrderHistoryPage() {
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+              className={`min-h-[40px] min-w-[40px] rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 p === page ? 'bg-zinc-900 text-white' : 'border border-zinc-300 text-zinc-700 hover:bg-zinc-50'
               }`}
             >
@@ -167,7 +209,7 @@ export default function OrderHistoryPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 disabled:opacity-40"
+            className="min-h-[40px] rounded-full border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-40"
           >
             Next
           </button>

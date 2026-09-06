@@ -25,6 +25,21 @@ const STATUS_BADGE: Record<ProductStatus, string> = {
   ARCHIVED: 'bg-zinc-700 text-zinc-100 border-zinc-800',
 }
 
+/** Icon-only "back to admin home" affordance - no text, matching AdminProductForm's back link. */
+function AdminHomeBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin"
+      aria-label="Back to admin home"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 function StatusBadge({ status }: { status: ProductStatus }) {
   const label = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status
   return (
@@ -150,22 +165,20 @@ export default function AdminProductList() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Products</h1>
-          <p className="mt-1 text-sm text-zinc-500">Manage the storefront catalog — products, variants, and stock.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-2">
+          <AdminHomeBackLink className="mt-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">Products</h1>
+            <p className="mt-1 text-sm text-zinc-500">Manage the storefront catalog — products, variants, and stock.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            &larr; Admin home
-          </Link>
-          <Link
-            to="/admin/products/new"
-            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700"
-          >
-            + Add product
-          </Link>
-        </div>
+        <Link
+          to="/admin/products/new"
+          className="shrink-0 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97]"
+        >
+          + Add product
+        </Link>
       </div>
 
       {/* Toolbar */}
@@ -383,6 +396,10 @@ export default function AdminProductList() {
           setDeleteError(null)
         }}
       />
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <AdminHomeBackLink />
+      </div>
     </div>
   )
 }

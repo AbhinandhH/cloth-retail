@@ -10,6 +10,7 @@ import AdminConfiguration from './pages/AdminConfiguration'
 import AdminProductList from './pages/AdminProductList'
 import AdminProductForm from './pages/AdminProductForm'
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard'
+import AdminInventoryStock from './pages/AdminInventoryStock'
 import AdminInventoryHistory from './pages/AdminInventoryHistory'
 import AdminMastersHub from './pages/AdminMastersHub'
 import AdminCategories from './pages/AdminCategories'
@@ -28,6 +29,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 
@@ -81,6 +83,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminInventoryDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/inventory/stock"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminInventoryStock />
           </RequireAuth>
         }
       />
@@ -232,6 +242,14 @@ export default function App() {
           element={
             <RequireAuth>
               <OrderDetailPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <Profile />
             </RequireAuth>
           }
         />

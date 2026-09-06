@@ -49,10 +49,10 @@ export default function FilterSheet({ open, onClose, categories, sizes, colors, 
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="animate-[sheet-slide-up_0.25s_ease-out] absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-white shadow-xl">
+      <div className="absolute inset-0 bg-zinc-950/40" onClick={onClose} />
+      <div className="animate-[sheet-slide-up_0.25s_ease-out] absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-white shadow-elevated">
         <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-zinc-900">Filters</h2>
+          <h2 className="font-display text-lg text-zinc-900">Filters</h2>
           <button
             type="button"
             onClick={onClose}
@@ -81,7 +81,7 @@ export default function FilterSheet({ open, onClose, categories, sizes, colors, 
           <button
             type="button"
             onClick={() => onApply(draft)}
-            className="ml-auto flex-1 rounded-lg bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white hover:opacity-90"
+            className="ml-auto flex-1 rounded-full bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Show results
           </button>

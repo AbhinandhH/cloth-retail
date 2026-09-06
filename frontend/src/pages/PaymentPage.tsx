@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as ordersApi from '../api/orders'
 import * as paymentsApi from '../api/payments'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import BackButton from '../components/BackButton'
+import ErrorState from '../components/ErrorState'
+import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
 import type { OrderDetail, PaymentInitiateResponse } from '../types'
 
 export default function PaymentPage() {
@@ -21,6 +24,15 @@ export default function PaymentPage() {
   const [simulating, setSimulating] = useState(false)
   const [failureMessage, setFailureMessage] = useState<string | null>(null)
 
+  // Guards against a real, reproduced backend deadlock: the /payments/initiate
+  // endpoint has no idempotency protection against two concurrent calls for
+  // the same order, so an accidental double-fire (StrictMode's dev double-
+  // invoke, a double-tap, or two tabs on the same payment page) can start two
+  // requests where one succeeds silently while the other's failure is what
+  // renders — hiding that payment actually went through.
+  const initiateInFlightRef = useRef(false)
+  const autoInitiatedOrderRef = useRef<string | undefined>(undefined)
+
   const loadOrder = useCallback(() => {
     if (!orderId) return
     setLoadingOrder(true)
@@ -34,6 +46,8 @@ export default function PaymentPage() {
 
   const initiate = useCallback(() => {
     if (!orderId) return
+    if (initiateInFlightRef.current) return
+    initiateInFlightRef.current = true
     setInitiating(true)
     setInitiateError(null)
     setFailureMessage(null)
@@ -41,16 +55,27 @@ export default function PaymentPage() {
       .initiatePayment(orderId)
       .then((data) => setPayment(data))
       .catch((err) => setInitiateError(getErrorMessage(err)))
-      .finally(() => setInitiating(false))
+      .finally(() => {
+        initiateInFlightRef.current = false
+        setInitiating(false)
+      })
   }, [orderId])
 
   useEffect(() => {
     loadOrder()
   }, [loadOrder])
 
+  // Auto-initiate once per order on mount. Tracking orderId (not just relying
+  // on the effect's own dependency identity) means React StrictMode's
+  // mount -> cleanup -> mount dev cycle is a no-op the second time through,
+  // while the Retry/Retry payment buttons below still call initiate()
+  // directly and are unaffected by this guard.
   useEffect(() => {
+    if (!orderId) return
+    if (autoInitiatedOrderRef.current === orderId) return
+    autoInitiatedOrderRef.current = orderId
     initiate()
-  }, [initiate])
+  }, [orderId, initiate])
 
   const handleSimulate = async (outcome: 'SUCCESS' | 'FAILURE') => {
     if (!payment || simulating) return
@@ -72,49 +97,69 @@ export default function PaymentPage() {
 
   if (loadingOrder) {
     return (
-      <div className="mx-auto max-w-md px-4 py-10 sm:px-6 lg:px-8">
-        <div className="h-40 animate-pulse rounded-lg bg-zinc-100" />
+      <div className="mx-auto max-w-md px-4 py-6 sm:px-6 lg:px-8">
+        <BackButton className="-ml-2" />
+        <div className="mt-4 space-y-3">
+          <SkeletonText width="w-40" />
+          <SkeletonBlock className="h-16 w-full rounded-xl" />
+          <SkeletonBlock className="h-56 w-full rounded-xl" />
+        </div>
       </div>
     )
   }
 
   if (orderError || !order) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center sm:px-6 lg:px-8">
-        <p className="text-lg font-medium text-zinc-900">Order not found</p>
-        <p className="mt-2 text-sm text-zinc-500">{orderError ?? 'This order could not be loaded.'}</p>
-        <Link to="/cart" className="mt-6 inline-block text-sm font-medium text-rose-600 hover:text-rose-700">
-          &larr; Back to cart
-        </Link>
+      <div className="mx-auto max-w-md px-4 py-6 sm:px-6 lg:px-8">
+        <BackButton className="-ml-2" />
+        <ErrorState
+          title="Order not found"
+          message={orderError ?? 'This order could not be loaded.'}
+          onRetry={loadOrder}
+        />
+        <div className="text-center">
+          <Link to="/cart" className="text-sm font-medium text-zinc-900 hover:underline">
+            Back to cart
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="mx-auto max-w-md px-4 py-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-zinc-900">Payment</h1>
-      <p className="mt-1 text-sm text-zinc-500">Order {order.orderNumber}</p>
+      <div className="flex items-center gap-1">
+        <BackButton className="-ml-2" />
+        <h1 className="font-display text-2xl font-semibold text-zinc-900 sm:text-3xl">Payment</h1>
+      </div>
+      <p className="mt-1 pl-1 text-sm text-zinc-500">Order {order.orderNumber}</p>
 
-      <div className="mt-6 rounded-lg border border-zinc-200 p-4 text-sm">
-        <div className="flex justify-between text-zinc-600">
-          <span>{order.items.length} item{order.items.length === 1 ? '' : 's'}</span>
-          <span className="text-base font-semibold text-zinc-900">{formatPrice(order.totalAmount)}</span>
-        </div>
+      <div className="mt-6 flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-4 text-sm shadow-soft sm:p-5">
+        <span className="text-zinc-600">
+          {order.items.length} item{order.items.length === 1 ? '' : 's'}
+        </span>
+        <span className="text-base font-semibold text-zinc-900">{formatPrice(order.totalAmount)}</span>
       </div>
 
       {/* Dev/simulation payment panel — deliberately styled so it can never be
-          mistaken for a real card/UPI entry screen. */}
-      <div className="mt-6 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-5">
+          mistaken for a real card/UPI entry screen: dashed amber border,
+          hazard-style badge, explicit "no real payment" copy. */}
+      <div className="mt-6 rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50 p-5">
         <div className="flex items-center gap-2">
-          <span className="rounded bg-amber-400 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-950">
+          <span className="rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-950">
             Development Mode
           </span>
         </div>
-        <p className="mt-2 text-sm text-amber-900">
+        <p className="mt-2.5 text-sm text-amber-900">
           This is a simulated payment gateway for development. No real payment is processed.
         </p>
 
-        {initiating && <p className="mt-4 text-sm text-amber-800">Preparing payment…</p>}
+        {initiating && (
+          <p className="mt-4 flex items-center gap-2 text-sm text-amber-800">
+            <span className="h-3.5 w-3.5 animate-pulse rounded-full bg-amber-400" />
+            Preparing payment…
+          </p>
+        )}
 
         {initiateError && (
           <div className="mt-4 space-y-2">
@@ -122,7 +167,7 @@ export default function PaymentPage() {
             <button
               type="button"
               onClick={initiate}
-              className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+              className="min-h-[40px] rounded-full border border-amber-400 bg-white px-4 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100"
             >
               Retry
             </button>
@@ -131,7 +176,7 @@ export default function PaymentPage() {
 
         {payment && !initiateError && (
           <>
-            <p className="mt-3 break-all text-xs text-amber-700">Reference: {payment.gatewayReference}</p>
+            <p className="mt-4 break-all text-xs text-amber-700">Reference: {payment.gatewayReference}</p>
             <p className="mt-1 text-sm font-medium text-amber-900">Amount due: {formatPrice(payment.amount)}</p>
 
             {failureMessage ? (
@@ -142,13 +187,13 @@ export default function PaymentPage() {
                     type="button"
                     onClick={initiate}
                     disabled={initiating}
-                    className="flex-1 rounded-md bg-zinc-900 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-60"
+                    className="min-h-[40px] flex-1 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                   >
                     Retry payment
                   </button>
                   <Link
                     to="/cart"
-                    className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-center text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="flex min-h-[40px] flex-1 items-center justify-center rounded-full border border-zinc-300 px-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
                   >
                     Return to cart
                   </Link>
@@ -160,7 +205,7 @@ export default function PaymentPage() {
                   type="button"
                   onClick={() => handleSimulate('SUCCESS')}
                   disabled={simulating}
-                  className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                  className="min-h-[40px] rounded-full bg-emerald-600 px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
                   {simulating ? 'Processing…' : 'Simulate Successful Payment'}
                 </button>
@@ -168,7 +213,7 @@ export default function PaymentPage() {
                   type="button"
                   onClick={() => handleSimulate('FAILURE')}
                   disabled={simulating}
-                  className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                  className="min-h-[40px] rounded-full bg-rose-600 px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
                   {simulating ? 'Processing…' : 'Simulate Failed Payment'}
                 </button>

@@ -19,7 +19,7 @@ export default function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-zinc-900">
+      <label htmlFor={id} className="block text-sm font-medium text-zinc-700">
         {label}
       </label>
       <input
@@ -29,9 +29,9 @@ export default function Field({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+        className="mt-1.5 w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
       />
-      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
     </div>
   )
 }

@@ -41,11 +41,16 @@ public class MediaStorageService {
     }
 
     public MediaUploadResponse store(MultipartFile file) {
+        log.info("[1657] Storing uploaded media: originalFilename={}, contentType={}, size={}",
+                file.getOriginalFilename(), file.getContentType(), file.getSize());
         if (file.isEmpty()) {
+            log.error("[1658] Media upload rejected: file is empty (originalFilename={})", file.getOriginalFilename());
             throw new BadRequestException("File must not be empty");
         }
         String extension = ALLOWED_CONTENT_TYPES.get(file.getContentType());
         if (extension == null) {
+            log.error("[1659] Media upload rejected: unsupported content type {} (originalFilename={})",
+                    file.getContentType(), file.getOriginalFilename());
             throw new BadRequestException("Unsupported file type: " + file.getContentType()
                     + ". Allowed types: " + String.join(", ", ALLOWED_CONTENT_TYPES.keySet()));
         }
@@ -54,8 +59,10 @@ public class MediaStorageService {
             Files.createDirectories(uploadDir);
             String filename = UUID.randomUUID() + "." + extension;
             file.transferTo(uploadDir.resolve(filename));
+            log.info("[1660] Media stored: filename={}, uploadDir={}", filename, uploadDir);
             return new MediaUploadResponse("/media/" + filename);
         } catch (IOException e) {
+            log.error("[1661] Failed to store uploaded media (originalFilename={}): {}", file.getOriginalFilename(), e.getMessage(), e);
             throw new UncheckedIOException("Failed to store uploaded file", e);
         }
     }

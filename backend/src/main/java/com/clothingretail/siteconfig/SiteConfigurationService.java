@@ -5,6 +5,7 @@ import com.clothingretail.siteconfig.dto.SiteConfigurationAdminResponse;
 import com.clothingretail.siteconfig.dto.SiteConfigurationUpdateRequest;
 import com.clothingretail.siteconfig.dto.ThemeAdminResponse;
 import com.clothingretail.siteconfig.dto.ThemeResponse;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class SiteConfigurationService {
 
     private final SiteConfigurationRepository repository;
@@ -25,15 +27,19 @@ public class SiteConfigurationService {
     }
 
     public SiteConfigurationAdminResponse getAdmin() {
+        log.info("[1662] Fetching admin site configuration");
         return toAdminResponse(loadSingleton());
     }
 
     public PublicConfigurationResponse getPublic() {
+        log.info("[1663] Fetching public site configuration");
         return toPublicResponse(loadSingleton());
     }
 
     @Transactional
     public SiteConfigurationAdminResponse update(SiteConfigurationUpdateRequest request) {
+        log.info("[1664] Updating site configuration: businessName={}, contactEmail={}, contactPhone={}",
+                request.businessName(), request.contactEmail(), request.contactPhone());
         SiteConfiguration config = loadSingleton();
         config.setBusinessName(request.businessName());
         config.setTagline(request.tagline());
@@ -49,14 +55,19 @@ public class SiteConfigurationService {
         config.setLoginPromoImageUrl(request.loginPromoImageUrl());
         config.setLoginPromoText(request.loginPromoText());
         config.setRegistrationImageUrl(request.registrationImageUrl());
-        return toAdminResponse(repository.save(config));
+        config = repository.save(config);
+        log.info("[1665] Site configuration updated: id={}, businessName={}", config.getId(), config.getBusinessName());
+        return toAdminResponse(config);
     }
 
     private SiteConfiguration loadSingleton() {
         return repository.findById(SiteConfiguration.SINGLETON_ID)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Singleton site_configuration row (id=1) is missing - this is a startup-time misconfiguration, "
-                                + "check that V4__init_site_configuration.sql ran"));
+                .orElseThrow(() -> {
+                    log.error("[1666] Singleton site_configuration row (id={}) is missing", SiteConfiguration.SINGLETON_ID);
+                    return new IllegalStateException(
+                            "Singleton site_configuration row (id=1) is missing - this is a startup-time misconfiguration, "
+                                    + "check that V4__init_site_configuration.sql ran");
+                });
     }
 
     private PublicConfigurationResponse toPublicResponse(SiteConfiguration config) {

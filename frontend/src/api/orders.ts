@@ -1,5 +1,10 @@
-import { api } from './client'
-import type { CreateOrderRequest, OrderDetail, OrderListItem, PageResponse } from '../types'
+import { api } from "./client";
+import type {
+  CreateOrderRequest,
+  OrderDetail,
+  OrderListItem,
+  PageResponse,
+} from "../types";
 
 // NOTE: this file is shared with the Cart/Checkout/Payment flow (built in
 // parallel by another agent) — both sides need order-fetching functions.
@@ -7,30 +12,32 @@ import type { CreateOrderRequest, OrderDetail, OrderListItem, PageResponse } fro
 // agent's exports (e.g. anything related to placing an order/payment).
 
 export interface OrderQuery {
-  page?: number
-  size?: number
+  page?: number;
+  size?: number;
 }
 
 function cleanParams<T extends object>(query: T) {
-  const params: Record<string, string | number> = {}
+  const params: Record<string, string | number> = {};
   for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== null && value !== '') {
-      params[key] = value as string | number
+    if (value !== undefined && value !== null && value !== "") {
+      params[key] = value as string | number;
     }
   }
-  return params
+  return params;
 }
 
 /** GET /api/orders?page=&size= — the current customer's own orders, paginated. */
-export function fetchMyOrders(query: OrderQuery = {}) {
-  return api
-    .get<PageResponse<OrderListItem>>('/orders', { params: cleanParams(query) })
-    .then((r) => r.data)
+export async function fetchMyOrders(query: OrderQuery = {}) {
+  const r = await api.get<PageResponse<OrderListItem>>("/orders", {
+    params: cleanParams(query),
+  });
+  return r.data;
 }
 
 /** GET /api/orders/{id} — full order detail (also used as the post-checkout confirmation screen). */
-export function fetchOrderById(id: number | string) {
-  return api.get<OrderDetail>(`/orders/${id}`).then((r) => r.data)
+export async function fetchOrderById(id: number | string) {
+  const r = await api.get<OrderDetail>(`/orders/${id}`);
+  return r.data;
 }
 
 /**
@@ -39,6 +46,7 @@ export function fetchOrderById(id: number | string) {
  * checkout attempt so a duplicate click/retry can't create two orders.
  * Returns the created order in PENDING_PAYMENT status.
  */
-export function createOrder(payload: CreateOrderRequest) {
-  return api.post<OrderDetail>('/orders', payload).then((r) => r.data)
+export async function createOrder(payload: CreateOrderRequest) {
+  const r = await api.post<OrderDetail>("/orders", payload);
+  return r.data;
 }

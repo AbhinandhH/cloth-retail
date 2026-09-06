@@ -8,3 +8,6 @@ target/
 # Local storage for app.media.upload-dir (default ./uploads) - uploaded media
 # must never be committed.
 /uploads/
+
+# Log4j2 file appender output (see log4j2.xml) - runtime logs, never committed.
+/log/

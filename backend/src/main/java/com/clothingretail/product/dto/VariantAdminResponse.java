@@ -19,4 +19,4 @@ public record VariantAdminResponse(
         int availableQuantity,
         Integer lowStockThreshold,
         boolean active,
-        List<String> images) {}
+        List<VariantImageResponse> images) {}

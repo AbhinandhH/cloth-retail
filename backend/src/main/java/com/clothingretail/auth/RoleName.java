@@ -4,5 +4,6 @@ package com.clothingretail.auth;
 public enum RoleName {
     SUPER_ADMIN,
     ADMIN,
+    EMPLOYEE,
     CUSTOMER
 }

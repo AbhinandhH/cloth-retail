@@ -13,10 +13,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -82,7 +84,9 @@ public class Order extends BaseEntity {
     @Column(name = "contact_phone", nullable = false, length = 20)
     private String contactPhone;
 
-    /** Only meaningful while status = PENDING_PAYMENT - see the scheduled cleanup job. */
+    /**
+     * Only meaningful while status = PENDING_PAYMENT - see the scheduled cleanup job.
+     */
     @Column(name = "reservation_expires_at")
     private Instant reservationExpiresAt;
 

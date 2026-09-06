@@ -54,7 +54,7 @@ export default function FilterFields({ categories, sizes, colors, values, onChan
             placeholder="Min"
             value={values.minPrice}
             onChange={(e) => onChange('minPrice', e.target.value)}
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-full border border-zinc-300 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400"
           />
           <span className="text-zinc-400">–</span>
           <input
@@ -64,7 +64,7 @@ export default function FilterFields({ categories, sizes, colors, values, onChan
             placeholder="Max"
             value={values.maxPrice}
             onChange={(e) => onChange('maxPrice', e.target.value)}
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-full border border-zinc-300 px-4 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400"
           />
         </div>
       </div>

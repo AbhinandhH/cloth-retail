@@ -11,10 +11,12 @@ import com.clothingretail.order.OrderStatusHistoryService;
 import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Log4j2
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -44,16 +46,22 @@ public class PaymentService {
 
     @Transactional
     public PaymentInitiateResponse initiate(Long userId, Long orderId, String paymentMethod) {
+        log.info("[1800] Initiating payment userId={}, orderId={}, paymentMethod={}", userId, orderId, paymentMethod);
         CustomerProfile profile = resolveProfile(userId);
         Order order = orderRepository.findById(orderId)
                 .filter(o -> o.getCustomerProfile().getId().equals(profile.getId()))
-                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+                .orElseThrow(() -> {
+                    log.error("[1802] Payment initiation failed - order not found or not owned userId={}, orderId={}", userId, orderId);
+                    return new NotFoundException("Order not found: " + orderId);
+                });
 
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            log.error("[1803] Payment initiation rejected - order {} not awaiting payment, status={}", orderId, order.getStatus());
             throw new ConflictException("Order is not awaiting payment (status: " + order.getStatus() + ")");
         }
 
         PaymentInitiation initiation = paymentGateway.initiate(order);
+        log.info("[1804] Gateway initiation succeeded orderId={}, gatewayReference={}", orderId, initiation.gatewayReference());
 
         Payment payment = new Payment();
         payment.setOrder(order);
@@ -62,11 +70,13 @@ public class PaymentService {
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentMethod(hasText(paymentMethod) ? paymentMethod : "UPI");
         payment = paymentRepository.save(payment);
+        log.info("[1805] Payment created id={}, orderId={}, status={}, amount={}", payment.getId(), orderId, payment.getStatus(), payment.getAmount());
 
         OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.PAYMENT_PROCESSING);
         orderRepository.save(order);
         orderStatusHistoryService.record(order, previousStatus, OrderStatus.PAYMENT_PROCESSING, null, null);
+        log.info("[1806] Order status transition orderId={}, previousStatus={}, newStatus={}", order.getId(), previousStatus, order.getStatus());
 
         return new PaymentInitiateResponse(payment.getId(), order.getId(), order.getTotalAmount(), payment.getGatewayReference());
     }
@@ -87,21 +97,32 @@ public class PaymentService {
      */
     @Transactional
     public SimulatePaymentResponse simulate(Long userId, SimulatePaymentRequest request) {
+        log.info("[1807] Simulating payment webhook userId={}, gatewayReference={}, outcome={}", userId, request.gatewayReference(), request.outcome());
         CustomerProfile profile = resolveProfile(userId);
         Payment payment = paymentRepository.findByGatewayReference(request.gatewayReference())
                 .filter(p -> p.getOrder().getCustomerProfile().getId().equals(profile.getId()))
-                .orElseThrow(() -> new NotFoundException("Unknown payment reference"));
+                .orElseThrow(() -> {
+                    log.error("[1808] Payment simulation failed - unknown/not-owned gatewayReference={}, userId={}", request.gatewayReference(), userId);
+                    return new NotFoundException("Unknown payment reference");
+                });
 
         PaymentOutcome outcome = PaymentOutcome.valueOf(request.outcome());
         MockPaymentGateway.SignedWebhookPayload signed = mockPaymentGateway.buildSimulatedWebhook(
                 payment.getGatewayReference(), payment.getOrder().getId(), payment.getId(), payment.getAmount(), outcome);
+        log.info(
+                "[1809] Simulated webhook built gatewayReference={}, orderId={}, paymentId={}, amount={}, outcome={}",
+                payment.getGatewayReference(), payment.getOrder().getId(), payment.getId(), payment.getAmount(), outcome);
 
         WebhookResult result = paymentWebhookService.handleWebhook(signed.payload(), signed.signature());
+        log.info("[1810] Payment simulation result orderId={}, orderStatus={}, paymentStatus={}", result.orderId(), result.orderStatus(), result.paymentStatus());
         return new SimulatePaymentResponse(result.orderId(), result.orderStatus(), result.paymentStatus());
     }
 
     private CustomerProfile resolveProfile(Long userId) {
         return customerProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException("Customer profile not found for user: " + userId));
+                .orElseThrow(() -> {
+                    log.error("[1801] Payment operation failed - customer profile not found userId={}", userId);
+                    return new NotFoundException("Customer profile not found for user: " + userId);
+                });
     }
 }

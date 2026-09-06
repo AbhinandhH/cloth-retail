@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -25,6 +26,7 @@ import org.springframework.util.StringUtils;
  */
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class SizeGroupService {
 
     private final SizeGroupRepository repository;
@@ -44,6 +46,7 @@ public class SizeGroupService {
     }
 
     public List<SizeGroupAdminResponse> listAdmin(String q, Boolean active) {
+        log.info("[1439] Listing size groups query={} active={}", q, active);
         List<SizeGroup> groups = repository.findAll().stream()
                 .filter(g -> matchesQuery(g, q))
                 .filter(g -> active == null || g.isActive() == active)
@@ -54,12 +57,14 @@ public class SizeGroupService {
     }
 
     public SizeGroupAdminResponse getAdmin(Long id) {
+        log.info("[1440] Fetching size group id={}", id);
         SizeGroup group = find(id);
         return toResponse(group, auditorNameResolver.resolveNames(group.getCreatedBy(), group.getUpdatedBy()));
     }
 
     @Transactional
     public SizeGroupAdminResponse create(SizeGroupAdminRequest request) {
+        log.info("[1441] Creating size group name={} displayOrder={} active={} categoryIds={} sizeIds={}", request.name(), request.displayOrder(), request.active(), request.categoryIds(), request.sizeIds());
         SizeGroup group = new SizeGroup();
         apply(group, request);
         SizeGroup saved = repository.save(group);
@@ -68,6 +73,7 @@ public class SizeGroupService {
 
     @Transactional
     public SizeGroupAdminResponse update(Long id, SizeGroupAdminRequest request) {
+        log.info("[1442] Updating size group id={} name={} displayOrder={} active={} categoryIds={} sizeIds={}", id, request.name(), request.displayOrder(), request.active(), request.categoryIds(), request.sizeIds());
         SizeGroup group = find(id);
         apply(group, request);
         SizeGroup saved = repository.save(group);
@@ -76,13 +82,17 @@ public class SizeGroupService {
 
     @Transactional
     public void delete(Long id) {
+        log.info("[1443] Deleting size group id={}", id);
         // No delete-guard needed: nothing holds a hard FK to a SizeGroup (ProductVariant.size
         // points directly at the flat Size table) - see the class-level Javadoc.
         repository.delete(find(id));
     }
 
     private SizeGroup find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Size group not found: " + id));
+        return repository.findById(id).orElseThrow(() -> {
+            log.error("[1444] Size group not found id={}", id);
+            return new NotFoundException("Size group not found: " + id);
+        });
     }
 
     private boolean matchesQuery(SizeGroup group, String q) {
@@ -98,6 +108,7 @@ public class SizeGroupService {
         List<Long> categoryIds = request.categoryIds() != null ? request.categoryIds() : List.of();
         Set<Category> categories = new HashSet<>(categoryRepository.findAllById(categoryIds));
         if (categories.size() != new HashSet<>(categoryIds).size()) {
+            log.error("[1445] Cannot save size group - {} of {} requested categoryIds not found: {}", categories.size(), new HashSet<>(categoryIds).size(), categoryIds);
             throw new NotFoundException("One or more categories were not found");
         }
         group.setCategories(categories);
@@ -106,6 +117,7 @@ public class SizeGroupService {
         Map<Long, Size> sizesById =
                 sizeRepository.findAllById(sizeIds).stream().collect(Collectors.toMap(Size::getId, s -> s));
         if (sizesById.size() != new HashSet<>(sizeIds).size()) {
+            log.error("[1446] Cannot save size group - {} of {} requested sizeIds not found: {}", sizesById.size(), new HashSet<>(sizeIds).size(), sizeIds);
             throw new NotFoundException("One or more sizes were not found");
         }
 
@@ -117,6 +129,7 @@ public class SizeGroupService {
             sgs.setDisplayOrder(order++);
             group.addSizeGroupSize(sgs);
         }
+        log.info("[1447] Assigned display order for {} size(s) in size group", sizeIds.size());
     }
 
     private SizeGroupAdminResponse toResponse(SizeGroup g, Map<Long, String> names) {

@@ -33,6 +33,12 @@ export default function AdminHome() {
           Inventory
         </Link>
         <Link
+          to="/admin/inventory/stock"
+          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
+        >
+          Stock
+        </Link>
+        <Link
           to="/admin/orders"
           className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
         >

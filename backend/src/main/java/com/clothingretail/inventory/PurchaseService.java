@@ -11,6 +11,7 @@ import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * apart.
  */
 @Service
+@Log4j2
 public class PurchaseService {
 
     private final PurchaseRepository purchaseRepository;
@@ -42,8 +44,12 @@ public class PurchaseService {
 
     @Transactional
     public PurchaseResponse createPurchase(PurchaseRequest request) {
+        log.info("[1325] Creating purchase vendorId={}, itemCount={}", request.vendorId(), request.items().size());
         Vendor vendor = vendorRepository.findById(request.vendorId())
-                .orElseThrow(() -> new NotFoundException("Vendor not found: " + request.vendorId()));
+                .orElseThrow(() -> {
+                    log.error("[1326] Purchase creation failed - vendor not found id={}", request.vendorId());
+                    return new NotFoundException("Vendor not found: " + request.vendorId());
+                });
 
         Purchase purchase = new Purchase();
         purchase.setVendor(vendor);
@@ -54,8 +60,14 @@ public class PurchaseService {
         List<int[]> quantitySnapshots = new ArrayList<>();
 
         for (PurchaseItemRequest itemRequest : request.items()) {
+            log.info(
+                    "[1327] Processing purchase item variantId={}, quantity={}, purchasePrice={}, sellingPrice={}",
+                    itemRequest.productVariantId(), itemRequest.quantity(), itemRequest.purchasePrice(), itemRequest.sellingPrice());
             ProductVariant variant = productVariantRepository.findById(itemRequest.productVariantId())
-                    .orElseThrow(() -> new NotFoundException("Product variant not found: " + itemRequest.productVariantId()));
+                    .orElseThrow(() -> {
+                        log.error("[1328] Purchase item failed - product variant not found id={}", itemRequest.productVariantId());
+                        return new NotFoundException("Product variant not found: " + itemRequest.productVariantId());
+                    });
 
             PurchaseItem item = new PurchaseItem();
             item.setProductVariant(variant);
@@ -67,6 +79,9 @@ public class PurchaseService {
             int previousQuantity = variant.getStockQuantity();
             int newQuantity = previousQuantity + itemRequest.quantity();
             variant.setStockQuantity(newQuantity);
+            log.info(
+                    "[1329] Stock increased by purchase variantId={}, previousQuantity={}, newQuantity={}",
+                    variant.getId(), previousQuantity, newQuantity);
             if (itemRequest.sellingPrice() != null) {
                 variant.setSellingPrice(itemRequest.sellingPrice());
             }
@@ -92,19 +107,27 @@ public class PurchaseService {
             inventoryTransactionRepository.save(transaction);
         }
 
+        log.info("[1330] Purchase created id={}, vendorId={}, itemCount={}", saved.getId(), vendor.getId(), savedItems.size());
         return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public PurchaseResponse getPurchase(Long id) {
+        log.info("[1331] Fetching purchase id={}", id);
         Purchase purchase = purchaseRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Purchase not found: " + id));
+                .orElseThrow(() -> {
+                    log.error("[1332] Purchase not found id={}", id);
+                    return new NotFoundException("Purchase not found: " + id);
+                });
         return toResponse(purchase);
     }
 
     @Transactional(readOnly = true)
     public List<PurchaseResponse> listPurchases() {
-        return purchaseRepository.findAll().stream().map(this::toResponse).toList();
+        log.info("[1333] Listing all purchases");
+        List<PurchaseResponse> result = purchaseRepository.findAll().stream().map(this::toResponse).toList();
+        log.info("[1334] Found {} purchase(s)", result.size());
+        return result;
     }
 
     private PurchaseResponse toResponse(Purchase purchase) {

@@ -9,12 +9,14 @@ import com.clothingretail.product.ProductRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class BrandService {
 
     private final BrandRepository repository;
@@ -28,6 +30,7 @@ public class BrandService {
     }
 
     public List<BrandAdminResponse> listAdmin(String q, Boolean active) {
+        log.info("[1400] Listing brands query={} active={}", q, active);
         List<Brand> brands = repository.findAll().stream()
                 .filter(b -> matchesQuery(b, q))
                 .filter(b -> active == null || b.isActive() == active)
@@ -38,13 +41,16 @@ public class BrandService {
     }
 
     public BrandAdminResponse getAdmin(Long id) {
+        log.info("[1401] Fetching brand id={}", id);
         Brand brand = find(id);
         return toResponse(brand, auditorNameResolver.resolveNames(brand.getCreatedBy(), brand.getUpdatedBy()));
     }
 
     @Transactional
     public BrandAdminResponse create(BrandAdminRequest request) {
+        log.info("[1402] Creating brand name={} displayOrder={} active={}", request.name(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
+            log.error("[1403] Cannot create brand - name={} already exists", request.name());
             throw new ConflictException("A brand with this name already exists");
         }
         Brand brand = new Brand();
@@ -55,6 +61,7 @@ public class BrandService {
 
     @Transactional
     public BrandAdminResponse update(Long id, BrandAdminRequest request) {
+        log.info("[1404] Updating brand id={} name={} displayOrder={} active={}", id, request.name(), request.displayOrder(), request.active());
         Brand brand = find(id);
         apply(brand, request);
         Brand saved = repository.save(brand);
@@ -63,9 +70,11 @@ public class BrandService {
 
     @Transactional
     public void delete(Long id) {
+        log.info("[1405] Deleting brand id={}", id);
         Brand brand = find(id);
         long usageCount = productRepository.countByBrandId(id);
         if (usageCount > 0) {
+            log.error("[1406] Cannot delete brand id={} - {} products depend on it", id, usageCount);
             throw new ConflictException(
                     "This brand is currently used by " + usageCount + " products and cannot be deleted. Deactivate it instead.");
         }
@@ -73,7 +82,10 @@ public class BrandService {
     }
 
     private Brand find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Brand not found: " + id));
+        return repository.findById(id).orElseThrow(() -> {
+            log.error("[1407] Brand not found id={}", id);
+            return new NotFoundException("Brand not found: " + id);
+        });
     }
 
     private boolean matchesQuery(Brand brand, String q) {

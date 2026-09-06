@@ -10,12 +10,14 @@ import com.clothingretail.product.ProductVariantRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class SizeService {
 
     private final SizeRepository repository;
@@ -30,6 +32,7 @@ public class SizeService {
     }
 
     public List<SizeAdminResponse> listAdmin(String q, Boolean active) {
+        log.info("[1448] Listing sizes query={} active={}", q, active);
         List<Size> sizes = repository.findAll().stream()
                 .filter(s -> matchesQuery(s, q))
                 .filter(s -> active == null || s.isActive() == active)
@@ -40,11 +43,13 @@ public class SizeService {
     }
 
     public SizeAdminResponse getAdmin(Long id) {
+        log.info("[1449] Fetching size id={}", id);
         Size size = find(id);
         return toResponse(size, auditorNameResolver.resolveNames(size.getCreatedBy(), size.getUpdatedBy()));
     }
 
     public List<SizeResponse> listPublic() {
+        log.info("[1450] Listing public sizes");
         return repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
                 .map(s -> new SizeResponse(s.getId(), s.getName()))
                 .toList();
@@ -52,7 +57,9 @@ public class SizeService {
 
     @Transactional
     public SizeAdminResponse create(SizeAdminRequest request) {
+        log.info("[1451] Creating size name={} displayOrder={} active={}", request.name(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
+            log.error("[1452] Cannot create size - name={} already exists", request.name());
             throw new ConflictException("A size with this name already exists");
         }
         Size size = new Size();
@@ -63,6 +70,7 @@ public class SizeService {
 
     @Transactional
     public SizeAdminResponse update(Long id, SizeAdminRequest request) {
+        log.info("[1453] Updating size id={} name={} displayOrder={} active={}", id, request.name(), request.displayOrder(), request.active());
         Size size = find(id);
         apply(size, request);
         Size saved = repository.save(size);
@@ -71,9 +79,11 @@ public class SizeService {
 
     @Transactional
     public void delete(Long id) {
+        log.info("[1454] Deleting size id={}", id);
         Size size = find(id);
         long usageCount = productVariantRepository.countBySizeId(id);
         if (usageCount > 0) {
+            log.error("[1455] Cannot delete size id={} - {} product variants depend on it", id, usageCount);
             throw new ConflictException(
                     "This size is currently used by " + usageCount + " product variants and cannot be deleted. Deactivate it instead.");
         }
@@ -81,7 +91,10 @@ public class SizeService {
     }
 
     private Size find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Size not found: " + id));
+        return repository.findById(id).orElseThrow(() -> {
+            log.error("[1456] Size not found id={}", id);
+            return new NotFoundException("Size not found: " + id);
+        });
     }
 
     private boolean matchesQuery(Size size, String q) {

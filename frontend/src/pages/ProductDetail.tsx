@@ -1,11 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { fetchProductBySlug } from '../api/products'
-import { getErrorMessage } from '../api/client'
+import { fetchProductBySlug, fetchProducts } from '../api/products'
+import { getErrorMessage, toMediaUrl } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import type { ProductDetail as ProductDetailType, ProductVariant } from '../types'
+import { useCategories } from '../context/MasterDataContext'
+import BackButton from '../components/BackButton'
+import ProductCard from '../components/ProductCard'
+import ErrorState from '../components/ErrorState'
+import { SkeletonBlock, SkeletonImage, SkeletonText } from '../components/Skeleton'
+import type { ProductDetail as ProductDetailType, ProductListItem, ProductVariant } from '../types'
+
+// Static, generic size-conversion reference — explicitly NOT per-product or
+// per-category data (no backend field exists for that, and none should be
+// added). Approximate inches, general guidance only.
+const SIZE_GUIDE_ROWS = [
+  { size: 'S', chest: '34–36"', waist: '28–30"' },
+  { size: 'M', chest: '38–40"', waist: '32–34"' },
+  { size: 'L', chest: '42–44"', waist: '36–38"' },
+  { size: 'XL', chest: '46–48"', waist: '40–42"' },
+  { size: 'XXL', chest: '50–52"', waist: '44–46"' },
+]
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>()
@@ -13,6 +29,7 @@ export default function ProductDetail() {
   const { addItem } = useCart()
   const navigate = useNavigate()
   const location = useLocation()
+  const { data: categories } = useCategories()
   const [product, setProduct] = useState<ProductDetailType | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +41,8 @@ export default function ProductDetail() {
   const [addingToCart, setAddingToCart] = useState(false)
   const [cartNotice, setCartNotice] = useState<string | null>(null)
   const [cartNoticeIsError, setCartNoticeIsError] = useState(false)
+
+  const [relatedProducts, setRelatedProducts] = useState<ProductListItem[]>([])
 
   useEffect(() => {
     if (!slug) return
@@ -50,6 +69,33 @@ export default function ProductDetail() {
       cancelled = true
     }
   }, [slug])
+
+  // Related products: same category, excluding the current product. There's
+  // no categoryId on ProductDetail (only categoryName) and fetchProducts
+  // filters by categoryId — so resolve the name against the categories master
+  // list first. If it can't be resolved, or the category turns out to have no
+  // other products, relatedProducts just stays empty and the section below is
+  // omitted entirely (an empty strip here would look broken, not intentional).
+  useEffect(() => {
+    if (!product) return
+    const category = categories.find((c) => c.name === product.categoryName)
+    if (!category) {
+      setRelatedProducts([])
+      return
+    }
+    let cancelled = false
+    fetchProducts({ categoryId: category.id, size: 8 })
+      .then((res) => {
+        if (cancelled) return
+        setRelatedProducts(res.content.filter((p) => p.slug !== product.slug).slice(0, 4))
+      })
+      .catch(() => {
+        if (!cancelled) setRelatedProducts([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [product, categories])
 
   const sizes = useMemo(
     () => Array.from(new Set((product?.variants ?? []).map((v) => v.sizeName))),
@@ -79,13 +125,15 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="aspect-square animate-pulse rounded-lg bg-zinc-100" />
+          <SkeletonImage className="aspect-[4/5] sm:aspect-square" />
           <div className="space-y-4">
-            <div className="h-6 w-1/3 animate-pulse rounded bg-zinc-100" />
-            <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-100" />
-            <div className="h-5 w-1/4 animate-pulse rounded bg-zinc-100" />
+            <SkeletonText width="w-1/3" />
+            <SkeletonText width="w-2/3" className="h-7" />
+            <SkeletonText width="w-1/4" />
+            <SkeletonBlock className="h-9 w-40" />
+            <SkeletonBlock className="h-24 w-full" />
           </div>
         </div>
       </div>
@@ -94,18 +142,21 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-lg font-medium text-zinc-900">Product not found</p>
-        <p className="mt-2 text-sm text-zinc-500">{error ?? 'This product may have been removed.'}</p>
-        <Link to="/" className="mt-6 inline-block text-sm font-medium text-rose-600 hover:text-rose-700">
-          &larr; Back to shop
-        </Link>
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+        <ErrorState title="Product not found" message={error ?? 'This product may have been removed.'} />
+        <div className="-mt-6 text-center">
+          <Link to="/" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
+            &larr; Back to shop
+          </Link>
+        </div>
       </div>
     )
   }
 
   const variant = selectedVariant
-  const images = variant?.images?.length ? variant.images : []
+  // Variant images may come back as backend-relative paths (local uploads, e.g. "/media/x.png")
+  // or already-absolute URLs (seeded picsum.photos data) - toMediaUrl leaves the latter untouched.
+  const images = variant?.images?.length ? variant.images.map((url) => toMediaUrl(url) ?? url) : []
   const hasDiscount = (variant?.discountPercent ?? 0) > 0
   const price = variant?.sellingPrice ?? 0
   const discountedPrice = hasDiscount ? price * (1 - (variant?.discountPercent ?? 0) / 100) : price
@@ -146,26 +197,28 @@ export default function ProductDetail() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Gallery */}
-        <div>
-          <div className="aspect-square w-full overflow-hidden rounded-lg bg-zinc-100">
+        <div className="relative">
+          <BackButton className="absolute left-2 top-2 z-10 bg-white/90 shadow-soft backdrop-blur-sm sm:left-3 sm:top-3" />
+          <div className="aspect-[4/5] w-full overflow-hidden rounded-lg bg-zinc-100 sm:aspect-square">
             {images[activeImage] ? (
               <img
+                key={activeImage}
                 src={images[activeImage]}
                 alt={`${product.name} — ${variant?.colorName}`}
-                className="h-full w-full object-cover"
+                className="animate-fade-in h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-zinc-400">No image</div>
             )}
           </div>
           {images.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
               {images.map((img, i) => (
                 <button
                   key={img + i}
                   onClick={() => setActiveImage(i)}
-                  className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 ${
-                    i === activeImage ? 'border-zinc-900' : 'border-transparent'
+                  className={`h-16 w-16 flex-shrink-0 snap-start overflow-hidden rounded-md border-2 transition-colors sm:h-20 sm:w-20 ${
+                    i === activeImage ? 'border-zinc-900' : 'border-transparent hover:border-zinc-300'
                   }`}
                 >
                   <img src={img} alt="" className="h-full w-full object-cover" />
@@ -178,27 +231,19 @@ export default function ProductDetail() {
         {/* Details */}
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">{product.brand}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-900">{product.name}</h1>
+          <h1 className="mt-1 font-display text-2xl text-zinc-900 sm:text-3xl">{product.name}</h1>
 
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xl font-bold text-zinc-900">{formatPrice(discountedPrice)}</span>
             {hasDiscount && (
               <>
                 <span className="text-sm text-zinc-400 line-through">{formatPrice(price)}</span>
-                <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-700">
+                <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-700">
                   -{variant?.discountPercent}%
                 </span>
               </>
             )}
           </div>
-
-          <p className="mt-2 text-sm font-medium">
-            {inStock ? (
-              <span className="text-emerald-600">In stock</span>
-            ) : (
-              <span className="text-zinc-500">Out of stock</span>
-            )}
-          </p>
 
           {/* Color selector */}
           {colors.length > 0 && (
@@ -213,7 +258,7 @@ export default function ProductDetail() {
                     onClick={() => setSelectedColor(name)}
                     title={name}
                     aria-pressed={selectedColor === name}
-                    className={`h-9 w-9 rounded-full border-2 ${
+                    className={`h-9 w-9 rounded-full border-2 transition-colors ${
                       selectedColor === name ? 'border-zinc-900' : 'border-zinc-200'
                     }`}
                     style={{ backgroundColor: hex || '#e5e5e5' }}
@@ -238,7 +283,7 @@ export default function ProductDetail() {
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       disabled={disabled}
-                      className={`min-w-[2.75rem] rounded-md border px-3 py-1.5 text-sm font-medium ${
+                      className={`min-w-[2.75rem] rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                         selectedSize === size
                           ? 'border-zinc-900 bg-zinc-900 text-white'
                           : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'
@@ -252,10 +297,80 @@ export default function ProductDetail() {
             </div>
           )}
 
+          {/* Size guide — static, general reference; not per-product data */}
+          <details className="group mt-4 rounded-lg border border-zinc-200">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-zinc-900">
+              <span>Size guide</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-zinc-500 transition-transform group-open:rotate-180"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div className="px-4 pb-4">
+              <p className="mb-2 text-xs text-zinc-500">
+                General size guide (approximate, inches). Fit may vary by style.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-zinc-700">
+                  <thead>
+                    <tr className="border-b border-zinc-200 text-zinc-500">
+                      <th className="py-1.5 pr-3 font-medium">Size</th>
+                      <th className="py-1.5 pr-3 font-medium">Chest</th>
+                      <th className="py-1.5 font-medium">Waist</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SIZE_GUIDE_ROWS.map((row) => (
+                      <tr key={row.size} className="border-b border-zinc-100 last:border-0">
+                        <td className="py-1.5 pr-3 font-medium text-zinc-900">{row.size}</td>
+                        <td className="py-1.5 pr-3">{row.chest}</td>
+                        <td className="py-1.5">{row.waist}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          {/* Stock availability */}
+          <p className="mt-4 text-sm font-medium">
+            {inStock ? (
+              <span className="text-emerald-600">In stock</span>
+            ) : (
+              <span className="text-zinc-500">Out of stock</span>
+            )}
+          </p>
+
+          {/* Description */}
+          <div className="mt-6 space-y-4 border-t border-zinc-200 pt-6 text-sm text-zinc-700">
+            <p>{product.description}</p>
+            <dl className="grid grid-cols-2 gap-y-2">
+              <dt className="text-zinc-500">Category</dt>
+              <dd>{product.categoryName}{product.subCategoryName ? ` / ${product.subCategoryName}` : ''}</dd>
+              <dt className="text-zinc-500">Brand</dt>
+              <dd>{product.brand}</dd>
+              <dt className="text-zinc-500">Material</dt>
+              <dd>{product.material}</dd>
+              {variant?.sku && (
+                <>
+                  <dt className="text-zinc-500">SKU</dt>
+                  <dd>{variant.sku}</dd>
+                </>
+              )}
+            </dl>
+          </div>
+
+          {/* Add to cart */}
           {inStock && isAuthenticated && (
-            <div className="mt-8 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-3">
               <span className="text-sm font-medium text-zinc-900">Qty</span>
-              <div className="flex items-center rounded-md border border-zinc-300">
+              <div className="flex items-center rounded-full border border-zinc-300">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -283,7 +398,7 @@ export default function ProductDetail() {
             type="button"
             onClick={handleAddToCart}
             disabled={!inStock || addingToCart}
-            className="mt-4 w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
+            className="mt-4 w-full rounded-full bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
           >
             {!inStock ? 'Out of stock' : addingToCart ? 'Adding…' : 'Add to cart'}
           </button>
@@ -300,26 +415,22 @@ export default function ProductDetail() {
               )}
             </p>
           )}
-
-          <div className="mt-8 space-y-4 border-t border-zinc-200 pt-6 text-sm text-zinc-700">
-            <p>{product.description}</p>
-            <dl className="grid grid-cols-2 gap-y-2">
-              <dt className="text-zinc-500">Category</dt>
-              <dd>{product.categoryName}{product.subCategoryName ? ` / ${product.subCategoryName}` : ''}</dd>
-              <dt className="text-zinc-500">Brand</dt>
-              <dd>{product.brand}</dd>
-              <dt className="text-zinc-500">Material</dt>
-              <dd>{product.material}</dd>
-              {variant?.sku && (
-                <>
-                  <dt className="text-zinc-500">SKU</dt>
-                  <dd>{variant.sku}</dd>
-                </>
-              )}
-            </dl>
-          </div>
         </div>
       </div>
+
+      {/* Related products — omitted entirely when the category can't be
+          resolved or has no other products, rather than showing an empty
+          strip. */}
+      {relatedProducts.length > 0 && (
+        <section className="mt-14 border-t border-zinc-200 pt-8">
+          <h2 className="font-display text-display text-zinc-900">You may also like</h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {relatedProducts.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

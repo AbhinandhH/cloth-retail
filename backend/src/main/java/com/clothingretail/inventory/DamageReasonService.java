@@ -8,12 +8,14 @@ import com.clothingretail.inventory.dto.DamageReasonAdminResponse;
 import com.clothingretail.inventory.dto.DamageReasonResponse;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class DamageReasonService {
 
     private final DamageReasonRepository repository;
@@ -28,58 +30,75 @@ public class DamageReasonService {
     }
 
     public List<DamageReasonAdminResponse> listAdmin(String q, Boolean active) {
+        log.info("[1300] Listing damage reasons (admin) q={}, active={}", q, active);
         List<DamageReason> reasons = repository.findAll().stream()
                 .filter(r -> matchesQuery(r, q))
                 .filter(r -> active == null || r.isActive() == active)
                 .toList();
+        log.info("[1301] Found {} damage reason(s) for q={}, active={}", reasons.size(), q, active);
         Map<Long, String> names = auditorNameResolver.resolveNames(
                 reasons.stream().flatMap(r -> java.util.stream.Stream.of(r.getCreatedBy(), r.getUpdatedBy())).toList());
         return reasons.stream().map(r -> toResponse(r, names)).toList();
     }
 
     public DamageReasonAdminResponse getAdmin(Long id) {
+        log.info("[1302] Fetching damage reason admin view id={}", id);
         DamageReason reason = find(id);
         return toResponse(reason, auditorNameResolver.resolveNames(reason.getCreatedBy(), reason.getUpdatedBy()));
     }
 
     public List<DamageReasonResponse> listPublic() {
-        return repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
+        log.info("[1304] Listing active public damage reasons");
+        List<DamageReasonResponse> result = repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
                 .map(r -> new DamageReasonResponse(r.getId(), r.getName()))
                 .toList();
+        log.info("[1305] Found {} active public damage reason(s)", result.size());
+        return result;
     }
 
     @Transactional
     public DamageReasonAdminResponse create(DamageReasonAdminRequest request) {
+        log.info("[1306] Creating damage reason name={}, code={}", request.name(), request.code());
         if (repository.existsByNameIgnoreCase(request.name())) {
+            log.error("[1307] Damage reason creation conflict - name already exists: {}", request.name());
             throw new ConflictException("A damage reason with this name already exists");
         }
         DamageReason reason = new DamageReason();
         apply(reason, request);
         DamageReason saved = repository.save(reason);
+        log.info("[1308] Damage reason created id={}, name={}", saved.getId(), saved.getName());
         return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public DamageReasonAdminResponse update(Long id, DamageReasonAdminRequest request) {
+        log.info("[1309] Updating damage reason id={}, name={}, code={}", id, request.name(), request.code());
         DamageReason reason = find(id);
         apply(reason, request);
         DamageReason saved = repository.save(reason);
+        log.info("[1310] Damage reason updated id={}, name={}", saved.getId(), saved.getName());
         return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
     @Transactional
     public void delete(Long id) {
+        log.info("[1311] Deleting damage reason id={}", id);
         DamageReason reason = find(id);
         long usageCount = damageRecordRepository.countByReasonId(id);
         if (usageCount > 0) {
+            log.error("[1312] Cannot delete damage reason id={} - in use by {} damage record(s)", id, usageCount);
             throw new ConflictException(
                     "This damage reason is currently used by " + usageCount + " damage record(s) and cannot be deleted. Deactivate it instead.");
         }
         repository.delete(reason);
+        log.info("[1313] Damage reason deleted id={}", id);
     }
 
     private DamageReason find(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Damage reason not found: " + id));
+        return repository.findById(id).orElseThrow(() -> {
+            log.error("[1303] Damage reason not found id={}", id);
+            return new NotFoundException("Damage reason not found: " + id);
+        });
     }
 
     private boolean matchesQuery(DamageReason reason, String q) {

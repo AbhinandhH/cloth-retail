@@ -22,4 +22,4 @@ public record VariantAdminRequest(
         @Min(value = 0, message = "must be >= 0") Integer stockQuantity,
         @Min(value = 0, message = "must be >= 0") Integer lowStockThreshold,
         Boolean active,
-        List<String> images) {}
+        List<VariantImageRequest> images) {}

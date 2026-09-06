@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSiteConfig } from '../context/SiteConfigContext'
 import { getErrorMessage, getFieldErrors, toMediaUrl } from '../api/client'
+import BackButton from '../components/BackButton'
 
 export default function Login() {
   const { login } = useAuth()
@@ -40,31 +41,45 @@ export default function Login() {
     }
   }
 
+  const inputClass =
+    'mt-1.5 w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10'
+
   return (
     <div
-      className={hasPromo ? 'flex min-h-[70dvh] flex-col md:flex-row' : 'min-h-[70dvh]'}
+      className={hasPromo ? 'relative flex min-h-[70dvh] flex-col md:flex-row' : 'relative min-h-[70dvh]'}
       style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
     >
+      <BackButton className="absolute left-3 top-3 z-10 sm:left-4 sm:top-4" />
+
       {hasPromo && (
-        <div className="hidden flex-col items-center justify-center gap-4 bg-zinc-900 p-10 text-center text-white md:flex md:w-1/2">
-          {promoUrl && <img src={promoUrl} alt="" className="max-h-[50vh] w-full max-w-sm rounded-lg object-cover" />}
-          {promoText && <p className="max-w-sm text-lg font-medium">{promoText}</p>}
+        <div className="hidden flex-col items-center justify-center gap-6 bg-zinc-900 p-10 text-center text-white md:flex md:w-1/2">
+          {promoUrl && (
+            <img src={promoUrl} alt="" className="max-h-[50vh] w-full max-w-sm rounded-2xl object-cover shadow-elevated" />
+          )}
+          {promoText && <p className="max-w-sm font-display text-xl leading-relaxed text-white/90">{promoText}</p>}
         </div>
       )}
-      <div className={hasPromo ? 'flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 md:w-1/2' : 'mx-auto flex min-h-[70dvh] max-w-md flex-col justify-center px-4 py-12 sm:px-6'}>
-        <div className={hasPromo ? 'mx-auto w-full max-w-md' : ''}>
-          <h1 className="text-2xl font-semibold text-zinc-900">Log in</h1>
-          <p className="mt-1 text-sm text-zinc-500">Welcome back. Enter your details below.</p>
+
+      <div
+        className={
+          hasPromo
+            ? 'flex flex-1 flex-col justify-center px-4 py-16 sm:px-6 md:w-1/2'
+            : 'mx-auto flex min-h-[70dvh] max-w-md flex-col justify-center px-4 py-16 sm:px-6'
+        }
+      >
+        <div className={`animate-fade-in-up ${hasPromo ? 'mx-auto w-full max-w-md' : ''}`}>
+          <h1 className="font-display text-3xl text-zinc-900">Welcome back</h1>
+          <p className="mt-2 text-sm text-zinc-500">Log in to continue to your account.</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
             {formError && (
-              <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
                 {formError}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-zinc-900">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-zinc-700">Email</label>
               <input
                 id="email"
                 type="email"
@@ -72,13 +87,13 @@ export default function Login() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className={inputClass}
               />
-              {fieldErrors.email && <p className="mt-1 text-xs text-rose-600">{fieldErrors.email}</p>}
+              {fieldErrors.email && <p className="mt-1.5 text-xs text-rose-600">{fieldErrors.email}</p>}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-zinc-900">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-700">Password</label>
               <input
                 id="password"
                 type="password"
@@ -86,15 +101,15 @@ export default function Login() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className={inputClass}
               />
-              {fieldErrors.password && <p className="mt-1 text-xs text-rose-600">{fieldErrors.password}</p>}
+              {fieldErrors.password && <p className="mt-1.5 text-xs text-rose-600">{fieldErrors.password}</p>}
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-xl bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white shadow-soft ring-1 ring-inset ring-[var(--brand-secondary,#18181b)]/20 transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {submitting ? 'Logging in…' : 'Log in'}
             </button>

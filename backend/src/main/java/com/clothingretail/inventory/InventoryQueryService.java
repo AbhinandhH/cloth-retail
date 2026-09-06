@@ -12,6 +12,7 @@ import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(readOnly = true)
+@Log4j2
 public class InventoryQueryService {
 
     private static final int DASHBOARD_RECENT_LIMIT_10 = 10;
@@ -58,38 +60,57 @@ public class InventoryQueryService {
             String dir,
             int page,
             int size) {
+        log.info(
+                "[1314] Listing variants q={}, categoryId={}, colorId={}, sizeId={}, stockStatus={}, productStatus={}, sort={}, dir={}, page={}, size={}",
+                q, categoryId, colorId, sizeId, stockStatus, productStatus, sort, dir, page, size);
         Pageable pageable = PageRequest.of(page, size, variantSort(sort, dir));
         var spec = InventorySpecifications.filterVariants(q, categoryId, colorId, sizeId, stockStatus, productStatus);
-        return productVariantRepository.findAll(spec, pageable).map(this::toRow);
+        Page<VariantInventoryRow> result = productVariantRepository.findAll(spec, pageable).map(this::toRow);
+        log.info("[1315] Variant listing returned {} of {} total element(s)", result.getNumberOfElements(), result.getTotalElements());
+        return result;
     }
 
     public Page<InventoryTransactionRow> listTransactions(
             Long variantId, InventoryTransactionType type, Instant dateFrom, Instant dateTo, int page, int size) {
+        log.info(
+                "[1316] Listing inventory transactions variantId={}, type={}, dateFrom={}, dateTo={}, page={}, size={}",
+                variantId, type, dateFrom, dateTo, page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         var spec = InventorySpecifications.filterTransactions(variantId, type, dateFrom, dateTo);
-        return inventoryTransactionRepository.findAll(spec, pageable).map(this::toRow);
+        Page<InventoryTransactionRow> result = inventoryTransactionRepository.findAll(spec, pageable).map(this::toRow);
+        log.info("[1317] Transaction listing returned {} of {} total element(s)", result.getNumberOfElements(), result.getTotalElements());
+        return result;
     }
 
     public Page<InventoryTransactionRow> listVariantTransactions(Long variantId, int page, int size) {
+        log.info("[1318] Listing transactions for variantId={}, page={}, size={}", variantId, page, size);
         return listTransactions(variantId, null, null, null, page, size);
     }
 
     public Page<DamageRecordRow> listDamages(Long variantId, int page, int size) {
+        log.info("[1319] Listing damage records variantId={}, page={}, size={}", variantId, page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         var spec = InventorySpecifications.filterDamages(variantId);
-        return damageRecordRepository.findAll(spec, pageable).map(this::toRow);
+        Page<DamageRecordRow> result = damageRecordRepository.findAll(spec, pageable).map(this::toRow);
+        log.info("[1320] Damage record listing returned {} of {} total element(s)", result.getNumberOfElements(), result.getTotalElements());
+        return result;
     }
 
     public DashboardResponse dashboard() {
+        log.info("[1321] Building inventory dashboard");
         long totalProducts = productRepository.count();
         long totalVariants = productVariantRepository.count();
         long totalAvailableStock = productVariantRepository.sumAvailableQuantity();
         long totalDamagedStock = productVariantRepository.sumDamagedQuantity();
+        log.info(
+                "[1322] Dashboard totals: products={}, variants={}, availableStock={}, damagedStock={}",
+                totalProducts, totalVariants, totalAvailableStock, totalDamagedStock);
 
         var lowStockSpec = InventorySpecifications.filterVariants(null, null, null, null, StockStatus.LOW_STOCK, null);
         var outOfStockSpec = InventorySpecifications.filterVariants(null, null, null, null, StockStatus.OUT_OF_STOCK, null);
         long lowStockCount = productVariantRepository.count(lowStockSpec);
         long outOfStockCount = productVariantRepository.count(outOfStockSpec);
+        log.info("[1323] Dashboard stock alerts: lowStockCount={}, outOfStockCount={}", lowStockCount, outOfStockCount);
 
         Sort byStockAsc = Sort.by(Sort.Direction.ASC, "stockQuantity");
         List<VariantInventoryRow> lowStockItems = productVariantRepository
@@ -116,6 +137,9 @@ public class InventoryQueryService {
                 .map(this::toRow)
                 .getContent();
 
+        log.info(
+                "[1324] Dashboard built: recentProducts={}, recentTransactions={}, recentDamages={}",
+                recentProducts.size(), recentTransactions.size(), recentDamages.size());
         return new DashboardResponse(
                 totalProducts,
                 totalVariants,
