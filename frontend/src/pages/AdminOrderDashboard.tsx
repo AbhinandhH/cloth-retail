@@ -37,6 +37,21 @@ const PAYMENT_STATUS_OPTIONS: { value: PaymentStatusFilter; label: string }[] = 
   { value: 'FAILED', label: 'Failed' },
 ]
 
+/** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */
+function AdminHomeBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin"
+      aria-label="Back to admin home"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 function orderStatusBadgeClasses(status: AdminOrderStatus) {
   switch (status) {
     case 'PENDING_PAYMENT':
@@ -213,23 +228,21 @@ function AdminOrderDashboardContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Orders</h1>
-          <p className="mt-1 text-sm text-zinc-500">Track, search, and filter customer orders.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-2">
+          <AdminHomeBackLink className="mt-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">Orders</h1>
+            <p className="mt-1 text-sm text-zinc-500">Track, search, and filter customer orders.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={refreshAll}
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-          >
-            Refresh
-          </button>
-          <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            &larr; Admin home
-          </Link>
-        </div>
+        <button
+          type="button"
+          onClick={refreshAll}
+          className="mt-2 shrink-0 text-sm font-medium text-zinc-600 hover:text-zinc-900"
+        >
+          Refresh
+        </button>
       </div>
 
       {dashboardError && (
@@ -301,23 +314,28 @@ function AdminOrderDashboardContent() {
       {dashboard && dashboard.recentOrders && dashboard.recentOrders.length > 0 && (
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-zinc-900">Recent orders</h3>
-          <ul className="mt-2 divide-y divide-zinc-100">
-            {dashboard.recentOrders.map((o) => (
-              <li key={o.id} className="flex items-center justify-between py-2 text-sm">
-                <Link to={`/admin/orders/${o.id}`} className="truncate pr-2 font-medium text-zinc-800 hover:underline">
-                  {o.orderNumber}
-                </Link>
-                <span className="truncate px-2 text-zinc-500">{o.customerName}</span>
-                <span className="shrink-0 text-zinc-500">{formatDateTime(o.createdAt)}</span>
-                <span className="shrink-0 pl-2 text-zinc-900">{formatPrice(o.totalAmount)}</span>
-                <span
-                  className={`ml-2 shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${orderStatusBadgeClasses(o.status)}`}
-                >
-                  {orderStatusLabel(o.status)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {/* Fixed per-column widths (rather than flex-shrink/truncate) so the row has a real
+              total width - on a narrow viewport that's wider than the screen, which is what
+              makes it a horizontally scrollable strip instead of just squeezing/clipping. */}
+          <div className="mt-2 overflow-x-auto">
+            <ul className="min-w-[640px] divide-y divide-zinc-100">
+              {dashboard.recentOrders.map((o) => (
+                <li key={o.id} className="flex items-center gap-3 py-2 text-sm">
+                  <Link to={`/admin/orders/${o.id}`} className="w-36 shrink-0 truncate font-medium text-zinc-800 hover:underline">
+                    {o.orderNumber}
+                  </Link>
+                  <span className="w-32 shrink-0 truncate text-zinc-500">{o.customerName}</span>
+                  <span className="w-40 shrink-0 text-zinc-500">{formatDateTime(o.createdAt)}</span>
+                  <span className="w-20 shrink-0 text-right text-zinc-900">{formatPrice(o.totalAmount)}</span>
+                  <span
+                    className={`w-28 shrink-0 rounded-full border px-1.5 py-0.5 text-center text-[10px] font-medium ${orderStatusBadgeClasses(o.status)}`}
+                  >
+                    {orderStatusLabel(o.status)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -515,6 +533,10 @@ function AdminOrderDashboardContent() {
           )}
         </div>
       </section>
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <AdminHomeBackLink />
+      </div>
     </div>
   )
 }

@@ -64,23 +64,31 @@ export default function AdminInventoryHistory() {
   return <AdminInventoryHistoryContent />
 }
 
+/** Icon-only "back to inventory" affordance - no text, matching the other admin screens' back links. */
+function InventoryBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin/inventory"
+      aria-label="Back to inventory"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 function AdminInventoryHistoryContent() {
   const [tab, setTab] = useState<Tab>('transactions')
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start gap-2">
+        <InventoryBackLink className="mt-0.5" />
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900">Inventory history</h1>
           <p className="mt-1 text-sm text-zinc-500">Stock movements and damage records.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/admin/inventory" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            &larr; Inventory
-          </Link>
-          <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            Admin home
-          </Link>
         </div>
       </div>
 
@@ -461,6 +469,10 @@ function DamagesPanel() {
             </button>
           </div>
         )}
+      </div>
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <InventoryBackLink />
       </div>
     </div>
   )

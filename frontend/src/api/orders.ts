@@ -42,8 +42,8 @@ export async function fetchOrderById(id: number | string) {
 
 /**
  * POST /api/orders — places an order from the current cart. Idempotent on
- * `idempotencyKey`: CheckoutPage generates a fresh crypto.randomUUID() per
- * checkout attempt so a duplicate click/retry can't create two orders.
+ * `idempotencyKey`: CheckoutPage generates a fresh key (lib/uuid.ts's randomUUID())
+ * per checkout attempt so a duplicate click/retry can't create two orders.
  * Returns the created order in PENDING_PAYMENT status.
  */
 export async function createOrder(payload: CreateOrderRequest) {

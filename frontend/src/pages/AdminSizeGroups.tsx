@@ -10,6 +10,21 @@ import SelectField from '../components/SelectField'
 import TextField from '../components/TextField'
 import type { AdminSizeGroup, SizeGroupRequest } from '../types'
 
+/** Icon-only "back to masters" affordance - no text, matching the other admin screens' back links. */
+function MastersBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin/masters"
+      aria-label="Back to masters"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 interface FormState {
   name: string
   description: string
@@ -223,25 +238,23 @@ function AdminSizeGroupsContent() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Size Groups</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Scope which sizes apply to which categories — e.g. shoe sizes vs. apparel sizes.
-          </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-2">
+          <MastersBackLink className="mt-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">Size Groups</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Scope which sizes apply to which categories — e.g. shoe sizes vs. apparel sizes.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to="/admin/masters" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            &larr; Masters
-          </Link>
-          <button
-            type="button"
-            onClick={openAdd}
-            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700"
-          >
-            + Add
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openAdd}
+          className="shrink-0 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97]"
+        >
+          + Add
+        </button>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_200px]">
@@ -508,6 +521,10 @@ function AdminSizeGroupsContent() {
           setDeleteError(null)
         }}
       />
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <MastersBackLink />
+      </div>
     </div>
   )
 }

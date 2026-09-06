@@ -7,6 +7,7 @@ import * as addressesApi from "../api/addresses";
 import * as ordersApi from "../api/orders";
 import { getErrorMessage } from "../api/client";
 import { formatPrice } from "../lib/formatPrice";
+import { randomUUID } from "../lib/uuid";
 import BackButton from "../components/BackButton";
 import { SkeletonBlock } from "../components/Skeleton";
 import TextField from "../components/customer/TextField";
@@ -24,7 +25,7 @@ const EMPTY_ADDRESS: AddressRequest = {
 };
 
 export default function CheckoutPage() {
-  const { cart, refresh: refreshCart } = useCart();
+  const { cart, refresh: refreshCart, markCartEmptied } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -43,7 +44,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
 
-  const idempotencyKeyRef = useRef(crypto.randomUUID());
+  const idempotencyKeyRef = useRef(randomUUID());
   // Guards against a real, reproduced bug: two racing submits (a double
   // click/tap before React re-renders the disabled button, or two tabs on
   // the same checkout) both read `placing === false` from their own stale
@@ -128,9 +129,14 @@ export default function CheckoutPage() {
       // created (OrderCreationService.create), but CheckoutPage calls
       // ordersApi directly rather than going through CartContext, so its
       // in-memory `cart` never learns that happened — the navbar badge and
-      // /cart page would keep showing the just-ordered item(s) until some
-      // unrelated event happened to trigger a refetch. Pull the now-empty
-      // cart in so that's immediate.
+      // /cart page would keep showing the just-ordered item(s) otherwise.
+      // markCartEmptied() updates that state immediately and synchronously
+      // (the outcome is already certain, no refetch needed); refreshCart()
+      // is still fired in the background as a best-effort reconcile, but
+      // unlike markCartEmptied it silently no-ops the UI on a failed/slow
+      // refetch (e.g. a flaky mobile connection), so it must never be the
+      // only thing clearing the badge.
+      markCartEmptied();
       refreshCart();
       navigate(`/checkout/payment/${order.id}`);
     } catch (err) {

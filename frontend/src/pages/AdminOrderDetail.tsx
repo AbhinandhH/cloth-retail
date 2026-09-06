@@ -130,6 +130,21 @@ function SectionCard({ title, right, children }: { title: string; right?: ReactN
   )
 }
 
+/** Icon-only "back to orders" affordance - no text, matching the other admin screens' back links. */
+function OrdersBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin/orders"
+      aria-label="Back to orders"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 export default function AdminOrderDetail() {
   const { isAdmin } = useAuth()
 
@@ -321,8 +336,8 @@ function AdminOrderDetailContent() {
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {loadError ?? 'Order not found.'}
         </div>
-        <Link to="/admin" className="mt-4 inline-block text-sm font-medium text-zinc-900 underline">
-          &larr; Admin home
+        <Link to="/admin/orders" className="mt-4 inline-block text-sm font-medium text-zinc-900 underline">
+          &larr; Back to orders
         </Link>
       </div>
     )
@@ -332,17 +347,16 @@ function AdminOrderDetailContent() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-        &larr; Admin home
-      </Link>
-
       {/* Header */}
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Order {order.orderNumber}</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Created {formatDateTime(order.createdAt)} &middot; Updated {formatDateTime(order.updatedAt)}
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <OrdersBackLink className="mt-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">Order {order.orderNumber}</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Created {formatDateTime(order.createdAt)} &middot; Updated {formatDateTime(order.updatedAt)}
+            </p>
+          </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <OrderStatusBadge status={order.status} />
@@ -804,6 +818,10 @@ function AdminOrderDetailContent() {
           setRefundError(null)
         }}
       />
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <OrdersBackLink />
+      </div>
     </div>
   )
 }

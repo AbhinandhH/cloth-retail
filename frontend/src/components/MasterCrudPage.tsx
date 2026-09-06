@@ -8,6 +8,21 @@ import ConfirmDialog from './ConfirmDialog'
 import SelectField from './SelectField'
 import TextField from './TextField'
 
+/** Icon-only back affordance - no text, matching the other admin screens' back links. Target is this page's own `backTo` (usually /admin/masters), not always the same place. */
+function MasterBackLink({ to, className = '' }: { to: string; className?: string }) {
+  return (
+    <Link
+      to={to}
+      aria-label="Go back"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 export interface MasterFieldConfig {
   key: string
   label: string
@@ -297,23 +312,21 @@ export default function MasterCrudPage<T extends { id: number | string; active?:
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">{config.title}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{config.description}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-2">
+          <MasterBackLink to={backTo} className="mt-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">{config.title}</h1>
+            <p className="mt-1 text-sm text-zinc-500">{config.description}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to={backTo} className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            &larr; Masters
-          </Link>
-          <button
-            type="button"
-            onClick={openAdd}
-            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700"
-          >
-            + Add
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openAdd}
+          className="shrink-0 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97]"
+        >
+          + Add
+        </button>
       </div>
 
       {/* Toolbar */}
@@ -492,6 +505,10 @@ export default function MasterCrudPage<T extends { id: number | string; active?:
           setDeleteError(null)
         }}
       />
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <MasterBackLink to={backTo} />
+      </div>
     </div>
   )
 }

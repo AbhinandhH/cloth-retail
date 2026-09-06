@@ -30,6 +30,21 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
   }
 }
 
+/** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */
+function AdminHomeBackLink({ className = '' }: { className?: string }) {
+  return (
+    <Link
+      to="/admin"
+      aria-label="Back to admin home"
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 active:bg-zinc-200 ${className}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+    </Link>
+  )
+}
+
 export default function AdminConfigurationForm() {
   const { refresh: refreshSiteConfig } = useSiteConfig()
 
@@ -112,16 +127,14 @@ export default function AdminConfigurationForm() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start gap-2">
+        <AdminHomeBackLink className="mt-0.5" />
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900">Site configuration</h1>
           <p className="mt-1 text-sm text-zinc-500">
             Theme, branding, and login/registration visuals for the storefront.
           </p>
         </div>
-        <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-          &larr; Admin home
-        </Link>
       </div>
 
       {loadError && (
@@ -266,16 +279,20 @@ export default function AdminConfigurationForm() {
           </div>
         )}
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-center sm:justify-end">
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-60"
+            className="w-full rounded-xl bg-zinc-900 px-7 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {saving ? 'Saving…' : 'Save configuration'}
           </button>
         </div>
       </form>
+
+      <div className="mt-10 flex justify-center border-t border-zinc-100 pt-6">
+        <AdminHomeBackLink />
+      </div>
     </div>
   )
 }

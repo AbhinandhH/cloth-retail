@@ -14,6 +14,7 @@ interface CartContextValue {
   removeItem: (itemId: number | string) => Promise<Cart>
   clearCart: () => Promise<Cart>
   refresh: () => Promise<void>
+  markCartEmptied: () => void
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined)
@@ -85,9 +86,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return data
   }, [])
 
+  // Synchronous, network-independent counterpart to refresh() — for the one place
+  // (CheckoutPage, right after a successful order) where the new cart state is
+  // already known for certain (the backend guarantees order creation empties the
+  // cart), so the UI/badge doesn't have to wait on, or depend on the success of,
+  // a refetch. `refresh()`'s load() swallows a failed refetch into `error` state
+  // without touching `cart` - on a flaky mobile connection that silently leaves
+  // the stale pre-order cart (and its badge count) displayed indefinitely.
+  const markCartEmptied = useCallback(() => {
+    setCart((prev) => (prev ? { ...prev, items: [], subtotal: 0, discountTotal: 0, total: 0, itemCount: 0 } : prev))
+  }, [])
+
   const value = useMemo<CartContextValue>(
-    () => ({ cart, isLoading, error, addItem, updateQuantity, removeItem, clearCart, refresh: load }),
-    [cart, isLoading, error, addItem, updateQuantity, removeItem, clearCart, load],
+    () => ({ cart, isLoading, error, addItem, updateQuantity, removeItem, clearCart, refresh: load, markCartEmptied }),
+    [cart, isLoading, error, addItem, updateQuantity, removeItem, clearCart, load, markCartEmptied],
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
