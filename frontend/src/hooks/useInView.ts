@@ -48,6 +48,20 @@ export function useInView<T extends HTMLElement = HTMLDivElement>({
     )
 
     observer.observe(node)
+
+    // Guard against a real, reproduced bug: on some browsers the observer's
+    // first callback for an element that's ALREADY in the viewport at mount
+    // can lag until an actual scroll/layout event fires - leaving
+    // above-the-fold content (product images, etc.) sitting at opacity: 0
+    // until the user nudges the page, i.e. exactly "images don't show up
+    // until I scroll a little". A synchronous bounding-rect check right after
+    // observe() catches that case immediately instead of waiting on it.
+    const rect = node.getBoundingClientRect()
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setIsInView(true)
+      if (once) observer.disconnect()
+    }
+
     return () => observer.disconnect()
   }, [threshold, rootMargin, once])
 

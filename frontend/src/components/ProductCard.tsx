@@ -29,7 +29,14 @@ export default function ProductCard({ product, index = 0 }: { product: ProductLi
           <img
             src={toMediaUrl(product.primaryImageUrl) ?? undefined}
             alt={product.name}
-            loading="lazy"
+            // Above-the-fold cards (first row or two) load eagerly - the
+            // browser's own "is this near the viewport" heuristic behind
+            // loading="lazy" has real, observed quirks where it doesn't
+            // realize an image is already visible until an actual scroll
+            // event fires, which is exactly the "images don't show up
+            // until I scroll a little" symptom this sidesteps for content
+            // that's visible immediately anyway.
+            loading={index < 8 ? 'eager' : 'lazy'}
             className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
             onError={(e) => {
               e.currentTarget.style.display = 'none'

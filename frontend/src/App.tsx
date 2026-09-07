@@ -32,10 +32,13 @@ import OrderDetailPage from './pages/OrderDetailPage'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
+import ScrollToTop from './components/ScrollToTop'
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* Admin area — conceptually separate from the customer app. */}
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route
@@ -255,6 +258,7 @@ export default function App() {
         />
         <Route path="*" element={<NotFound />} />
       </Route>
-    </Routes>
+      </Routes>
+    </>
   )
 }

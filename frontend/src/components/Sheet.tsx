@@ -14,7 +14,7 @@ interface SheetProps {
   widthClassName?: string
 }
 
-const TRANSITION_MS = 300
+const TRANSITION_MS = 400
 
 const OFFSCREEN: Record<Side, string> = {
   left: '-translate-x-full',
@@ -79,11 +79,11 @@ export default function Sheet({ open, onClose, side, children, ariaLabel, widthC
   return createPortal(
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={ariaLabel}>
       <div
-        className={`absolute inset-0 bg-zinc-950/40 transition-opacity duration-300 ${entered ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out ${entered ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
       <div
-        className={`absolute flex flex-col bg-white shadow-elevated transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${POSITION[side]} ${side === 'bottom' ? '' : widthClassName} ${entered ? ONSCREEN : OFFSCREEN[side]}`}
+        className={`absolute flex flex-col bg-white shadow-elevated transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${POSITION[side]} ${side === 'bottom' ? '' : widthClassName} ${entered ? ONSCREEN : OFFSCREEN[side]}`}
       >
         {children}
       </div>

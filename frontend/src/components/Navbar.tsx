@@ -132,7 +132,8 @@ export default function Navbar() {
           <Link
             to="/"
             onClick={closeDrawer}
-            className="rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+            className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+            style={{ animationDelay: '20ms' }}
           >
             Shop
           </Link>
@@ -142,7 +143,8 @@ export default function Navbar() {
               <Link
                 to="/cart"
                 onClick={closeDrawer}
-                className="flex items-center justify-between rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                className="animate-fade-in-up flex items-center justify-between rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '60ms' }}
               >
                 Cart
                 {itemCount > 0 && (
@@ -154,26 +156,32 @@ export default function Navbar() {
               <Link
                 to="/orders"
                 onClick={closeDrawer}
-                className="rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '100ms' }}
               >
                 My orders
               </Link>
               <Link
                 to="/profile"
                 onClick={closeDrawer}
-                className="rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '140ms' }}
               >
                 Account
               </Link>
 
-              <div className="mt-3 border-t border-zinc-100 px-3 pt-4">
+              <div
+                className="animate-fade-in-up mt-3 border-t border-zinc-100 px-3 pt-4"
+                style={{ animationDelay: '180ms' }}
+              >
                 <p className="text-xs text-zinc-400">Signed in as</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-zinc-700">{user?.fullName ?? user?.email}</p>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="mt-2 rounded-lg px-3 py-3 text-left text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                className="animate-fade-in-up mt-2 rounded-lg px-3 py-3 text-left text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '220ms' }}
               >
                 Log out
               </button>
@@ -183,14 +191,16 @@ export default function Navbar() {
               <Link
                 to="/login"
                 onClick={closeDrawer}
-                className="rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '60ms' }}
               >
                 Log in
               </Link>
               <Link
                 to="/register"
                 onClick={closeDrawer}
-                className="mt-1 rounded-full bg-[var(--brand-primary,#18181b)] px-3 py-3 text-center text-base font-semibold text-white transition-opacity hover:opacity-90"
+                className="animate-fade-in-up mt-1 rounded-full bg-[var(--brand-primary,#18181b)] px-3 py-3 text-center text-base font-semibold text-white transition duration-200 hover:opacity-90 active:scale-[0.98]"
+                style={{ animationDelay: '100ms' }}
               >
                 Sign up
               </Link>

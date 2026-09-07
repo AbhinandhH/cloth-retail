@@ -19,13 +19,19 @@ export default function BrandMark({
   }
   if (businessName) {
     return (
-      <span className="text-xl font-bold tracking-tight text-zinc-900">
+      <span
+        className="shimmer-text text-xl font-bold tracking-tight"
+        style={{ ["--shimmer-base" as string]: "#18181b" }}
+      >
         {businessName}
       </span>
     );
   }
   return (
-    <span className="text-xl font-bold tracking-tight text-zinc-900">
+    <span
+      className="shimmer-text text-xl font-bold tracking-tight"
+      style={{ ["--shimmer-base" as string]: "#18181b" }}
+    >
       Loom Atelier Studio
     </span>
   );
