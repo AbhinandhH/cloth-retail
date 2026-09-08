@@ -52,7 +52,7 @@ function AdminHomeBackLink({ className = '' }: { className?: string }) {
   )
 }
 
-function orderStatusBadgeClasses(status: AdminOrderStatus) {
+export function orderStatusBadgeClasses(status: AdminOrderStatus) {
   switch (status) {
     case 'PENDING_PAYMENT':
     case 'PAYMENT_PROCESSING':
@@ -76,7 +76,7 @@ function orderStatusBadgeClasses(status: AdminOrderStatus) {
   }
 }
 
-function orderStatusLabel(status: AdminOrderStatus) {
+export function orderStatusLabel(status: AdminOrderStatus) {
   return status.replace(/_/g, ' ')
 }
 

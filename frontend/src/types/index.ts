@@ -201,11 +201,16 @@ export interface AdminProductListItem {
 /** Alias kept for readability at call sites — same generic PageResponse used by inventory. */
 export type AdminProductListResponse = PageResponse<AdminProductListItem>;
 
+/** Discriminates an AdminProductImage/ProductVariantImageRequest row as a still image or a video clip. */
+export type MediaType = "IMAGE" | "VIDEO";
+
 export interface AdminProductImage {
   id?: number | string;
   url: string;
   displayOrder: number;
   primary: boolean;
+  /** Absent on media saved before video support existed — treat as "IMAGE". */
+  mediaType?: MediaType;
 }
 
 export interface AdminProductVariant {
@@ -237,6 +242,8 @@ export interface AdminProductDetail {
   brandName: string | null;
   materialId: number | string;
   materialName: string;
+  vendorId: number | string | null;
+  vendorName: string | null;
   name: string;
   slug: string;
   description: string;
@@ -251,6 +258,7 @@ export interface ProductVariantImageRequest {
   url: string;
   displayOrder: number;
   primary: boolean;
+  mediaType?: MediaType;
 }
 
 export interface ProductVariantRequest {
@@ -272,6 +280,7 @@ export interface ProductAdminRequest {
   subCategoryId: number | string | null;
   brandId: number | string | null;
   materialId: number | string;
+  vendorId: number | string;
   name: string;
   slug: string;
   description: string;
@@ -617,6 +626,72 @@ export interface AdminOrderDashboardData {
   recentOrders: AdminOrderSummary[];
 }
 
+// --- Admin customers ---------------------------------------------------
+// GET /admin/customers (list), GET /admin/customers/{id} (detail),
+// GET /admin/customers/{id}/orders (paginated order history — reuses
+// AdminOrderSummary, identical row shape to the Orders module), and
+// PATCH /admin/customers/{id}/status (enable/disable — the same flag
+// AuthService checks at login, so this is a real block, not cosmetic).
+
+export interface AdminCustomerRow {
+  id: number | string;
+  userId: number | string;
+  fullName: string;
+  email: string;
+  mobileNumber: string | null;
+  enabled: boolean;
+  orderCount: number;
+  totalSpent: number;
+  createdAt: string;
+}
+
+export interface AdminCustomerDetail {
+  id: number | string;
+  userId: number | string;
+  fullName: string;
+  email: string;
+  mobileNumber: string | null;
+  enabled: boolean;
+  dateOfBirth: string | null;
+  gender: string | null;
+  orderCount: number;
+  totalSpent: number;
+  createdAt: string;
+}
+
+// --- Admin landing dashboard -----------------------------------------------
+// GET /admin/dashboard — the admin home's "Today's sales / stock / recent
+// orders / sales overview / top-selling products" module. Deliberately reuses
+// AdminOrderSummary for recentOrders (identical shape to the Orders module's
+// own dashboard row) rather than a parallel type.
+
+export interface SalesOverviewPoint {
+  date: string;
+  sales: number;
+  orderCount: number;
+}
+
+export interface TopSellingProductRow {
+  sku: string;
+  productName: string;
+  imageUrl: string | null;
+  quantitySold: number;
+  revenue: number;
+}
+
+export interface AdminDashboardData {
+  todaysSales: number;
+  todaysOrderCount: number;
+  totalOrders: number;
+  pendingOrders: number;
+  productsInStock: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  recentOrders: AdminOrderSummary[];
+  salesOverview: SalesOverviewPoint[];
+  topSellingProducts: TopSellingProductRow[];
+}
+
 // --- Admin order detail --------------------------------------------------
 // GET /admin/orders/{id} and its mutating actions (status/cancel/notes/
 // shipment/refund) — the admin Order Detail screen. See AdminOrderDetail.tsx
@@ -764,6 +839,13 @@ export interface Cart {
   discountTotal: number;
   total: number;
   itemCount: number;
+}
+
+// --- Wishlist ------------------------------------------------------------
+
+export interface Wishlist {
+  /** Product ids only - a ProductCard just needs to know whether it's in the set. */
+  productIds: (number | string)[];
 }
 
 // --- Customer payments -------------------------------------------------

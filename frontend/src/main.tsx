@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext'
 import { SiteConfigProvider } from './context/SiteConfigContext'
 import { MasterDataProvider } from './context/MasterDataContext'
 import { CartProvider } from './context/CartContext'
+import { WishlistProvider } from './context/WishlistContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,14 +17,17 @@ createRoot(document.getElementById('root')!).render(
           MasterDataContext lists (brands/materials/vendors) do hit admin-only
           endpoints, but nothing fetches until a consumer mounts, by which
           point an admin session/token is already in place.
-          CartProvider is nested INSIDE AuthProvider (unlike those two) since
-          it reads isAuthenticated/isAuthChecking to decide whether to load —
-          it no-ops for guests and clears on logout. */}
+          CartProvider (and WishlistProvider, same reasoning) is nested INSIDE
+          AuthProvider (unlike those two) since it reads
+          isAuthenticated/isAuthChecking to decide whether to load — it
+          no-ops for guests and clears on logout. */}
       <SiteConfigProvider>
         <MasterDataProvider>
           <AuthProvider>
             <CartProvider>
-              <App />
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </MasterDataProvider>

@@ -1,6 +1,22 @@
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "../context/SiteConfigContext";
 
+// Local, theme-derived tokens (same color-mix pattern as AmbientBackground/
+// BrandHero) scoped to .footer-surface so Tailwind's arbitrary-value syntax
+// can reference a single var() each (text-[var(--footer-accent)] etc.)
+// rather than a full color-mix(...) expression with commas, which arbitrary
+// values don't parse reliably.
+const FOOTER_STYLES = `
+  .footer-surface {
+    --footer-border: color-mix(in srgb, var(--brand-secondary, #b8860b) 35%, var(--brand-background, #ffffff));
+    --footer-accent: color-mix(in srgb, var(--brand-secondary, #b8860b) 85%, var(--brand-text, #1c1712));
+    --footer-ink: var(--brand-text, #1c1712);
+    --footer-muted: color-mix(in srgb, var(--brand-text, #1c1712) 55%, var(--brand-background, #ffffff));
+    --footer-link: color-mix(in srgb, var(--brand-text, #1c1712) 75%, var(--brand-background, #ffffff));
+    --footer-copyright: color-mix(in srgb, var(--brand-text, #1c1712) 45%, var(--brand-background, #ffffff));
+  }
+`;
+
 function InstagramIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,58 +77,62 @@ export default function Footer() {
 
   return (
     <footer
-      className="relative overflow-hidden border-t border-[#e7d9b8]"
-      style={{ background: "linear-gradient(180deg, #ffffff 0%, #faf6ec 55%, #f6eeda 100%)" }}
+      className="footer-surface relative overflow-hidden border-t border-[var(--footer-border)]"
+      style={{
+        background:
+          "linear-gradient(180deg, var(--brand-background, #ffffff) 0%, color-mix(in srgb, var(--brand-secondary, #b8860b) 8%, var(--brand-background, #ffffff)) 55%, color-mix(in srgb, var(--brand-secondary, #b8860b) 14%, var(--brand-background, #ffffff)) 100%)",
+      }}
     >
-      {/* Thin gold thread across the very top edge, echoing the hero's own divider
+      <style>{FOOTER_STYLES}</style>
+      {/* Thin accent thread across the very top edge, echoing the hero's own divider
           under its heading — the one recurring "brand line" motif tying every
-          section of the page back to the same premium theme. */}
+          section of the page back to the same theme. */}
       <div
         className="absolute inset-x-0 top-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, #b8860b, transparent)" }}
+        style={{ background: "linear-gradient(90deg, transparent, var(--footer-accent), transparent)" }}
       />
-      {/* Same soft gold corner wash used in the hero, kept very faint here since
+      {/* Same soft accent corner wash used in the hero, kept very faint here since
           the footer is a quiet closing note rather than the main event. */}
       <div
         className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.10), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand-secondary, #d4af37) 10%, transparent), transparent 70%)" }}
         aria-hidden="true"
       />
       <div
         className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand-secondary, #d4af37) 8%, transparent), transparent 70%)" }}
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
-            <span className="font-display text-2xl font-semibold tracking-tight text-[#1c1712]">
+            <span className="font-display text-2xl font-semibold tracking-tight text-[var(--footer-ink)]">
               {businessName ?? <>Loom Atelier Studio</>}
             </span>
             <div
               className="mt-3 h-px w-12"
-              style={{ background: "linear-gradient(90deg, #b8860b, transparent)" }}
+              style={{ background: "linear-gradient(90deg, var(--footer-accent), transparent)" }}
             />
-            <p className="mt-3 max-w-[26ch] text-sm leading-relaxed text-[#6b5f4f]">
+            <p className="mt-3 max-w-[26ch] text-sm leading-relaxed text-[var(--footer-muted)]">
               {tagline}
             </p>
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[#a9781f]">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--footer-accent)]">
               Shop
             </h3>
-            <ul className="mt-4 space-y-2.5 text-sm text-[#4a4238]">
+            <ul className="mt-4 space-y-2.5 text-sm text-[var(--footer-link)]">
               <li>
-                <Link to="/" className="transition-colors hover:text-[#1c1712]">
+                <Link to="/" className="transition-colors hover:text-[var(--footer-ink)]">
                   All products
                 </Link>
               </li>
               <li>
                 <Link
                   to="/?category=new"
-                  className="transition-colors hover:text-[#1c1712]"
+                  className="transition-colors hover:text-[var(--footer-ink)]"
                 >
                   New arrivals
                 </Link>
@@ -122,15 +142,15 @@ export default function Footer() {
 
           {(contactEmail || contactPhone) && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[#a9781f]">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--footer-accent)]">
                 Support
               </h3>
-              <ul className="mt-4 space-y-2.5 text-sm text-[#4a4238]">
+              <ul className="mt-4 space-y-2.5 text-sm text-[var(--footer-link)]">
                 {contactEmail && (
                   <li>
                     <a
                       href={`mailto:${contactEmail}`}
-                      className="transition-colors hover:text-[#1c1712]"
+                      className="transition-colors hover:text-[var(--footer-ink)]"
                     >
                       {contactEmail}
                     </a>
@@ -140,7 +160,7 @@ export default function Footer() {
                   <li>
                     <a
                       href={`tel:${contactPhone}`}
-                      className="transition-colors hover:text-[#1c1712]"
+                      className="transition-colors hover:text-[var(--footer-ink)]"
                     >
                       {contactPhone}
                     </a>
@@ -152,17 +172,17 @@ export default function Footer() {
 
           {hasSocial && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[#a9781f]">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--footer-accent)]">
                 Follow
               </h3>
-              <ul className="mt-4 space-y-2.5 text-sm text-[#4a4238]">
+              <ul className="mt-4 space-y-2.5 text-sm text-[var(--footer-link)]">
                 {instagramUrl && (
                   <li>
                     <a
                       href={instagramUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 transition-colors hover:text-[#1c1712]"
+                      className="inline-flex items-center gap-2 transition-colors hover:text-[var(--footer-ink)]"
                     >
                       <InstagramIcon />
                       Instagram
@@ -175,7 +195,7 @@ export default function Footer() {
                       href={`https://wa.me/${whatsappNumber.replace(/[^\d]/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 transition-colors hover:text-[#1c1712]"
+                      className="inline-flex items-center gap-2 transition-colors hover:text-[var(--footer-ink)]"
                     >
                       <WhatsAppIcon />
                       WhatsApp
@@ -188,7 +208,7 @@ export default function Footer() {
                       href={facebookUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 transition-colors hover:text-[#1c1712]"
+                      className="inline-flex items-center gap-2 transition-colors hover:text-[var(--footer-ink)]"
                     >
                       <FacebookIcon />
                       Facebook
@@ -201,8 +221,8 @@ export default function Footer() {
         </div>
 
         <div
-          className="mt-12 pt-6 text-center text-xs text-[#8a7d68] sm:text-left"
-          style={{ borderTop: "1px solid rgba(184,134,11,0.2)" }}
+          className="mt-12 pt-6 text-center text-xs text-[var(--footer-copyright)] sm:text-left"
+          style={{ borderTop: "1px solid color-mix(in srgb, var(--brand-secondary, #b8860b) 20%, transparent)" }}
         >
           {footerText}
         </div>

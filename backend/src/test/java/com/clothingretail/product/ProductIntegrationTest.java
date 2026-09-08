@@ -11,6 +11,7 @@ import com.clothingretail.masterdata.CategoryRepository;
 import com.clothingretail.masterdata.ColorRepository;
 import com.clothingretail.masterdata.MaterialRepository;
 import com.clothingretail.masterdata.SizeRepository;
+import com.clothingretail.masterdata.VendorRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
@@ -49,6 +50,9 @@ class ProductIntegrationTest {
     @Autowired
     private ColorRepository colorRepository;
 
+    @Autowired
+    private VendorRepository vendorRepository;
+
     private String adminAccessToken() throws Exception {
         String loginBody = """
                 {"email":"admin@clothingretail.local","password":"ChangeMe123!"}
@@ -68,11 +72,12 @@ class ProductIntegrationTest {
         Long materialId = materialRepository.findAll().stream().findFirst().orElseThrow().getId();
         Long sizeId = sizeRepository.findAll().stream().findFirst().orElseThrow().getId();
         Long colorId = colorRepository.findAll().stream().findFirst().orElseThrow().getId();
+        Long vendorId = vendorRepository.findAll().stream().findFirst().orElseThrow().getId();
 
         String requestBody = """
-                {"categoryId":%d,"materialId":%d,"name":"Test Product %s","slug":"%s","status":"%s",
+                {"categoryId":%d,"materialId":%d,"vendorId":%d,"name":"Test Product %s","slug":"%s","status":"%s",
                  "variants":[{"sku":"TST-%s","sizeId":%d,"colorId":%d,"sellingPrice":499.00,"stockQuantity":5}]}
-                """.formatted(category.getId(), materialId, slug, slug, status, slug.toUpperCase(), sizeId, colorId);
+                """.formatted(category.getId(), materialId, vendorId, slug, slug, status, slug.toUpperCase(), sizeId, colorId);
 
         mockMvc.perform(post("/api/admin/products")
                         .header("Authorization", "Bearer " + adminAccessToken())

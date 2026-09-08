@@ -9,9 +9,11 @@ import { useCategories, useColors } from "../context/MasterDataContext";
 import ImageUploadField from "../components/ImageUploadField";
 import SelectField from "../components/SelectField";
 import TextField from "../components/TextField";
+import VendorCombobox from "../components/VendorCombobox";
 import type {
   AdminProductDetail,
   AdminProductVariant,
+  AdminVendor,
   Brand,
   Color,
   Material,
@@ -28,6 +30,7 @@ interface ImageRow {
   url: string;
   displayOrder: number;
   primary: boolean;
+  mediaType: "IMAGE" | "VIDEO";
 }
 
 interface VariantRow {
@@ -78,6 +81,7 @@ function toVariantRow(v: AdminProductVariant): VariantRow {
         url: img.url,
         displayOrder: img.displayOrder,
         primary: img.primary,
+        mediaType: img.mediaType ?? "IMAGE",
       })),
     reservedQuantity: v.reservedQuantity,
     damagedQuantity: v.damagedQuantity,
@@ -195,6 +199,7 @@ export default function AdminProductForm() {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [vendors, setVendors] = useState<AdminVendor[]>([]);
   // Category-scoped sizes (GET /categories/{id}/available-sizes) — refetched
   // whenever the selected category changes, see the effect below.
   const [sizes, setSizes] = useState<Size[]>([]);
@@ -207,6 +212,7 @@ export default function AdminProductForm() {
   const [subCategoryId, setSubCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [materialId, setMaterialId] = useState("");
+  const [vendorId, setVendorId] = useState("");
   const [status, setStatus] = useState<ProductStatus>("DRAFT");
   const [baseSku, setBaseSku] = useState("");
   const [baseSellingPrice, setBaseSellingPrice] = useState("");
@@ -230,6 +236,10 @@ export default function AdminProductForm() {
       .fetchMaterials()
       .then(setMaterials)
       .catch(() => setMaterials([]));
+    adminProductsApi
+      .fetchVendors()
+      .then(setVendors)
+      .catch(() => setVendors([]));
   }, []);
 
   // Sub-categories depend on the chosen category.
@@ -288,6 +298,7 @@ export default function AdminProductForm() {
     );
     setBrandId(product.brandId != null ? String(product.brandId) : "");
     setMaterialId(String(product.materialId));
+    setVendorId(product.vendorId != null ? String(product.vendorId) : "");
     setStatus(product.status);
     setBaseSku(product.baseSku ?? "");
     setBaseSellingPrice(
@@ -345,10 +356,17 @@ export default function AdminProductForm() {
     setVariants((prev) => prev.filter((v) => v.key !== key));
   };
 
-  // --- Per-variant image helpers ---
+  // --- Per-variant image/video helpers ---
 
-  const handleImageUploaded = (variantKey: string, url: string | null) => {
+  const handleMediaUploaded = (
+    variantKey: string,
+    url: string | null,
+    contentType?: string,
+  ) => {
     if (!url) return;
+    const mediaType: "IMAGE" | "VIDEO" = contentType?.startsWith("video/")
+      ? "VIDEO"
+      : "IMAGE";
     setVariants((prev) =>
       prev.map((v) => {
         if (v.key !== variantKey) return v;
@@ -356,6 +374,7 @@ export default function AdminProductForm() {
           url,
           displayOrder: v.images.length,
           primary: v.images.length === 0,
+          mediaType,
         };
         return { ...v, images: [...v.images, newImage] };
       }),
@@ -413,6 +432,7 @@ export default function AdminProductForm() {
     subCategoryId: subCategoryId ? Number(subCategoryId) : null,
     brandId: brandId ? Number(brandId) : null,
     materialId: Number(materialId),
+    vendorId: Number(vendorId),
     name,
     slug: slugify(name),
     description,
@@ -437,15 +457,24 @@ export default function AdminProductForm() {
         url: img.url,
         displayOrder: idx,
         primary: img.primary,
+        mediaType: img.mediaType,
       })),
     })),
   });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setSaveError(null);
     setFieldErrors({});
+    // vendorId isn't a native <select>/<input required> (VendorCombobox is custom), so an empty
+    // selection wouldn't otherwise block submission - and Number('') is 0, not null, which would
+    // pass the backend's @NotNull check and surface as a confusing "Vendor not found: 0" 404
+    // instead of a clean "required" field error. Caught here before the request even goes out.
+    if (!vendorId) {
+      setFieldErrors({ vendorId: "must not be null" });
+      return;
+    }
+    setSaving(true);
     try {
       const payload = buildPayload();
       if (isNew) {
@@ -614,6 +643,16 @@ export default function AdminProductForm() {
                   label: m.name,
                 }))}
                 error={fieldErrors.materialId}
+              />
+              <VendorCombobox
+                vendors={vendors}
+                value={vendorId}
+                onChange={(id) => {
+                  setVendorId(id);
+                  if (id) setFieldErrors((prev) => ({ ...prev, vendorId: "" }));
+                }}
+                onVendorCreated={(v) => setVendors((prev) => [...prev, v])}
+                error={fieldErrors.vendorId}
               />
             </div>
 
@@ -904,12 +943,24 @@ export default function AdminProductForm() {
                             className="w-20 shrink-0"
                           >
                             <div className="relative">
-                              {url && (
+                              {url && img.mediaType === "VIDEO" ? (
+                                <video
+                                  src={url}
+                                  muted
+                                  playsInline
+                                  className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
+                                />
+                              ) : url ? (
                                 <img
                                   src={url}
                                   alt=""
                                   className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
                                 />
+                              ) : null}
+                              {img.mediaType === "VIDEO" && (
+                                <span className="absolute bottom-1 right-1 rounded bg-zinc-900/80 px-1 text-[9px] font-bold uppercase tracking-wide text-white">
+                                  Video
+                                </span>
                               )}
                               {img.primary && (
                                 <span className="absolute left-1 top-1 rounded-full bg-amber-400 px-1 text-[10px] font-bold text-white">
@@ -960,11 +1011,23 @@ export default function AdminProductForm() {
                     </div>
                   )}
 
-                  <div className="mt-4 max-w-xs">
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ImageUploadField
                       label="Add image"
                       value={null}
-                      onUploaded={(url) => handleImageUploaded(v.key, url)}
+                      onUploaded={(url, contentType) =>
+                        handleMediaUploaded(v.key, url, contentType)
+                      }
+                    />
+                    <ImageUploadField
+                      label="Add video"
+                      value={null}
+                      accept="video/*"
+                      isVideo
+                      helpText="MP4, WebM or MOV, up to 50MB."
+                      onUploaded={(url, contentType) =>
+                        handleMediaUploaded(v.key, url, contentType)
+                      }
                     />
                   </div>
                 </div>

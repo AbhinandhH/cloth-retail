@@ -23,8 +23,11 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      # Outer bound only - MediaStorageService enforces the real per-type caps (5MB images,
+      # 50MB videos) itself and rejects an oversized image well before this limit. This just
+      # needs to be at least as large as the biggest allowed upload (video).
+      max-file-size: 55MB
+      max-request-size: 55MB
 
 server:
   port: 8080
@@ -40,9 +43,23 @@ app:
     email: ${ADMIN_BOOTSTRAP_EMAIL:admin@clothingretail.local}
     password: ${ADMIN_BOOTSTRAP_PASSWORD:ChangeMe123!}
   cors:
-    # Comma-separated list. LAN IP added so the storefront can be tested from a phone
-    # on the same network - update/override via CORS_ALLOWED_ORIGIN if the IP changes.
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173,http://172.20.10.3:5173}
+    # Comma-separated list of origins/origin-patterns (see SecurityConfig - these support
+    # "*" wildcards). LAN IP added so the storefront can be tested from a phone on the same
+    # network - update/override via CORS_ALLOWED_ORIGIN if the IP changes. The ngrok-domain
+    # wildcards cover a public demo (frontend tunneled through ngrok) without needing this
+    # updated every time a new random ngrok subdomain is generated.
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173,http://172.20.10.3:5173,https://*.ngrok-free.app,https://*.ngrok-free.dev,https://*.ngrok.app,https://*.ngrok.io}
+  auth:
+    # A same-origin local dev setup (frontend and backend sharing localhost) works fine with
+    # the default Lax/non-secure cookie. Cross-origin setups - e.g. frontend and backend each
+    # tunneled through their own separate ngrok URL for a public demo - need SameSite=None
+    # paired with Secure=true instead (a plain Lax cookie is never sent on cross-site
+    # XHR/fetch, and browsers ignore SameSite=None unless Secure is also set; ngrok serves
+    # https so Secure still works). Override via COOKIE_SECURE=true COOKIE_SAME_SITE=None
+    # when running the backend for that kind of demo - don't flip these for same-origin local
+    # dev, a Secure cookie is silently rejected over plain http.
+    cookie-secure: ${COOKIE_SECURE:false}
+    cookie-same-site: ${COOKIE_SAME_SITE:Lax}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:./uploads}
   order:

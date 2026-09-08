@@ -32,22 +32,33 @@
 
 body {
   margin: 0;
-  /* Full-bleed sections (e.g. the homepage hero) break out to 100vw to reach
-     both edges regardless of the page's own max-w-7xl container - but 100vw
-     measures wider than the actual visible viewport by however much width
-     the vertical scrollbar itself occupies, which otherwise shows up as a
-     genuine few-pixel horizontal scrollbar/bounce. Nothing in this app's
-     layout intentionally extends past the viewport, so hiding overflow-x
-     here only suppresses that artifact, not any real content. */
-  overflow-x: hidden;
+  /* No overflow-x here (see :root above for why the clipping itself lives on
+     <html> only) - setting overflow-x without overflow-y on BOTH html and
+     body used to force each into its own independent auto-scrolling
+     container (per the CSS overflow spec: pairing a non-visible axis with a
+     visible one computes the visible one to auto). That silently broke every
+     position:sticky element on the page - Navbar's header included - since
+     "sticky" then resolved against the wrong one of the two nested
+     scrollers. <html>'s own overflow-x:hidden already clips any full-bleed
+     section's horizontal overflow on its own; body doesn't need a second,
+     conflicting copy of the same rule. */
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #18181b;
-  /* A bare flat gray read as "very plain" - this is a genuine mix (white
-     easing into a barely-there warm cream), not a single flat color, kept
-     subtle enough to still work as a neutral backdrop on every page. */
-  background: linear-gradient(180deg, #ffffff 0%, #fbf8f2 55%, #f8f3e9 100%);
+  color: var(--brand-text, #18181b);
+  /* A bare flat gray read as "very plain" - this is a genuine mix (the
+     theme's own background easing into a barely-there tint of its own
+     secondary color), not a single flat color, kept subtle enough to still
+     work as a neutral backdrop on every page. Derived from the active theme
+     (see SiteConfigContext's --brand-* variables) rather than a fixed hex so
+     switching the admin-configured theme actually changes this, not just a
+     couple of buttons. */
+  background: linear-gradient(
+    180deg,
+    var(--brand-background, #ffffff) 0%,
+    color-mix(in srgb, var(--brand-secondary, #d4af37) 6%, var(--brand-background, #ffffff)) 55%,
+    color-mix(in srgb, var(--brand-secondary, #d4af37) 10%, var(--brand-background, #ffffff)) 100%
+  );
   background-attachment: fixed;
 }
 
@@ -130,7 +141,12 @@ body {
   to { background-position: 100% 0; }
 }
 .shimmer-text {
-  background-image: linear-gradient(100deg, var(--shimmer-base) 42%, #f1d488 50%, var(--shimmer-base) 58%);
+  background-image: linear-gradient(
+    100deg,
+    var(--shimmer-base) 42%,
+    color-mix(in srgb, var(--brand-secondary, #d4af37) 70%, white) 50%,
+    var(--shimmer-base) 58%
+  );
   background-size: 260% 100%;
   background-repeat: repeat-x;
   -webkit-background-clip: text;

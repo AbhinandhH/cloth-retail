@@ -17,22 +17,18 @@ public class AdminAuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final RefreshCookieFactory refreshCookieFactory;
 
-    public AdminAuthController(AuthService authService, JwtService jwtService) {
+    public AdminAuthController(AuthService authService, JwtService jwtService, RefreshCookieFactory refreshCookieFactory) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.refreshCookieFactory = refreshCookieFactory;
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResult<AuthResponse> result = authService.adminLogin(request);
-        ResponseCookie cookie = ResponseCookie.from(AuthController.REFRESH_COOKIE_NAME, result.rawRefreshToken())
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(jwtService.getRefreshTokenTtlSeconds())
-                .build();
+        ResponseCookie cookie = refreshCookieFactory.build(result.rawRefreshToken(), jwtService.getRefreshTokenTtlSeconds());
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(result.body());
     }
 }

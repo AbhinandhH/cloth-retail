@@ -222,7 +222,10 @@ public class AdminOrderQueryService {
     }
 
     /** Maps a page of orders to list/dashboard rows in O(1) extra queries total (batched item-count + latest-payment lookups), never per-row. */
-    private List<AdminOrderRow> toRows(List<Order> orders) {
+    /** Package-visibility would do, but public so the admin Customers module (a different
+     * package) can reuse this exact batched mapping for a customer's own order-history list
+     * rather than re-implementing the same item-count/payment-status batching itself. */
+    public List<AdminOrderRow> toRows(List<Order> orders) {
         if (orders.isEmpty()) {
             return List.of();
         }

@@ -28,6 +28,23 @@ function CartBadge({ count }: { count: number }) {
   )
 }
 
+// Theme-derived tokens (same color-mix pattern as Footer/AdminHome) so the
+// header's own chrome - background, borders, link text - tracks the active
+// theme instead of a fixed white/zinc palette. This matters beyond looks: a
+// dark theme (e.g. "Black & Rose Gold") sets --brand-text to a near-white
+// color, which BrandMark's shimmer-base picks up - against a fixed white
+// header that text goes nearly invisible. Deriving the header's own
+// background/text from the same theme keeps them a guaranteed-contrasting
+// pair regardless of which preset is active.
+const NAV_STYLES = `
+  .nav-surface {
+    --nav-text: color-mix(in srgb, var(--brand-text, #3f3f46) 78%, var(--brand-background, #ffffff));
+    --nav-text-strong: var(--brand-text, #09090b);
+    --nav-border: color-mix(in srgb, var(--brand-text, #e4e4e7) 14%, var(--brand-background, #ffffff));
+    --nav-hover-bg: color-mix(in srgb, var(--brand-text, #fafafa) 6%, var(--brand-background, #ffffff));
+  }
+`
+
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
@@ -45,7 +62,8 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/95 backdrop-blur-sm">
+    <header className="nav-surface sticky top-0 z-40 border-b border-[var(--nav-border)] bg-[var(--brand-background,#ffffff)]/95 backdrop-blur-sm">
+      <style>{NAV_STYLES}</style>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center" onClick={closeDrawer}>
           <BrandMark businessName={config?.businessName} logoUrl={config?.logoUrl} />
@@ -53,31 +71,31 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
-          <Link to="/" className="text-sm font-medium tracking-wide text-zinc-700 transition-colors hover:text-zinc-950">
+          <Link to="/" className="text-sm font-medium tracking-wide text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
             Shop
           </Link>
           {isAuthenticated ? (
             <div className="flex items-center gap-5">
-              <Link to="/cart" className="relative text-zinc-700 transition-colors hover:text-zinc-950" aria-label="View cart">
+              <Link to="/cart" className="relative text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]" aria-label="View cart">
                 <CartIcon />
                 <CartBadge count={itemCount} />
               </Link>
-              <Link to="/orders" className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-950">
+              <Link to="/orders" className="text-sm font-medium text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
                 Orders
               </Link>
-              <Link to="/profile" className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-950">
+              <Link to="/profile" className="text-sm font-medium text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
                 Hi, {user?.fullName?.split(' ')[0] ?? 'there'}
               </Link>
               <button
                 onClick={handleLogout}
-                className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="rounded-full border border-[var(--nav-border)] px-4 py-1.5 text-sm font-medium text-[var(--nav-text)] transition-colors hover:bg-[var(--nav-hover-bg)]"
               >
                 Log out
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link to="/login" className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-950">
+              <Link to="/login" className="text-sm font-medium text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
                 Log in
               </Link>
               <Link
@@ -93,14 +111,14 @@ export default function Navbar() {
         {/* Mobile: cart + hamburger */}
         <div className="flex items-center gap-1 md:hidden">
           {isAuthenticated && (
-            <Link to="/cart" className="relative flex h-10 w-10 items-center justify-center text-zinc-700" aria-label="View cart">
+            <Link to="/cart" className="relative flex h-10 w-10 items-center justify-center text-[var(--nav-text)]" aria-label="View cart">
               <CartIcon />
               <CartBadge count={itemCount} />
             </Link>
           )}
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--nav-text)] transition-colors hover:bg-[var(--nav-hover-bg)]"
             aria-label="Open menu"
             aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen(true)}

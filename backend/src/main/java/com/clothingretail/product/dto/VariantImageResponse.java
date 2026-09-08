@@ -1,3 +1,5 @@
 package com.clothingretail.product.dto;
 
-public record VariantImageResponse(Long id, String url, int displayOrder, boolean primary) {}
+import com.clothingretail.product.MediaType;
+
+public record VariantImageResponse(Long id, String url, int displayOrder, boolean primary, MediaType mediaType) {}

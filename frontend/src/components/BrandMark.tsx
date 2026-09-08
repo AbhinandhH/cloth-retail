@@ -21,7 +21,7 @@ export default function BrandMark({
     return (
       <span
         className="shimmer-text text-xl font-bold tracking-tight"
-        style={{ ["--shimmer-base" as string]: "#18181b" }}
+        style={{ ["--shimmer-base" as string]: "var(--brand-text, #18181b)" }}
       >
         {businessName}
       </span>
@@ -30,7 +30,7 @@ export default function BrandMark({
   return (
     <span
       className="shimmer-text text-xl font-bold tracking-tight"
-      style={{ ["--shimmer-base" as string]: "#18181b" }}
+      style={{ ["--shimmer-base" as string]: "var(--brand-text, #18181b)" }}
     >
       Loom Atelier Studio
     </span>

@@ -67,20 +67,12 @@ function AdminInventoryDashboardContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-2">
-          <AdminHomeBackLink className="mt-0.5" />
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-900">Inventory</h1>
-            <p className="mt-1 text-sm text-zinc-500">Stock levels, adjustments, and damage tracking.</p>
-          </div>
+      <div className="flex items-start gap-2">
+        <AdminHomeBackLink className="mt-0.5" />
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Inventory</h1>
+          <p className="mt-1 text-sm text-zinc-500">Stock levels, adjustments, and damage tracking.</p>
         </div>
-        <Link
-          to="/admin/products/new"
-          className="shrink-0 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97]"
-        >
-          + Add product
-        </Link>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-zinc-600">
         <Link to="/admin/inventory/stock" className="hover:text-zinc-900">

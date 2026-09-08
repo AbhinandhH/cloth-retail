@@ -112,8 +112,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // app.cors.allowed-origin may be a comma-separated list (e.g. localhost dev origin
-        // plus a LAN IP for testing from a phone on the same network).
-        configuration.setAllowedOrigins(Arrays.stream(allowedOrigin.split(","))
+        // plus a LAN IP for testing from a phone on the same network). Origin *patterns*
+        // (not just exact origins) so the default list can include a wildcard for ngrok's
+        // random-subdomain demo URLs (https://*.ngrok-free.app etc.) without needing to be
+        // reconfigured every time a new tunnel is started - setAllowedOriginPatterns still
+        // works correctly with allowCredentials(true), unlike a literal "*" origin would.
+        configuration.setAllowedOriginPatterns(Arrays.stream(allowedOrigin.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList());

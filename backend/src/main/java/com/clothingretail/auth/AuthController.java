@@ -25,10 +25,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final RefreshCookieFactory refreshCookieFactory;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, JwtService jwtService, RefreshCookieFactory refreshCookieFactory) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.refreshCookieFactory = refreshCookieFactory;
     }
 
     @PostMapping("/register")
@@ -60,26 +62,11 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken) {
         authService.logout(refreshToken);
-        ResponseCookie cleared = ResponseCookie.from(REFRESH_COOKIE_NAME, "")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(0)
-                .build();
-        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cleared.toString()).build();
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, refreshCookieFactory.clear().toString()).build();
     }
 
     private <T> ResponseEntity<T> withRefreshCookie(AuthResult<T> result) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, result.rawRefreshToken())
-                .httpOnly(true)
-                // NOTE: secure=false so the cookie also works over plain http://localhost in
-                // local dev. Set to true once the app is served over https in production.
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(jwtService.getRefreshTokenTtlSeconds())
-                .build();
+        ResponseCookie cookie = refreshCookieFactory.build(result.rawRefreshToken(), jwtService.getRefreshTokenTtlSeconds());
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(result.body());
     }
 }

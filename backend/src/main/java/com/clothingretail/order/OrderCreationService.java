@@ -11,6 +11,7 @@ import com.clothingretail.customer.AddressRepository;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.CustomerProfileRepository;
 import com.clothingretail.order.dto.CreateOrderRequest;
+import com.clothingretail.product.MediaType;
 import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
@@ -187,8 +188,11 @@ class OrderCreationService {
 
     /** Same resolution ProductService.toSummary() uses for a product's primary image, applied to a single variant: the image marked primary, or its lowest displayOrder one, or null if it has none. */
     private String primaryImageUrl(ProductVariant variant) {
+        // Order line-item snapshot is rendered as a plain <img> - a video can't back it, so
+        // pick the first still image even if a video happens to be marked primary.
         return variant.getImages().stream()
                 .sorted(ProductImage.displayOrderComparator())
+                .filter(img -> img.getMediaType() == MediaType.IMAGE)
                 .map(ProductImage::getUrl)
                 .findFirst()
                 .orElse(null);

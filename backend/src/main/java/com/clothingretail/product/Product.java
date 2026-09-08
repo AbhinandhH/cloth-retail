@@ -5,6 +5,7 @@ import com.clothingretail.masterdata.Brand;
 import com.clothingretail.masterdata.Category;
 import com.clothingretail.masterdata.Material;
 import com.clothingretail.masterdata.SubCategory;
+import com.clothingretail.masterdata.Vendor;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,6 +48,15 @@ public class Product extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "material_id", nullable = false)
     private Material material;
+
+    // Nullable at the DB/entity level (see V12 migration - existing rows predate this column
+    // and there's no sensible vendor to backfill them with), even though the admin "Add
+    // product" form requires it for every NEW product - that's enforced in
+    // ProductAdminRequest's @NotNull, the same split brand_id/material_id would need if either
+    // one were ever made required after the fact instead of at table-creation time.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vendor_id")
+    private Vendor vendor;
 
     @Column(nullable = false, length = 200)
     private String name;

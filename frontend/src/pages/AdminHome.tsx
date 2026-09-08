@@ -1,68 +1,213 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import type { ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useSiteConfig } from "../context/SiteConfigContext";
+import AmbientBackground from "../components/AmbientBackground";
+import BrandHero from "../components/BrandHero";
+import BrandMark from "../components/BrandMark";
+
+const MODULES_ANCHOR_ID = "admin-modules";
+
+// Same theme-derived-token pattern as Footer.tsx: scoped custom properties so
+// Tailwind's arbitrary-value classes (including hover: variants) can each
+// reference a single var() rather than a full color-mix(...) expression.
+const MODULE_STYLES = `
+  .admin-modules-surface {
+    --admin-border: color-mix(in srgb, var(--brand-secondary, #d8b878) 35%, var(--brand-background, #ffffff));
+    --admin-border-hover: color-mix(in srgb, var(--brand-secondary, #d8b878) 60%, var(--brand-background, #ffffff));
+    --admin-accent: color-mix(in srgb, var(--brand-secondary, #a9781f) 85%, var(--brand-text, #1c1712));
+    --admin-ink: var(--brand-text, #1c1712);
+    --admin-muted: color-mix(in srgb, var(--brand-text, #1c1712) 55%, var(--brand-background, #ffffff));
+    /* Header chrome - see Navbar.tsx's own NAV_STYLES comment for why this
+       can't stay a fixed white/zinc bar: a dark theme's near-white
+       --brand-text would render BrandMark's logo invisible against it. */
+    --admin-nav-text: color-mix(in srgb, var(--brand-text, #3f3f46) 78%, var(--brand-background, #ffffff));
+    --admin-nav-border: color-mix(in srgb, var(--brand-text, #e4e4e7) 14%, var(--brand-background, #ffffff));
+    --admin-nav-hover-bg: color-mix(in srgb, var(--brand-text, #fafafa) 6%, var(--brand-background, #ffffff));
+  }
+`;
+
+function DashboardIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <rect x="3.5" y="3.5" width="7" height="9" rx="1.25" strokeWidth={1.75} />
+      <rect x="13.5" y="3.5" width="7" height="5" rx="1.25" strokeWidth={1.75} />
+      <rect x="13.5" y="11.5" width="7" height="9" rx="1.25" strokeWidth={1.75} />
+      <rect x="3.5" y="15.5" width="7" height="5" rx="1.25" strokeWidth={1.75} />
+    </svg>
+  );
+}
+
+function ProductsIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20.59 13.41L11 3.83A2 2 0 009.59 3.2L4 3a1 1 0 00-1 1l.2 5.59a2 2 0 00.59 1.4l9.6 9.6a2 2 0 002.82 0l4.4-4.4a2 2 0 000-2.78z" />
+      <circle cx="8" cy="8" r="1.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function InventoryIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 8l9-4.5L21 8m-18 0l9 4.5M3 8v8l9 4.5M21 8l-9 4.5m9-4.5v8l-9 4.5m0-8v8" />
+    </svg>
+  );
+}
+
+function StockIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 4.5h6a1 1 0 011 1V6h1.5A1.5 1.5 0 0119 7.5v11A1.5 1.5 0 0117.5 20h-11A1.5 1.5 0 015 18.5v-11A1.5 1.5 0 016.5 6H8v-.5a1 1 0 011-1z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8.5 12h7M8.5 15.5h7" />
+    </svg>
+  );
+}
+
+function OrdersIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 7l1.2-3h9.6L18 7M6 7h12M6 7l-1.2 12.2A1 1 0 005.8 20.5h12.4a1 1 0 001-1.3L18 7" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10.5a3 3 0 006 0" />
+    </svg>
+  );
+}
+
+function CustomersIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <circle cx="9" cy="8" r="3" strokeWidth={1.75} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3.5 19.5a5.5 5.5 0 0111 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.5 8.5a2.75 2.75 0 110 5.5M17 14.5a4.5 4.5 0 014.5 4.5" />
+    </svg>
+  );
+}
+
+function MastersIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 3l8 4-8 4-8-4 8-4zM4 11l8 4 8-4M4 15l8 4 8-4" />
+    </svg>
+  );
+}
+
+function ConfigurationIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10.3 3.6c.2-.9 1.2-.9 1.4 0l.2.9c.1.5.5.9 1 1l.9.2c.9.2.9 1.2 0 1.4l-.9.2c-.5.1-.9.5-1 1l-.2.9c-.2.9-1.2.9-1.4 0l-.2-.9c-.1-.5-.5-.9-1-1l-.9-.2c-.9-.2-.9-1.2 0-1.4l.9-.2c.5-.1.9-.5 1-1z" />
+      <circle cx="11" cy="16" r="3.25" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 12.5l1.4-.4M17 19.5l1.4.4" />
+    </svg>
+  );
+}
+
+interface AdminModule {
+  to: string;
+  label: string;
+  description: string;
+  icon: ReactNode;
+}
+
+const MODULES: AdminModule[] = [
+  { to: "/admin/dashboard", label: "Dashboard", description: "Sales & stock overview", icon: <DashboardIcon /> },
+  { to: "/admin/products", label: "Products", description: "Catalog & variants", icon: <ProductsIcon /> },
+  { to: "/admin/inventory", label: "Inventory", description: "Stock movements", icon: <InventoryIcon /> },
+  { to: "/admin/inventory/stock", label: "Stock", description: "On-hand levels", icon: <StockIcon /> },
+  { to: "/admin/orders", label: "Orders", description: "Fulfilment queue", icon: <OrdersIcon /> },
+  { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon /> },
+  { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon /> },
+  { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon /> },
+];
+
+function ModuleCard({ mod }: { mod: AdminModule }) {
+  return (
+    <Link
+      to={mod.to}
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-[var(--admin-border)] bg-[var(--brand-background,#ffffff)]/60 px-4 py-6 text-center shadow-sm ring-1 ring-black/[0.02] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[var(--admin-border-hover)] hover:bg-[var(--brand-background,#ffffff)]/85 hover:shadow-md"
+    >
+      <span
+        className="flex h-14 w-14 items-center justify-center rounded-full text-[var(--admin-accent)] transition-transform group-hover:scale-105"
+        style={{
+          background:
+            "linear-gradient(160deg, color-mix(in srgb, var(--brand-secondary, #d4af37) 30%, var(--brand-background, #ffffff)) 0%, color-mix(in srgb, var(--brand-secondary, #d4af37) 55%, var(--brand-background, #ffffff)) 100%)",
+        }}
+      >
+        {mod.icon}
+      </span>
+      <span className="text-sm font-semibold text-[var(--admin-ink)]">{mod.label}</span>
+      <span className="text-xs text-[var(--admin-muted)]">{mod.description}</span>
+    </Link>
+  );
+}
 
 export default function AdminHome() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user, logout } = useAuth();
+  const { config } = useSiteConfig();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/admin/login', { replace: true })
-  }
+    await logout();
+    navigate("/admin/login", { replace: true });
+  };
+
+  const scrollToModules = () => {
+    document
+      .getElementById(MODULES_ANCHOR_ID)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-zinc-950 px-4">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-xl">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 text-lg font-bold text-white">
-          A
-        </span>
-        <h1 className="mt-4 text-xl font-semibold text-white">Admin Portal</h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          Signed in as <span className="text-zinc-200">{user?.fullName ?? user?.email}</span>.
-        </p>
-        <Link
-          to="/admin/products"
-          className="mt-6 block w-full rounded-lg bg-[var(--brand-primary,#e11d48)] py-2.5 text-sm font-semibold text-white hover:opacity-90"
-        >
-          Manage products
-        </Link>
-        <Link
-          to="/admin/inventory"
-          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Inventory
-        </Link>
-        <Link
-          to="/admin/inventory/stock"
-          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Stock
-        </Link>
-        <Link
-          to="/admin/orders"
-          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Orders
-        </Link>
-        <Link
-          to="/admin/masters"
-          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Masters
-        </Link>
-        <Link
-          to="/admin/configuration"
-          className="mt-3 block w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Site configuration
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="mt-3 w-full rounded-lg border border-zinc-700 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
-        >
-          Log out
-        </button>
+    // No bg-white: Home's own Layout wrapper lost this class too (see its own
+    // comment) since an opaque background here sat between AmbientBackground
+    // and the screen and washed most of its color out - both pages now render
+    // the identical AmbientBackground component with nothing diluting it in
+    // between, so they're guaranteed to match rather than needing a
+    // compensating class to fake the same muted look.
+    <div className="admin-modules-surface min-h-dvh">
+      <style>{MODULE_STYLES}</style>
+      <AmbientBackground />
+
+      <header className="sticky top-0 z-40 border-b border-[var(--admin-nav-border)] bg-[var(--brand-background,#ffffff)]/95 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <BrandMark businessName={config?.businessName} logoUrl={config?.logoUrl} />
+            <span className="rounded-full border border-[var(--admin-border-hover)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--admin-accent)]">
+              Admin
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="hidden text-sm text-[var(--admin-nav-text)] sm:inline">
+              {user?.fullName ?? user?.email}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-[var(--admin-nav-border)] px-4 py-1.5 text-sm font-medium text-[var(--admin-nav-text)] transition-colors hover:bg-[var(--admin-nav-hover-bg)]"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <BrandHero
+          eyebrow="Admin console"
+          heading={config?.businessName || <>Loom Atelier Studio</>}
+          tagline={`Signed in as ${user?.fullName ?? user?.email ?? "admin"}`}
+          cta={{ label: "Jump to modules", onClick: scrollToModules }}
+        />
+
+        <section id={MODULES_ANCHOR_ID} className="scroll-mt-20 pb-16">
+          <h2 className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-[var(--admin-accent)]">
+            Manage your store
+          </h2>
+          <div className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3">
+            {MODULES.map((mod) => (
+              <ModuleCard key={mod.to} mod={mod} />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
-  )
+  );
 }

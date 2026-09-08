@@ -192,22 +192,14 @@ function AdminInventoryStockContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-2">
-          <InventoryBackLink className="mt-0.5" />
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-900">Stock</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Search, filter, and adjust stock levels for every existing product variant.
-            </p>
-          </div>
+      <div className="flex items-start gap-2">
+        <InventoryBackLink className="mt-0.5" />
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Stock</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Search, filter, and adjust stock levels for every existing product variant.
+          </p>
         </div>
-        <Link
-          to="/admin/products/new"
-          className="shrink-0 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-150 hover:bg-zinc-800 active:scale-[0.97]"
-        >
-          + Add product
-        </Link>
       </div>
       <p className="mt-3 text-xs text-zinc-500">
         Adjust and mark-damaged below only affect stock for products that already exist. To bring a brand-new

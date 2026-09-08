@@ -56,10 +56,19 @@ public class VendorService {
 
     @Transactional
     public VendorAdminResponse create(VendorAdminRequest request) {
-        log.info("[1470] Creating vendor name={} contactName={} contactEmail={} active={}", request.name(), request.contactName(), request.contactEmail(), request.active());
+        log.info("[1470] Creating vendor name={} contactName={} contactEmail={} contactPhone={} active={}",
+                request.name(), request.contactName(), request.contactEmail(), request.contactPhone(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
             log.error("[1471] Cannot create vendor - name={} already exists", request.name());
             throw new ConflictException("A vendor with this name already exists");
+        }
+        if (StringUtils.hasText(request.contactEmail()) && repository.existsByContactEmailIgnoreCase(request.contactEmail())) {
+            log.error("[1476] Cannot create vendor - contactEmail={} already exists", request.contactEmail());
+            throw new ConflictException("A vendor with this email already exists");
+        }
+        if (StringUtils.hasText(request.contactPhone()) && repository.existsByContactPhone(request.contactPhone())) {
+            log.error("[1477] Cannot create vendor - contactPhone={} already exists", request.contactPhone());
+            throw new ConflictException("A vendor with this phone number already exists");
         }
         Vendor vendor = new Vendor();
         apply(vendor, request);
@@ -69,8 +78,21 @@ public class VendorService {
 
     @Transactional
     public VendorAdminResponse update(Long id, VendorAdminRequest request) {
-        log.info("[1472] Updating vendor id={} name={} contactEmail={} active={}", id, request.name(), request.contactEmail(), request.active());
+        log.info("[1472] Updating vendor id={} name={} contactEmail={} contactPhone={} active={}",
+                id, request.name(), request.contactEmail(), request.contactPhone(), request.active());
         Vendor vendor = find(id);
+        if (repository.existsByNameIgnoreCaseAndIdNot(request.name(), id)) {
+            log.error("[1478] Cannot update vendor id={} - name={} already used by another vendor", id, request.name());
+            throw new ConflictException("A vendor with this name already exists");
+        }
+        if (StringUtils.hasText(request.contactEmail()) && repository.existsByContactEmailIgnoreCaseAndIdNot(request.contactEmail(), id)) {
+            log.error("[1479] Cannot update vendor id={} - contactEmail={} already used by another vendor", id, request.contactEmail());
+            throw new ConflictException("A vendor with this email already exists");
+        }
+        if (StringUtils.hasText(request.contactPhone()) && repository.existsByContactPhoneAndIdNot(request.contactPhone(), id)) {
+            log.error("[1480] Cannot update vendor id={} - contactPhone={} already used by another vendor", id, request.contactPhone());
+            throw new ConflictException("A vendor with this phone number already exists");
+        }
         apply(vendor, request);
         Vendor saved = repository.save(vendor);
         return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));

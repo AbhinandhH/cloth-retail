@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
 import AdminHome from './pages/AdminHome'
+import AdminDashboard from './pages/AdminDashboard'
 import AdminConfiguration from './pages/AdminConfiguration'
 import AdminProductList from './pages/AdminProductList'
 import AdminProductForm from './pages/AdminProductForm'
@@ -24,6 +25,8 @@ import AdminVendors from './pages/AdminVendors'
 import AdminDamageReasons from './pages/AdminDamageReasons'
 import AdminOrderDashboard from './pages/AdminOrderDashboard'
 import AdminOrderDetail from './pages/AdminOrderDetail'
+import AdminCustomerList from './pages/AdminCustomerList'
+import AdminCustomerDetail from './pages/AdminCustomerDetail'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
@@ -46,6 +49,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminHome />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminDashboard />
           </RequireAuth>
         }
       />
@@ -198,6 +209,22 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminOrderDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/customers"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminCustomerList />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/customers/:id"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminCustomerDetail />
           </RequireAuth>
         }
       />

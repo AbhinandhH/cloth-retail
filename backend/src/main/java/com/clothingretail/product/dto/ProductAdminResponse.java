@@ -14,6 +14,8 @@ public record ProductAdminResponse(
         String brandName,
         Long materialId,
         String materialName,
+        Long vendorId,
+        String vendorName,
         String name,
         String slug,
         String description,

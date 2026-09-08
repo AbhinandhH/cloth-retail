@@ -14,6 +14,9 @@ public record ProductAdminRequest(
         // Brand is optional (see Product.brand).
         Long brandId,
         @NotNull(message = "must not be null") Long materialId,
+        // Nullable at the DB/entity level (see Product.vendor's own doc comment) but required
+        // here - every new product must specify a vendor.
+        @NotNull(message = "must not be null") Long vendorId,
         @NotBlank(message = "must not be blank") String name,
         @NotBlank(message = "must not be blank") String slug,
         String description,

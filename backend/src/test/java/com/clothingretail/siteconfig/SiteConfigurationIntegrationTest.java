@@ -176,4 +176,49 @@ class SiteConfigurationIntegrationTest {
 
         mockMvc.perform(get(url)).andExpect(status().isOk());
     }
+
+    @Test
+    void mediaUploadAcceptsVideoAndEnforcesSeparatePerTypeSizeCaps() throws Exception {
+        String token = superAdminAccessToken();
+
+        // A valid video content type uploads successfully, same endpoint as images.
+        MockMultipartFile video =
+                new MockMultipartFile("file", "clip.mp4", "video/mp4", new byte[] {1, 2, 3, 4});
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/admin/media/upload")
+                        .file(video)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode uploadJson = objectMapper.readTree(uploadResult.getResponse().getContentAsString());
+        String url = uploadJson.get("url").asText();
+        assertThat(url).matches("^/media/[0-9a-f-]{36}\\.mp4$");
+        mockMvc.perform(get(url)).andExpect(status().isOk());
+
+        // An unsupported video-ish content type is still rejected.
+        MockMultipartFile badVideoType =
+                new MockMultipartFile("file", "clip.avi", "video/x-msvideo", new byte[] {1, 2, 3, 4});
+        mockMvc.perform(multipart("/api/admin/media/upload")
+                        .file(badVideoType)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        // An image over the 5MB image cap is rejected even though it's well under the video cap.
+        byte[] oversizedImageBytes = new byte[6 * 1024 * 1024];
+        MockMultipartFile oversizedImage =
+                new MockMultipartFile("file", "big.png", MediaType.IMAGE_PNG_VALUE, oversizedImageBytes);
+        mockMvc.perform(multipart("/api/admin/media/upload")
+                        .file(oversizedImage)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        // A video under the 50MB video cap (but well over the 5MB image cap) is accepted -
+        // proves the video cap, not the image cap, is what's applied to video uploads.
+        byte[] largeVideoBytes = new byte[10 * 1024 * 1024];
+        MockMultipartFile largeVideo =
+                new MockMultipartFile("file", "big.mp4", "video/mp4", largeVideoBytes);
+        mockMvc.perform(multipart("/api/admin/media/upload")
+                        .file(largeVideo)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
 }

@@ -18,6 +18,8 @@ import com.clothingretail.masterdata.Size;
 import com.clothingretail.masterdata.SizeRepository;
 import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.SubCategoryRepository;
+import com.clothingretail.masterdata.Vendor;
+import com.clothingretail.masterdata.VendorRepository;
 import com.clothingretail.product.dto.ProductAdminRequest;
 import com.clothingretail.product.dto.ProductAdminResponse;
 import com.clothingretail.product.dto.ProductAdminSummaryResponse;
@@ -53,6 +55,7 @@ public class ProductService {
     private final SubCategoryRepository subCategoryRepository;
     private final BrandRepository brandRepository;
     private final MaterialRepository materialRepository;
+    private final VendorRepository vendorRepository;
     private final SizeRepository sizeRepository;
     private final ColorRepository colorRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
@@ -67,6 +70,7 @@ public class ProductService {
             SubCategoryRepository subCategoryRepository,
             BrandRepository brandRepository,
             MaterialRepository materialRepository,
+            VendorRepository vendorRepository,
             SizeRepository sizeRepository,
             ColorRepository colorRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
@@ -79,6 +83,7 @@ public class ProductService {
         this.subCategoryRepository = subCategoryRepository;
         this.brandRepository = brandRepository;
         this.materialRepository = materialRepository;
+        this.vendorRepository = vendorRepository;
         this.sizeRepository = sizeRepository;
         this.colorRepository = colorRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
@@ -222,6 +227,11 @@ public class ProductService {
                     log.error("[1926] Material not found materialId={}", request.materialId());
                     return new NotFoundException("Material not found: " + request.materialId());
                 });
+        Vendor vendor = vendorRepository.findById(request.vendorId())
+                .orElseThrow(() -> {
+                    log.error("[1937] Vendor not found vendorId={}", request.vendorId());
+                    return new NotFoundException("Vendor not found: " + request.vendorId());
+                });
         SubCategory subCategory = null;
         if (request.subCategoryId() != null) {
             subCategory = subCategoryRepository.findById(request.subCategoryId())
@@ -235,6 +245,7 @@ public class ProductService {
         product.setSubCategory(subCategory);
         product.setBrand(brand);
         product.setMaterial(material);
+        product.setVendor(vendor);
         product.setName(request.name());
         product.setSlug(request.slug());
         product.setDescription(request.description());
@@ -242,8 +253,8 @@ public class ProductService {
         product.setBaseSku(request.baseSku());
         product.setBaseSellingPrice(request.baseSellingPrice());
         product.setBaseCostPrice(request.baseCostPrice());
-        log.info("[1928] Product fields applied slug={} categoryId={} brandId={} materialId={}",
-                request.slug(), request.categoryId(), request.brandId(), request.materialId());
+        log.info("[1928] Product fields applied slug={} categoryId={} brandId={} materialId={} vendorId={}",
+                request.slug(), request.categoryId(), request.brandId(), request.materialId(), request.vendorId());
     }
 
     /** A brand-new variant created in this request, paired with the initial stock it needs an audit-trail entry for. */
@@ -325,6 +336,7 @@ public class ProductService {
                 for (VariantImageRequest imgReq : vr.images()) {
                     ProductImage image = new ProductImage();
                     image.setUrl(imgReq.url());
+                    image.setMediaType(imgReq.mediaType() != null ? imgReq.mediaType() : MediaType.IMAGE);
                     image.setDisplayOrder(order++);
                     boolean wantsPrimary = Boolean.TRUE.equals(imgReq.primary());
                     image.setPrimary(wantsPrimary && !primaryAssigned);
@@ -373,9 +385,13 @@ public class ProductService {
         BigDecimal maxPrice = considered.stream().map(ProductVariant::getSellingPrice).max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO);
         BigDecimal discountPercent = considered.stream().map(ProductVariant::getDiscountPercent).max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO);
         boolean inStock = considered.stream().anyMatch(v -> v.getStockQuantity() > 0);
+        // Videos aren't renderable as the flat <img> thumbnail this field backs (see
+        // ProductSummaryResponse / the customer product-list card), so only a still image can be
+        // picked here even if a video happens to be marked primary on the variant.
         String primaryImageUrl = considered.stream()
                 .sorted(Comparator.comparing(ProductVariant::getId))
                 .flatMap(v -> v.getImages().stream().sorted(ProductImage.displayOrderComparator()))
+                .filter(img -> img.getMediaType() == MediaType.IMAGE)
                 .map(ProductImage::getUrl)
                 .findFirst()
                 .orElse(null);
@@ -411,8 +427,14 @@ public class ProductService {
     }
 
     private VariantResponse toVariantResponse(ProductVariant v) {
+        // Customer-facing gallery only renders <img> today (VariantResponse.images is a flat
+        // List<String> of URLs) - videos are excluded here rather than handed to a renderer that
+        // can't display them. Wiring an actual <video> player into the customer product page is
+        // a follow-up; the data itself (mediaType) is already captured and retrievable via the
+        // admin endpoints for whenever that's built.
         List<String> images = v.getImages().stream()
                 .sorted(ProductImage.displayOrderComparator())
+                .filter(img -> img.getMediaType() == MediaType.IMAGE)
                 .map(ProductImage::getUrl)
                 .toList();
         return new VariantResponse(
@@ -432,6 +454,8 @@ public class ProductService {
                 product.getBrand() != null ? product.getBrand().getName() : null,
                 product.getMaterial().getId(),
                 product.getMaterial().getName(),
+                product.getVendor() != null ? product.getVendor().getId() : null,
+                product.getVendor() != null ? product.getVendor().getName() : null,
                 product.getName(),
                 product.getSlug(),
                 product.getDescription(),
@@ -461,7 +485,7 @@ public class ProductService {
     private VariantAdminResponse toVariantAdminResponse(ProductVariant v) {
         List<VariantImageResponse> images = v.getImages().stream()
                 .sorted(ProductImage.displayOrderComparator())
-                .map(img -> new VariantImageResponse(img.getId(), img.getUrl(), img.getDisplayOrder(), img.isPrimary()))
+                .map(img -> new VariantImageResponse(img.getId(), img.getUrl(), img.getDisplayOrder(), img.isPrimary(), img.getMediaType()))
                 .toList();
         return new VariantAdminResponse(
                 v.getId(),

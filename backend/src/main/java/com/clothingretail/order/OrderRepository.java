@@ -1,5 +1,6 @@
 package com.clothingretail.order;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,15 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     long countByStatus(OrderStatus status);
 
     /**
+     * Powers the admin landing dashboard's "today's sales" figure and its sales-overview chart -
+     * see AdminDashboardQueryService, which buckets these by day in Java rather than in SQL (the
+     * date-truncation function differs between MySQL and the H2-in-MySQL-mode test profile, and
+     * a couple of weeks of orders is a small enough set that bucketing in Java is simpler and
+     * fully portable). {@code statuses} is the fixed SALE_STATUSES list there, not caller input.
+     */
+    List<Order> findByCreatedAtGreaterThanEqualAndStatusIn(Instant createdAt, List<OrderStatus> statuses);
+
+    /**
      * Batched item-count lookup for the admin order list/dashboard rows: one query for a whole
      * page of order ids, instead of touching {@code order.getItems()} (a LAZY collection) once
      * per row, which would be N+1. See AdminOrderQueryService.
@@ -40,9 +50,58 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             + "FROM OrderItem oi WHERE oi.order.id IN :orderIds GROUP BY oi.order.id")
     List<OrderItemCountProjection> sumItemCountsByOrderIds(@Param("orderIds") List<Long> orderIds);
 
+    /**
+     * Top-selling products for the admin landing dashboard, aggregated from OrderItem's own
+     * denormalized snapshot columns (not the live Product/ProductVariant) so a since-renamed or
+     * deleted product's past sales still show up correctly. Grouped strictly by sku (the true
+     * unique key) with MAX(...) picking a representative name/image, rather than grouping by all
+     * three columns - two order snapshots for the same sku could in principle carry a
+     * (since-corrected) different productName/imageUrl, which would otherwise split one product's
+     * sales into multiple rows.
+     */
+    @Query("SELECT oi.sku AS sku, MAX(oi.productName) AS productName, MAX(oi.imageUrl) AS imageUrl, "
+            + "SUM(oi.quantity) AS quantitySold, SUM(oi.lineTotal) AS revenue "
+            + "FROM OrderItem oi WHERE oi.order.status IN :statuses "
+            + "GROUP BY oi.sku ORDER BY SUM(oi.quantity) DESC")
+    List<TopSellingProjection> findTopSellingProducts(@Param("statuses") List<OrderStatus> statuses, Pageable pageable);
+
+    /**
+     * Batched order-count + lifetime-spend lookup for the admin Customers module: one query for
+     * a whole page of customer ids (the list view), or a singleton list (the detail view) -
+     * never a per-row query, same batching principle as sumItemCountsByOrderIds above. A
+     * customer with zero *counted* orders simply won't appear in the result set, so callers must
+     * default to 0/ZERO for any id missing from the returned map. Restricted to {@link
+     * SaleOrderStatuses#SALE_STATUSES} - an abandoned/failed-payment checkout attempt shouldn't
+     * inflate "total amount spent" with money that was never actually charged.
+     */
+    @Query("SELECT o.customerProfile.id AS customerProfileId, COUNT(o) AS orderCount, COALESCE(SUM(o.totalAmount), 0) AS totalSpent "
+            + "FROM Order o WHERE o.customerProfile.id IN :customerProfileIds AND o.status IN :statuses GROUP BY o.customerProfile.id")
+    List<CustomerOrderStatsProjection> sumStatsByCustomerProfileIds(
+            @Param("customerProfileIds") List<Long> customerProfileIds, @Param("statuses") List<OrderStatus> statuses);
+
+    interface CustomerOrderStatsProjection {
+        Long getCustomerProfileId();
+
+        Long getOrderCount();
+
+        BigDecimal getTotalSpent();
+    }
+
     interface OrderItemCountProjection {
         Long getOrderId();
 
         Long getItemCount();
+    }
+
+    interface TopSellingProjection {
+        String getSku();
+
+        String getProductName();
+
+        String getImageUrl();
+
+        Long getQuantitySold();
+
+        BigDecimal getRevenue();
     }
 }
