@@ -11,11 +11,11 @@ import SelectField from "../components/SelectField";
 import TextField from "../components/TextField";
 import VendorCombobox from "../components/VendorCombobox";
 import type {
+  AdminColorImages,
   AdminProductDetail,
   AdminProductVariant,
   AdminVendor,
   Brand,
-  Color,
   Material,
   ProductAdminRequest,
   ProductStatus,
@@ -46,7 +46,6 @@ interface VariantRow {
   stockQuantity: string;
   lowStockThreshold: string;
   active: boolean;
-  images: ImageRow[];
   // Read-only display-only fields, present only when loaded from the server.
   reservedQuantity?: number;
   damagedQuantity?: number;
@@ -73,7 +72,17 @@ function toVariantRow(v: AdminProductVariant): VariantRow {
     lowStockThreshold:
       v.lowStockThreshold != null ? String(v.lowStockThreshold) : "",
     active: v.active,
-    images: (v.images ?? [])
+    reservedQuantity: v.reservedQuantity,
+    damagedQuantity: v.damagedQuantity,
+    availableQuantity: v.availableQuantity,
+  };
+}
+
+/** Server's colorImages array -> the form's colorId-keyed local state (see the `colorImages` state below). */
+function toColorImagesMap(colorImages: AdminColorImages[]): Record<string, ImageRow[]> {
+  const map: Record<string, ImageRow[]> = {};
+  for (const ci of colorImages) {
+    map[String(ci.colorId)] = ci.images
       .slice()
       .sort((a, b) => a.displayOrder - b.displayOrder)
       .map((img) => ({
@@ -82,11 +91,9 @@ function toVariantRow(v: AdminProductVariant): VariantRow {
         displayOrder: img.displayOrder,
         primary: img.primary,
         mediaType: img.mediaType ?? "IMAGE",
-      })),
-    reservedQuantity: v.reservedQuantity,
-    damagedQuantity: v.damagedQuantity,
-    availableQuantity: v.availableQuantity,
-  };
+      }));
+  }
+  return map;
 }
 
 function blankVariantRow(prefill: {
@@ -104,7 +111,6 @@ function blankVariantRow(prefill: {
     stockQuantity: "",
     lowStockThreshold: "",
     active: true,
-    images: [],
   };
 }
 
@@ -171,14 +177,6 @@ function TabButton({
   );
 }
 
-function variantLabel(v: VariantRow, sizes: Size[], colors: Color[]): string {
-  const size = sizes.find((s) => String(s.id) === v.sizeId);
-  const color = colors.find((c) => String(c.id) === v.colorId);
-  const parts = [color?.name, size?.name].filter(Boolean);
-  if (parts.length) return parts.join(" / ");
-  return v.sku || "New variant";
-}
-
 export default function AdminProductForm() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -218,8 +216,16 @@ export default function AdminProductForm() {
   const [baseSellingPrice, setBaseSellingPrice] = useState("");
   const [baseCostPrice, setBaseCostPrice] = useState("");
 
-  // Variants tab state (also drives the Images tab's sub-sections).
+  // Variants tab state.
   const [variants, setVariants] = useState<VariantRow[]>([]);
+  // Images tab state — one shared image/video set per color (colorId -> images),
+  // not per variant/size: every size of a color displays the exact same photos.
+  const [colorImages, setColorImages] = useState<Record<string, ImageRow[]>>({});
+  // Colors currently represented among the variants above, in first-seen order —
+  // drives both which color sections the Images tab renders and which colors get
+  // submitted in the payload (removing a color's last variant drops its images
+  // section here, and its media group is deleted server-side on save).
+  const usedColorIds = Array.from(new Set(variants.map((v) => v.colorId).filter((id) => id !== "")));
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -308,6 +314,7 @@ export default function AdminProductForm() {
       product.baseCostPrice != null ? String(product.baseCostPrice) : "",
     );
     setVariants((product.variants ?? []).map(toVariantRow));
+    setColorImages(toColorImagesMap(product.colorImages ?? []));
   }, []);
 
   useEffect(() => {
@@ -356,10 +363,10 @@ export default function AdminProductForm() {
     setVariants((prev) => prev.filter((v) => v.key !== key));
   };
 
-  // --- Per-variant image/video helpers ---
+  // --- Per-color image/video helpers (shared across every size of that color) ---
 
   const handleMediaUploaded = (
-    variantKey: string,
+    colorId: string,
     url: string | null,
     contentType?: string,
   ) => {
@@ -367,62 +374,43 @@ export default function AdminProductForm() {
     const mediaType: "IMAGE" | "VIDEO" = contentType?.startsWith("video/")
       ? "VIDEO"
       : "IMAGE";
-    setVariants((prev) =>
-      prev.map((v) => {
-        if (v.key !== variantKey) return v;
-        const newImage: ImageRow = {
-          url,
-          displayOrder: v.images.length,
-          primary: v.images.length === 0,
-          mediaType,
-        };
-        return { ...v, images: [...v.images, newImage] };
-      }),
-    );
+    setColorImages((prev) => {
+      const existing = prev[colorId] ?? [];
+      const newImage: ImageRow = {
+        url,
+        displayOrder: existing.length,
+        primary: existing.length === 0,
+        mediaType,
+      };
+      return { ...prev, [colorId]: [...existing, newImage] };
+    });
   };
 
-  const setPrimaryImage = (variantKey: string, index: number) => {
-    setVariants((prev) =>
-      prev.map((v) => {
-        if (v.key !== variantKey) return v;
-        return {
-          ...v,
-          images: v.images.map((img, i) => ({ ...img, primary: i === index })),
-        };
-      }),
-    );
+  const setPrimaryImage = (colorId: string, index: number) => {
+    setColorImages((prev) => ({
+      ...prev,
+      [colorId]: (prev[colorId] ?? []).map((img, i) => ({ ...img, primary: i === index })),
+    }));
   };
 
-  const moveImage = (variantKey: string, index: number, direction: -1 | 1) => {
-    setVariants((prev) =>
-      prev.map((v) => {
-        if (v.key !== variantKey) return v;
-        const target = index + direction;
-        if (target < 0 || target >= v.images.length) return v;
-        const imgs = v.images.slice();
-        [imgs[index], imgs[target]] = [imgs[target], imgs[index]];
-        return {
-          ...v,
-          images: imgs.map((img, i) => ({ ...img, displayOrder: i })),
-        };
-      }),
-    );
+  const moveImage = (colorId: string, index: number, direction: -1 | 1) => {
+    setColorImages((prev) => {
+      const imgs = (prev[colorId] ?? []).slice();
+      const target = index + direction;
+      if (target < 0 || target >= imgs.length) return prev;
+      [imgs[index], imgs[target]] = [imgs[target], imgs[index]];
+      return { ...prev, [colorId]: imgs.map((img, i) => ({ ...img, displayOrder: i })) };
+    });
   };
 
-  const removeImage = (variantKey: string, index: number) => {
-    setVariants((prev) =>
-      prev.map((v) => {
-        if (v.key !== variantKey) return v;
-        const imgs = v.images.filter((_, i) => i !== index);
-        if (imgs.length > 0 && !imgs.some((img) => img.primary)) {
-          imgs[0] = { ...imgs[0], primary: true };
-        }
-        return {
-          ...v,
-          images: imgs.map((img, i) => ({ ...img, displayOrder: i })),
-        };
-      }),
-    );
+  const removeImage = (colorId: string, index: number) => {
+    setColorImages((prev) => {
+      const imgs = (prev[colorId] ?? []).filter((_, i) => i !== index);
+      if (imgs.length > 0 && !imgs.some((img) => img.primary)) {
+        imgs[0] = { ...imgs[0], primary: true };
+      }
+      return { ...prev, [colorId]: imgs.map((img, i) => ({ ...img, displayOrder: i })) };
+    });
   };
 
   // --- Save ---
@@ -453,7 +441,10 @@ export default function AdminProductForm() {
         v.stockQuantity.trim() === "" ? 0 : Number(v.stockQuantity),
       lowStockThreshold: toNumberOrNull(v.lowStockThreshold),
       active: v.active,
-      images: v.images.map((img, idx) => ({
+    })),
+    colorImages: usedColorIds.map((colorId) => ({
+      colorId: Number(colorId),
+      images: (colorImages[colorId] ?? []).map((img, idx) => ({
         url: img.url,
         displayOrder: idx,
         primary: img.primary,
@@ -915,123 +906,137 @@ export default function AdminProductForm() {
           </section>
         )}
 
-        {/* Images tab */}
+        {/* Images tab — one shared set per color, not per size: every size of a
+            color displays the exact same photos, so this groups by colorId
+            rather than iterating variants directly. */}
         {activeTab === "images" && (
           <section className="mt-6 space-y-8">
-            {variants.length === 0 ? (
+            {usedColorIds.length === 0 ? (
               <p className="text-sm text-zinc-500">
                 Add at least one variant in the Variants tab before adding
                 images.
               </p>
             ) : (
-              variants.map((v) => (
-                <div
-                  key={v.key}
-                  className="rounded-lg border border-zinc-200 p-4"
-                >
-                  <h3 className="text-sm font-semibold text-zinc-900">
-                    {variantLabel(v, sizes, colors)}
-                  </h3>
+              usedColorIds.map((colorId) => {
+                const images = colorImages[colorId] ?? [];
+                const color = colors.find((c) => String(c.id) === colorId);
+                const sizeNames = variants
+                  .filter((v) => v.colorId === colorId)
+                  .map((v) => sizes.find((s) => String(s.id) === v.sizeId)?.name)
+                  .filter((n): n is string => Boolean(n));
+                return (
+                  <div
+                    key={colorId}
+                    className="rounded-lg border border-zinc-200 p-4"
+                  >
+                    <h3 className="text-sm font-semibold text-zinc-900">
+                      {color?.name ?? "Unknown color"}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      Shared by every size of this color
+                      {sizeNames.length > 0 ? ` — ${sizeNames.join(", ")}` : ""}.
+                    </p>
 
-                  {v.images.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-3">
-                      {v.images.map((img, index) => {
-                        const url = toMediaUrl(img.url);
-                        return (
-                          <div
-                            key={img.id ?? `${img.url}-${index}`}
-                            className="w-20 shrink-0"
-                          >
-                            <div className="relative">
-                              {url && img.mediaType === "VIDEO" ? (
-                                <video
-                                  src={url}
-                                  muted
-                                  playsInline
-                                  className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
-                                />
-                              ) : url ? (
-                                <img
-                                  src={url}
-                                  alt=""
-                                  className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
-                                />
-                              ) : null}
-                              {img.mediaType === "VIDEO" && (
-                                <span className="absolute bottom-1 right-1 rounded bg-zinc-900/80 px-1 text-[9px] font-bold uppercase tracking-wide text-white">
-                                  Video
-                                </span>
-                              )}
-                              {img.primary && (
-                                <span className="absolute left-1 top-1 rounded-full bg-amber-400 px-1 text-[10px] font-bold text-white">
+                    {images.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {images.map((img, index) => {
+                          const url = toMediaUrl(img.url);
+                          return (
+                            <div
+                              key={img.id ?? `${img.url}-${index}`}
+                              className="w-20 shrink-0"
+                            >
+                              <div className="relative">
+                                {url && img.mediaType === "VIDEO" ? (
+                                  <video
+                                    src={url}
+                                    muted
+                                    playsInline
+                                    className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
+                                  />
+                                ) : url ? (
+                                  <img
+                                    src={url}
+                                    alt=""
+                                    className="h-20 w-20 rounded-md border border-zinc-200 object-cover"
+                                  />
+                                ) : null}
+                                {img.mediaType === "VIDEO" && (
+                                  <span className="absolute bottom-1 right-1 rounded bg-zinc-900/80 px-1 text-[9px] font-bold uppercase tracking-wide text-white">
+                                    Video
+                                  </span>
+                                )}
+                                {img.primary && (
+                                  <span className="absolute left-1 top-1 rounded-full bg-amber-400 px-1 text-[10px] font-bold text-white">
+                                    ★
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-1 flex items-center justify-center gap-1 text-xs">
+                                <button
+                                  type="button"
+                                  title="Set primary"
+                                  onClick={() => setPrimaryImage(colorId, index)}
+                                  disabled={img.primary}
+                                  className="text-amber-500 hover:text-amber-600 disabled:opacity-30"
+                                >
                                   ★
-                                </span>
-                              )}
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Move earlier"
+                                  onClick={() => moveImage(colorId, index, -1)}
+                                  disabled={index === 0}
+                                  className="text-zinc-500 hover:text-zinc-800 disabled:opacity-30"
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Move later"
+                                  onClick={() => moveImage(colorId, index, 1)}
+                                  disabled={index === images.length - 1}
+                                  className="text-zinc-500 hover:text-zinc-800 disabled:opacity-30"
+                                >
+                                  ↓
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Remove"
+                                  onClick={() => removeImage(colorId, index)}
+                                  className="text-rose-500 hover:text-rose-700"
+                                >
+                                  ×
+                                </button>
+                              </div>
                             </div>
-                            <div className="mt-1 flex items-center justify-center gap-1 text-xs">
-                              <button
-                                type="button"
-                                title="Set primary"
-                                onClick={() => setPrimaryImage(v.key, index)}
-                                disabled={img.primary}
-                                className="text-amber-500 hover:text-amber-600 disabled:opacity-30"
-                              >
-                                ★
-                              </button>
-                              <button
-                                type="button"
-                                title="Move earlier"
-                                onClick={() => moveImage(v.key, index, -1)}
-                                disabled={index === 0}
-                                className="text-zinc-500 hover:text-zinc-800 disabled:opacity-30"
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                title="Move later"
-                                onClick={() => moveImage(v.key, index, 1)}
-                                disabled={index === v.images.length - 1}
-                                className="text-zinc-500 hover:text-zinc-800 disabled:opacity-30"
-                              >
-                                ↓
-                              </button>
-                              <button
-                                type="button"
-                                title="Remove"
-                                onClick={() => removeImage(v.key, index)}
-                                className="text-rose-500 hover:text-rose-700"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    )}
 
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <ImageUploadField
-                      label="Add image"
-                      value={null}
-                      onUploaded={(url, contentType) =>
-                        handleMediaUploaded(v.key, url, contentType)
-                      }
-                    />
-                    <ImageUploadField
-                      label="Add video"
-                      value={null}
-                      accept="video/*"
-                      isVideo
-                      helpText="MP4, WebM or MOV, up to 50MB."
-                      onUploaded={(url, contentType) =>
-                        handleMediaUploaded(v.key, url, contentType)
-                      }
-                    />
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <ImageUploadField
+                        label="Add image"
+                        value={null}
+                        onUploaded={(url, contentType) =>
+                          handleMediaUploaded(colorId, url, contentType)
+                        }
+                      />
+                      <ImageUploadField
+                        label="Add video"
+                        value={null}
+                        accept="video/*"
+                        isVideo
+                        helpText="MP4, WebM or MOV, up to 50MB."
+                        onUploaded={(url, contentType) =>
+                          handleMediaUploaded(colorId, url, contentType)
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </section>
         )}

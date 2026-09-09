@@ -54,6 +54,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
+                                "/api/auth/otp/verify",
+                                "/api/auth/otp/resend",
                                 "/api/admin/auth/login")
                         .permitAll()
                         // A real payment gateway calling this has no customer JWT - its security

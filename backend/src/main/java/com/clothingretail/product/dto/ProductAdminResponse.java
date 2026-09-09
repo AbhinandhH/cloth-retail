@@ -23,4 +23,5 @@ public record ProductAdminResponse(
         String baseSku,
         BigDecimal baseSellingPrice,
         BigDecimal baseCostPrice,
-        List<VariantAdminResponse> variants) {}
+        List<VariantAdminResponse> variants,
+        List<ColorImagesResponse> colorImages) {}

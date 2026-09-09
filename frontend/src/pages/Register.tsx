@@ -39,8 +39,21 @@ export default function Register() {
 
     setSubmitting(true)
     try {
-      await register({ fullName, email, mobileNumber, password })
-      navigate('/', { replace: true })
+      const res = await register({ fullName, email, mobileNumber, password })
+      if (res.completed) {
+        navigate('/', { replace: true })
+      } else {
+        navigate('/verify', {
+          replace: true,
+          state: {
+            registrationId: res.registrationId,
+            email,
+            mobileNumber,
+            emailVerificationRequired: res.emailVerificationRequired,
+            mobileVerificationRequired: res.mobileVerificationRequired,
+          },
+        })
+      }
     } catch (err) {
       setFormError(getErrorMessage(err))
       setFieldErrors(getFieldErrors(err))
@@ -98,13 +111,12 @@ export default function Register() {
             />
             <Field
               id="mobileNumber"
-              label="Mobile number"
+              label="Mobile number (optional)"
               type="tel"
               autoComplete="tel"
               value={mobileNumber}
               onChange={setMobileNumber}
               error={fieldErrors.mobileNumber}
-              required
             />
             <Field
               id="password"

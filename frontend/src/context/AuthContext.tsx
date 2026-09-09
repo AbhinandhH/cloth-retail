@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react'
 import * as authApi from '../api/auth'
 import { registerUnauthorizedHandler, setAccessToken } from '../api/client'
-import type { AuthResponse, User } from '../types'
+import type { AuthResponse, OtpChannel, User, VerificationStatusResponse } from '../types'
 
 interface AuthContextValue {
   user: User | null
@@ -12,7 +12,11 @@ interface AuthContextValue {
   isAdmin: boolean
   login: (email: string, password: string) => Promise<User>
   loginAsAdmin: (email: string, password: string) => Promise<User>
-  register: (payload: authApi.RegisterPayload) => Promise<User>
+  /** May come back already logged in, or still pending email/mobile OTP verification — see VerificationStatusResponse. */
+  register: (payload: authApi.RegisterPayload) => Promise<VerificationStatusResponse>
+  /** Logs the user in automatically once every required channel is verified (completed=true). */
+  verifyOtp: (registrationId: number | string, channel: OtpChannel, code: string) => Promise<VerificationStatusResponse>
+  resendOtp: (registrationId: number | string, channel: OtpChannel) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -84,13 +88,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applyAuthResponse],
   )
 
-  const register = useCallback(
-    async (payload: authApi.RegisterPayload) => {
-      const res = await authApi.registerCustomer(payload)
-      return applyAuthResponse(res)
+  // Shared by register() and verifyOtp() - both hit the same "is verification fully done yet"
+  // decision server-side (VerificationStatusResponse), and only actually log the user in once it is.
+  const applyVerificationStatus = useCallback(
+    (res: VerificationStatusResponse) => {
+      if (res.completed && res.auth) {
+        applyAuthResponse(res.auth)
+      }
+      return res
     },
     [applyAuthResponse],
   )
+
+  const register = useCallback(
+    async (payload: authApi.RegisterPayload) => {
+      const res = await authApi.registerCustomer(payload)
+      return applyVerificationStatus(res)
+    },
+    [applyVerificationStatus],
+  )
+
+  const verifyOtp = useCallback(
+    async (registrationId: number | string, channel: OtpChannel, code: string) => {
+      const res = await authApi.verifyOtp(registrationId, channel, code)
+      return applyVerificationStatus(res)
+    },
+    [applyVerificationStatus],
+  )
+
+  const resendOtp = useCallback(async (registrationId: number | string, channel: OtpChannel) => {
+    await authApi.resendOtp(registrationId, channel)
+  }, [])
 
   const logout = useCallback(async () => {
     try {
@@ -110,9 +138,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginAsAdmin,
       register,
+      verifyOtp,
+      resendOtp,
       logout,
     }),
-    [user, token, isAuthChecking, login, loginAsAdmin, register, logout],
+    [user, token, isAuthChecking, login, loginAsAdmin, register, verifyOtp, resendOtp, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

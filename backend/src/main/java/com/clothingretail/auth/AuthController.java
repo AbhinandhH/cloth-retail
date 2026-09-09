@@ -3,8 +3,11 @@ package com.clothingretail.auth;
 import com.clothingretail.auth.dto.AuthResponse;
 import com.clothingretail.auth.dto.LoginRequest;
 import com.clothingretail.auth.dto.RegisterRequest;
+import com.clothingretail.auth.dto.ResendOtpRequest;
 import com.clothingretail.auth.dto.TokenResponse;
 import com.clothingretail.auth.dto.UserSummary;
+import com.clothingretail.auth.dto.VerificationStatusResponse;
+import com.clothingretail.auth.dto.VerifyOtpRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -34,9 +37,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResult<AuthResponse> result = authService.register(request);
+    public ResponseEntity<VerificationStatusResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResult<VerificationStatusResponse> result = authService.register(request);
         return withRefreshCookie(result);
+    }
+
+    /** Confirms one OTP channel. Issues real tokens (and sets the refresh cookie) once every channel this account needs is verified. */
+    @PostMapping("/otp/verify")
+    public ResponseEntity<VerificationStatusResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResult<VerificationStatusResponse> result = authService.verifyOtp(request);
+        return withRefreshCookie(result);
+    }
+
+    @PostMapping("/otp/resend")
+    public ResponseEntity<Void> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        authService.resendOtp(request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
@@ -65,7 +81,11 @@ public class AuthController {
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, refreshCookieFactory.clear().toString()).build();
     }
 
+    /** No cookie is set when rawRefreshToken is null - the register/otp-verify pending-verification case, where no tokens exist yet. */
     private <T> ResponseEntity<T> withRefreshCookie(AuthResult<T> result) {
+        if (result.rawRefreshToken() == null) {
+            return ResponseEntity.ok(result.body());
+        }
         ResponseCookie cookie = refreshCookieFactory.build(result.rawRefreshToken(), jwtService.getRefreshTokenTtlSeconds());
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(result.body());
     }

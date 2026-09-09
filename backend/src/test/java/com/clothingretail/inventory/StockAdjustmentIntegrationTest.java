@@ -62,7 +62,7 @@ class StockAdjustmentIntegrationTest {
                         .content(registerBody))
                 .andExpect(status().isOk())
                 .andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("auth").get("accessToken").asText();
     }
 
     @Test

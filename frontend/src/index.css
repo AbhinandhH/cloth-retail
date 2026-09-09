@@ -30,6 +30,25 @@
   overflow-x: hidden;
 }
 
+/* Mobile Safari/Chrome auto-zoom the whole page on focus when a text input's
+ * COMPUTED font-size is under 16px, to keep the text legible while typing -
+ * and unreliably fail to zoom back out once the on-screen keyboard is
+ * dismissed, especially in an SPA. Every text input/textarea/select in this
+ * app uses Tailwind's text-sm (14px) or text-xs (12px) for its normal visual
+ * size, so this only overrides the computed size on small viewports (the
+ * zoom only happens on real mobile browsers - desktop never triggers it and
+ * keeps its normal text-sm/text-xs look). !important is needed since a
+ * single-class selector like .text-sm otherwise outranks a bare type
+ * selector here.
+ */
+@media (max-width: 639px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 body {
   margin: 0;
   /* No overflow-x here (see :root above for why the clipping itself lives on

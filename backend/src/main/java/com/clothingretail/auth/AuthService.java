@@ -4,15 +4,22 @@ import com.clothingretail.auth.dto.AuthResponse;
 import com.clothingretail.auth.dto.CreateAdminRequest;
 import com.clothingretail.auth.dto.LoginRequest;
 import com.clothingretail.auth.dto.RegisterRequest;
+import com.clothingretail.auth.dto.ResendOtpRequest;
 import com.clothingretail.auth.dto.TokenResponse;
 import com.clothingretail.auth.dto.UserSummary;
+import com.clothingretail.auth.dto.VerificationStatusResponse;
+import com.clothingretail.auth.dto.VerifyOtpRequest;
 import com.clothingretail.common.ConflictException;
+import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.notification.NotificationSettings;
+import com.clothingretail.notification.NotificationSettingsRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,41 +31,210 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 public class AuthService {
 
+    /** How long an unfinished signup survives before PendingRegistrationCleanupJob reclaims it. */
+    private static final long PENDING_REGISTRATION_TTL_SECONDS = 24L * 60 * 60;
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final CustomerProfileRepository customerProfileRepository;
+    private final PendingRegistrationRepository pendingRegistrationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final OtpService otpService;
+    private final NotificationSettingsRepository notificationSettingsRepository;
 
     public AuthService(
             UserRepository userRepository,
             RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
             CustomerProfileRepository customerProfileRepository,
+            PendingRegistrationRepository pendingRegistrationRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            OtpService otpService,
+            NotificationSettingsRepository notificationSettingsRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.customerProfileRepository = customerProfileRepository;
+        this.pendingRegistrationRepository = pendingRegistrationRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.otpService = otpService;
+        this.notificationSettingsRepository = notificationSettingsRepository;
     }
 
+    /**
+     * Read fresh on every register()/verifyOtp() call (not cached, not fixed at startup) so an
+     * admin flipping a switch in the Notifications module (see NotificationSettingsService) takes
+     * effect immediately for the very next signup - no restart needed.
+     */
+    private NotificationSettings loadNotificationSettings() {
+        return notificationSettingsRepository.findById(NotificationSettings.SINGLETON_ID)
+                .orElseThrow(() -> {
+                    log.error("[1969] Singleton notification_settings row (id={}) is missing", NotificationSettings.SINGLETON_ID);
+                    return new IllegalStateException(
+                            "Singleton notification_settings row (id=1) is missing - this is a startup-time misconfiguration, "
+                                    + "check that V16__notification_settings.sql ran");
+                });
+    }
+
+    /**
+     * A real `users` row is NEVER created here unless nothing needs verifying at all - see
+     * {@link #buildVerificationResult}, the only place a {@link PendingRegistration} gets promoted
+     * into a real account, once every required OTP channel is confirmed. An abandoned signup that
+     * never finishes verification therefore leaves no trace in `users` - only a row in
+     * pending_registrations, reclaimed by {@link PendingRegistrationCleanupJob}. Mobile OTP is only
+     * triggered when a number was given (mobileNumber stays optional at signup - see
+     * RegisterRequest).
+     */
     @Transactional
-    public AuthResult<AuthResponse> register(RegisterRequest request) {
+    public AuthResult<VerificationStatusResponse> register(RegisterRequest request) {
         log.info("[1000] Registration attempt for email={}", request.email());
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
             log.error("[1001] Registration failed, email already exists: email={}", request.email());
             throw new ConflictException("An account with this email already exists");
         }
-        Role customerRole = roleRepository.findByName(RoleName.CUSTOMER)
-                .orElseThrow(() -> {
-                    log.error("[1002] Registration failed, CUSTOMER role not seeded");
-                    return new IllegalStateException("CUSTOMER role is not seeded");
-                });
 
+        NotificationSettings notificationSettings = loadNotificationSettings();
+        boolean hasMobile = request.mobileNumber() != null && !request.mobileNumber().isBlank();
+        boolean needsEmailOtp = notificationSettings.isEmailVerificationEnabled();
+        boolean needsMobileOtp = notificationSettings.isMobileVerificationEnabled() && hasMobile;
+
+        if (!needsEmailOtp && !needsMobileOtp) {
+            User user = createVerifiedUser(request);
+            AuthResult<AuthResponse> tokens = issueTokens(user);
+            log.info("[1005] Registration completed immediately, no verification required userId={}", user.getId());
+            return new AuthResult<>(new VerificationStatusResponse(true, null, false, false, tokens.body()), tokens.rawRefreshToken());
+        }
+
+        // Re-submitting the same (still-pending) email reuses its existing row rather than
+        // erroring or creating a duplicate - a lost/expired code shouldn't force starting over,
+        // and any channel already confirmed on it stays confirmed.
+        PendingRegistration registration = pendingRegistrationRepository.findByEmailIgnoreCase(request.email())
+                .orElseGet(PendingRegistration::new);
+        boolean mobileChanged = !Objects.equals(registration.getMobileNumber(), request.mobileNumber());
+        registration.setFullName(request.fullName());
+        registration.setEmail(request.email());
+        registration.setMobileNumber(request.mobileNumber());
+        registration.setPasswordHash(passwordEncoder.encode(request.password()));
+        registration.setExpiresAt(Instant.now().plusSeconds(PENDING_REGISTRATION_TTL_SECONDS));
+        if (!needsEmailOtp) {
+            registration.setEmailVerified(true);
+        }
+        if (!needsMobileOtp) {
+            registration.setMobileVerified(true);
+        } else if (mobileChanged) {
+            // A different number than what was previously (maybe already) verified on this row -
+            // that prior verification doesn't carry over to a number that was never confirmed.
+            registration.setMobileVerified(false);
+        }
+        registration = pendingRegistrationRepository.save(registration);
+        log.info("[1003] Pending registration saved id={} email={}", registration.getId(), registration.getEmail());
+
+        if (needsEmailOtp && !registration.isEmailVerified()) {
+            otpService.generateAndSend(registration, OtpChannel.EMAIL);
+        }
+        if (needsMobileOtp && !registration.isMobileVerified()) {
+            otpService.generateAndSend(registration, OtpChannel.MOBILE);
+        }
+
+        AuthResult<VerificationStatusResponse> result = buildVerificationResult(registration, notificationSettings);
+        log.info("[1005] Registration pending verification registrationId={}", registration.getId());
+        return result;
+    }
+
+    /**
+     * Confirms one OTP channel. Once every channel this signup actually needs (per the current
+     * config toggles) is verified, {@link #buildVerificationResult} promotes it into a real account
+     * and tokens are issued in the same call - there's no separate "now log in" step, matching how
+     * registration used to work before OTP existed.
+     */
+    // noRollbackFor is required here: OtpService.verify() persists the incremented attempt count
+    // even on a wrong code (that's the whole point - it's what eventually locks the code out
+    // after maxAttempts), but that write happens inside THIS method's transaction. Throwing
+    // BadCredentialsException below to report "wrong code" to the caller would otherwise roll
+    // the whole transaction back by Spring's default behavior - silently undoing the attempt
+    // count on every single failed try and defeating the lockout entirely.
+    @Transactional(noRollbackFor = BadCredentialsException.class)
+    public AuthResult<VerificationStatusResponse> verifyOtp(VerifyOtpRequest request) {
+        log.info("[1959] OTP verify attempt registrationId={} channel={}", request.registrationId(), request.channel());
+        PendingRegistration registration = pendingRegistrationRepository.findById(request.registrationId())
+                .orElseThrow(() -> {
+                    log.error("[1960] OTP verify failed, pending registration not found registrationId={}", request.registrationId());
+                    return new NotFoundException("Registration not found or already completed: " + request.registrationId());
+                });
+        boolean matched = otpService.verify(registration, request.channel(), request.code());
+        if (!matched) {
+            log.error("[1961] OTP verify rejected, incorrect code registrationId={} channel={}", registration.getId(), request.channel());
+            throw new BadCredentialsException("Incorrect code");
+        }
+        if (request.channel() == OtpChannel.EMAIL) {
+            registration.setEmailVerified(true);
+        } else {
+            registration.setMobileVerified(true);
+        }
+        registration = pendingRegistrationRepository.save(registration);
+
+        NotificationSettings notificationSettings = loadNotificationSettings();
+        AuthResult<VerificationStatusResponse> result = buildVerificationResult(registration, notificationSettings);
+        log.info("[1962] OTP channel verified registrationId={} channel={} completed={}",
+                registration.getId(), request.channel(), result.body().completed());
+        return result;
+    }
+
+    @Transactional
+    public void resendOtp(ResendOtpRequest request) {
+        log.info("[1963] OTP resend attempt registrationId={} channel={}", request.registrationId(), request.channel());
+        PendingRegistration registration = pendingRegistrationRepository.findById(request.registrationId())
+                .orElseThrow(() -> {
+                    log.error("[1964] OTP resend failed, pending registration not found registrationId={}", request.registrationId());
+                    return new NotFoundException("Registration not found or already completed: " + request.registrationId());
+                });
+        if (request.channel() == OtpChannel.EMAIL && registration.isEmailVerified()) {
+            log.error("[1965] OTP resend rejected, email already verified registrationId={}", registration.getId());
+            throw new ConflictException("Email is already verified");
+        }
+        if (request.channel() == OtpChannel.MOBILE) {
+            if (registration.isMobileVerified()) {
+                log.error("[1966] OTP resend rejected, mobile already verified registrationId={}", registration.getId());
+                throw new ConflictException("Mobile number is already verified");
+            }
+            if (!registration.hasMobile()) {
+                log.error("[1967] OTP resend rejected, no mobile number on file registrationId={}", registration.getId());
+                throw new ConflictException("No mobile number on file");
+            }
+        }
+        otpService.generateAndSend(registration, request.channel());
+        log.info("[1968] OTP resent registrationId={} channel={}", registration.getId(), request.channel());
+    }
+
+    /**
+     * Not-yet-verified -> a pending status (no tokens, registrationId set); fully verified ->
+     * promotes the pending registration into a real {@link User} + CustomerProfile and issues
+     * tokens in the same call. Shared by register() and verifyOtp() so both end up at the exact
+     * same "am I done yet" decision.
+     */
+    private AuthResult<VerificationStatusResponse> buildVerificationResult(
+            PendingRegistration registration, NotificationSettings notificationSettings) {
+        boolean emailRequired = notificationSettings.isEmailVerificationEnabled() && !registration.isEmailVerified();
+        boolean mobileRequired =
+                notificationSettings.isMobileVerificationEnabled() && registration.hasMobile() && !registration.isMobileVerified();
+        if (!emailRequired && !mobileRequired) {
+            User user = promoteToUser(registration);
+            AuthResult<AuthResponse> tokens = issueTokens(user);
+            VerificationStatusResponse body = new VerificationStatusResponse(true, null, false, false, tokens.body());
+            return new AuthResult<>(body, tokens.rawRefreshToken());
+        }
+        VerificationStatusResponse body =
+                new VerificationStatusResponse(false, registration.getId(), emailRequired, mobileRequired, null);
+        return new AuthResult<>(body, null);
+    }
+
+    /** No verification required at all (both channels off, or off+no mobile given) - the pre-OTP-feature behavior. */
+    private User createVerifiedUser(RegisterRequest request) {
+        Role customerRole = findCustomerRole();
         User user = new User();
         user.setFullName(request.fullName());
         user.setEmail(request.email());
@@ -68,13 +244,36 @@ public class AuthService {
         user.getRoles().add(customerRole);
         user = userRepository.save(user);
         log.info("[1003] New user created id={} email={}", user.getId(), user.getEmail());
-
         customerProfileRepository.save(new CustomerProfile(user));
         log.info("[1004] Customer profile created for userId={}", user.getId());
+        return user;
+    }
 
-        AuthResult<AuthResponse> result = issueTokens(user);
-        log.info("[1005] Registration completed userId={}", user.getId());
-        return result;
+    /** Every required OTP channel is confirmed - create the real account from the stored signup data and discard the pending row. */
+    private User promoteToUser(PendingRegistration registration) {
+        Role customerRole = findCustomerRole();
+        User user = new User();
+        user.setFullName(registration.getFullName());
+        user.setEmail(registration.getEmail());
+        user.setMobileNumber(registration.getMobileNumber());
+        user.setPasswordHash(registration.getPasswordHash());
+        user.setEnabled(true);
+        user.getRoles().add(customerRole);
+        user = userRepository.save(user);
+        log.info("[1003] New user created from verified pending registration id={} userId={} email={}",
+                registration.getId(), user.getId(), user.getEmail());
+        customerProfileRepository.save(new CustomerProfile(user));
+        log.info("[1004] Customer profile created for userId={}", user.getId());
+        pendingRegistrationRepository.delete(registration);
+        return user;
+    }
+
+    private Role findCustomerRole() {
+        return roleRepository.findByName(RoleName.CUSTOMER)
+                .orElseThrow(() -> {
+                    log.error("[1002] Registration failed, CUSTOMER role not seeded");
+                    return new IllegalStateException("CUSTOMER role is not seeded");
+                });
     }
 
     @Transactional

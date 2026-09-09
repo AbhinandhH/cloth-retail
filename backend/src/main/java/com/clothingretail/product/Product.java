@@ -90,8 +90,19 @@ public class Product extends BaseEntity {
     @OrderBy("id ASC")
     private List<ProductVariant> variants = new ArrayList<>();
 
+    /** One shared image/video set per color, reused by every size variant of that color - see {@link ProductColorMedia}. */
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    private List<ProductColorMedia> colorMedia = new ArrayList<>();
+
     public void addVariant(ProductVariant variant) {
         variant.setProduct(this);
         variants.add(variant);
+    }
+
+    public void addColorMedia(ProductColorMedia media) {
+        media.setProduct(this);
+        colorMedia.add(media);
     }
 }

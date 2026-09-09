@@ -29,6 +29,24 @@ spring:
       max-file-size: 55MB
       max-request-size: 55MB
 
+  # Real SMTP, used by SmtpEmailSender to send OTP-verification emails (see app.otp below). No
+  # committed default host/credentials here - unlike app.jwt.secret this is a genuine external
+  # account, not a dev-safe fake secret, so it MUST be supplied via env vars (SMTP_HOST etc.).
+  # Leaving it unset is fine as long as app.otp.email-verification-enabled is false; if it's true
+  # with no host configured, sending fails at the point an OTP email is actually sent (not at
+  # startup) with a clear error - see SmtpEmailSender.
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+
 server:
   port: 8080
 
@@ -71,6 +89,20 @@ app:
       # Local-dev-only shared secret for MockPaymentGateway's HMAC-SHA256 webhook signing/verification.
       # Same story as app.jwt.secret above - override via env var in any non-local environment.
       secret: ${PAYMENT_MOCK_SECRET:c2FtcGxlLWxvY2FsLWRldi1vbmx5LXBheW1lbnQtd2ViaG9vay1zZWNyZXQ=}
+  mail:
+    # "From" address for OTP-verification emails - falls back to spring.mail.username (the SMTP
+    # account itself) when not set separately, which covers the common case of sending as the
+    # same account you authenticate with.
+    from: ${MAIL_FROM:${SMTP_USERNAME:}}
+  otp:
+    # Whether each channel is actually used at signup lives in the database now (see
+    # NotificationSettings / the admin Notifications module), not here - an admin can flip
+    # either on/off live with no restart. These remaining keys are lower-level tuning that
+    # isn't exposed in that UI.
+    code-length: ${OTP_CODE_LENGTH:6}
+    ttl-minutes: ${OTP_TTL_MINUTES:10}
+    max-attempts: ${OTP_MAX_ATTEMPTS:5}
+    resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:30}
 
 springdoc:
   swagger-ui:

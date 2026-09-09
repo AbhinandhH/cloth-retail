@@ -83,7 +83,7 @@ class OrderConcurrencyIntegrationTest {
     private Long registerCustomerAndGetUserId(String tag) {
         String email = "concurrency-" + tag + "-" + System.nanoTime() + "@example.com";
         RegisterRequest request = new RegisterRequest("Concurrency Tester " + tag, email, "9000000002", "Password123!");
-        return authService.register(request).body().user().id();
+        return authService.register(request).body().auth().user().id();
     }
 
     private Long createAddressFor(Long userId) {

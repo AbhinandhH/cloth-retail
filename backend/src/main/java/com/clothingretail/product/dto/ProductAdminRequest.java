@@ -24,4 +24,5 @@ public record ProductAdminRequest(
         String baseSku,
         @DecimalMin(value = "0", inclusive = true, message = "must be >= 0") BigDecimal baseSellingPrice,
         @DecimalMin(value = "0", inclusive = true, message = "must be >= 0") BigDecimal baseCostPrice,
-        @Valid List<VariantAdminRequest> variants) {}
+        @Valid List<VariantAdminRequest> variants,
+        @Valid List<ColorImagesRequest> colorImages) {}

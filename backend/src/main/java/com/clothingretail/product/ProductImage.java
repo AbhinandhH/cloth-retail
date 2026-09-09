@@ -16,10 +16,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Media (image or video) belonging to a variant (not the product) since color determines the
- * media set. Despite the class name it can hold a video too - see {@link MediaType} - kept as
- * ProductImage rather than renamed to avoid churning every existing call site for what is still,
- * by row count, almost entirely images.
+ * Media (image or video) belonging to a {@link ProductColorMedia} group (one per product+color,
+ * shared by every size variant of that color) rather than to any individual size. Despite the
+ * class name it can hold a video too - see {@link MediaType} - kept as ProductImage rather than
+ * renamed to avoid churning every existing call site for what is still, by row count, almost
+ * entirely images.
  */
 @Entity
 @Table(name = "product_images")
@@ -31,8 +32,8 @@ public class ProductImage extends BaseEntity {
 
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_variant_id", nullable = false)
-    private ProductVariant productVariant;
+    @JoinColumn(name = "product_color_media_id", nullable = false)
+    private ProductColorMedia productColorMedia;
 
     @Column(nullable = false, length = 500)
     private String url;

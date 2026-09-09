@@ -85,7 +85,7 @@ class SiteConfigurationIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
-        return json.get("accessToken").asText();
+        return json.get("auth").get("accessToken").asText();
     }
 
     @Test

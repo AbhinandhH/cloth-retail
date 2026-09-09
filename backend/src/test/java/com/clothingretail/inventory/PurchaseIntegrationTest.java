@@ -104,7 +104,7 @@ class PurchaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         JsonNode registerJson = objectMapper.readTree(registerResult.getResponse().getContentAsString());
-        String customerToken = registerJson.get("accessToken").asText();
+        String customerToken = registerJson.get("auth").get("accessToken").asText();
 
         ProductVariant variant = productVariantRepository.findBySku("FSK-BLU-M").orElseThrow();
         Vendor vendor = vendorRepository.findAll().stream().findFirst().orElseThrow();

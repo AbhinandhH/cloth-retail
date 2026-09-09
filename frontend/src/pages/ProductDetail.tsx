@@ -117,8 +117,17 @@ export default function ProductDetail() {
     )
   }, [product, selectedSize, selectedColor])
 
+  // Every size of a color shares the exact same photos (images are grouped
+  // by color on the backend now, not by size), so the gallery only needs to
+  // reset when the color actually changes, not on every size tap.
   useEffect(() => {
     setActiveImage(0)
+  }, [selectedVariant?.colorName])
+
+  // Quantity/cart notice DO need to reset on any variant change, size
+  // included — stock and a previously-shown error/notice are specific to the
+  // exact size+color SKU.
+  useEffect(() => {
     setQuantity(1)
     setCartNotice(null)
     setCartNoticeIsError(false)

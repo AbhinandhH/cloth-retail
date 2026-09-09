@@ -1,7 +1,6 @@
 package com.clothingretail.product.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public record VariantAdminResponse(
         Long id,
@@ -18,5 +17,4 @@ public record VariantAdminResponse(
         int damagedQuantity,
         int availableQuantity,
         Integer lowStockThreshold,
-        boolean active,
-        List<VariantImageResponse> images) {}
+        boolean active) {}

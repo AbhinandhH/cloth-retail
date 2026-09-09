@@ -22,6 +22,30 @@ export interface RefreshResponse {
   expiresIn: number;
 }
 
+export type OtpChannel = "EMAIL" | "MOBILE";
+
+/**
+ * Shared response shape for /auth/register and /auth/otp/verify. When completed is false, no
+ * account exists yet — registrationId identifies the pending signup (see the backend's
+ * PendingRegistration), and email/mobileVerificationRequired say which channels are still
+ * outstanding (recomputed on every call, so a partially-verified signup only shows the channel
+ * that's still pending). Once completed is true, auth carries the real tokens — that's the point
+ * a real account is actually created and the customer is logged in.
+ */
+export interface VerificationStatusResponse {
+  completed: boolean;
+  registrationId: number | string | null;
+  emailVerificationRequired: boolean;
+  mobileVerificationRequired: boolean;
+  auth: AuthResponse | null;
+}
+
+/** Admin-controllable on/off switches for the OTP notification channels — see the Notifications admin module. */
+export interface NotificationSettings {
+  emailVerificationEnabled: boolean;
+  mobileVerificationEnabled: boolean;
+}
+
 export interface FieldError {
   field: string;
   message: string;
@@ -232,6 +256,12 @@ export interface AdminProductVariant {
   availableQuantity: number;
   lowStockThreshold: number | null;
   active: boolean;
+}
+
+/** One color's shared image/video set, reused by every size variant of that color. */
+export interface AdminColorImages {
+  colorId: number | string;
+  colorName: string;
   images: AdminProductImage[];
 }
 
@@ -255,6 +285,7 @@ export interface AdminProductDetail {
   baseSellingPrice: number | null;
   baseCostPrice: number | null;
   variants: AdminProductVariant[];
+  colorImages: AdminColorImages[];
 }
 
 export interface ProductVariantImageRequest {
@@ -275,6 +306,11 @@ export interface ProductVariantRequest {
   stockQuantity: number;
   lowStockThreshold: number | null;
   active: boolean;
+}
+
+/** One color's shared image/video set within a ProductAdminRequest — see ProductVariantRequest, which no longer carries its own images. */
+export interface ColorImagesRequest {
+  colorId: number | string;
   images: ProductVariantImageRequest[];
 }
 
@@ -292,6 +328,7 @@ export interface ProductAdminRequest {
   baseSellingPrice: number | null;
   baseCostPrice: number | null;
   variants: ProductVariantRequest[];
+  colorImages: ColorImagesRequest[];
 }
 
 // --- Admin inventory ---

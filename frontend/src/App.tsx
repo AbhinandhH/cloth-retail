@@ -4,10 +4,12 @@ import Home from './pages/Home'
 import ProductDetail from './pages/ProductDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import VerifyOtp from './pages/VerifyOtp'
 import AdminLogin from './pages/AdminLogin'
 import AdminHome from './pages/AdminHome'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminConfiguration from './pages/AdminConfiguration'
+import AdminNotificationSettings from './pages/AdminNotificationSettings'
 import AdminProductList from './pages/AdminProductList'
 import AdminProductForm from './pages/AdminProductForm'
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard'
@@ -66,6 +68,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminConfiguration />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/notifications"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminNotificationSettings />
           </RequireAuth>
         }
       />
@@ -236,6 +246,7 @@ export default function App() {
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify" element={<VerifyOtp />} />
         <Route
           path="/wishlist"
           element={

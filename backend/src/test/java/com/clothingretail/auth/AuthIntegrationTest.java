@@ -42,18 +42,21 @@ class AuthIntegrationTest {
                 {"fullName":"Test Customer","email":"%s","mobileNumber":"9876543210","password":"Password123!"}
                 """.formatted(email);
 
+        // OTP verification is disabled in the test profile (application.yml), so registration
+        // completes immediately and "auth" is populated - see VerificationStatusResponse.
         MvcResult registerResult = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerBody))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken", notNullValue()))
-                .andExpect(jsonPath("$.tokenType", is("Bearer")))
-                .andExpect(jsonPath("$.user.email", is(email)))
-                .andExpect(jsonPath("$.user.roles[0]", is("CUSTOMER")))
+                .andExpect(jsonPath("$.completed", is(true)))
+                .andExpect(jsonPath("$.auth.accessToken", notNullValue()))
+                .andExpect(jsonPath("$.auth.tokenType", is("Bearer")))
+                .andExpect(jsonPath("$.auth.user.email", is(email)))
+                .andExpect(jsonPath("$.auth.user.roles[0]", is("CUSTOMER")))
                 .andReturn();
 
         JsonNode registerJson = objectMapper.readTree(registerResult.getResponse().getContentAsString());
-        String registerAccessToken = registerJson.get("accessToken").asText();
+        String registerAccessToken = registerJson.get("auth").get("accessToken").asText();
 
         // The access token from register should already work against a protected endpoint.
         mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + registerAccessToken))

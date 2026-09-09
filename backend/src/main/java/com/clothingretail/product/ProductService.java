@@ -20,6 +20,8 @@ import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.SubCategoryRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.VendorRepository;
+import com.clothingretail.product.dto.ColorImagesRequest;
+import com.clothingretail.product.dto.ColorImagesResponse;
 import com.clothingretail.product.dto.ProductAdminRequest;
 import com.clothingretail.product.dto.ProductAdminResponse;
 import com.clothingretail.product.dto.ProductAdminSummaryResponse;
@@ -164,6 +166,7 @@ public class ProductService {
         Product product = new Product();
         applyProductFields(product, request);
         List<NewVariantStock> newVariantStocks = applyVariants(product, request.variants());
+        applyColorImages(product, request.colorImages());
         Product saved = productRepository.save(product);
         log.info("[1911] Product created productId={} slug={}", saved.getId(), saved.getSlug());
         recordInitialStockTransactions(newVariantStocks, actingUserId);
@@ -181,6 +184,7 @@ public class ProductService {
         Product product = findProduct(id);
         applyProductFields(product, request);
         List<NewVariantStock> newVariantStocks = applyVariants(product, request.variants());
+        applyColorImages(product, request.colorImages());
         Product saved = productRepository.save(product);
         log.info("[1915] Product updated productId={}", saved.getId());
         recordInitialStockTransactions(newVariantStocks, actingUserId);
@@ -342,32 +346,6 @@ public class ProductService {
                 log.info("[1934] Existing variant updated variantId={} sku={}", vr.id(), vr.sku());
             }
 
-            if (vr.images() != null) {
-                variant.getImages().clear();
-                // The submitted list's own order is always what's persisted as displayOrder -
-                // a client-sent displayOrder value (if any) is ignored, never trusted for
-                // ordering. `primary` IS trusted, but normalized defensively: if the client
-                // marked none (or, from a stale double-submit, more than one) as primary, the
-                // first image in the list wins so exactly one image is ever primary.
-                boolean primaryAssigned = false;
-                int order = 0;
-                for (VariantImageRequest imgReq : vr.images()) {
-                    ProductImage image = new ProductImage();
-                    image.setUrl(imgReq.url());
-                    image.setMediaType(imgReq.mediaType() != null ? imgReq.mediaType() : MediaType.IMAGE);
-                    image.setDisplayOrder(order++);
-                    boolean wantsPrimary = Boolean.TRUE.equals(imgReq.primary());
-                    image.setPrimary(wantsPrimary && !primaryAssigned);
-                    if (image.isPrimary()) {
-                        primaryAssigned = true;
-                    }
-                    variant.addImage(image);
-                }
-                if (!primaryAssigned && !variant.getImages().isEmpty()) {
-                    variant.getImages().get(0).setPrimary(true);
-                }
-            }
-
             if (variant.getId() != null) {
                 keepIds.add(variant.getId());
             }
@@ -381,6 +359,74 @@ public class ProductService {
         }
 
         return newVariantStocks;
+    }
+
+    /**
+     * Applies each color's shared image/video set - see {@link ColorImagesRequest}'s own doc
+     * comment for why this is keyed by color rather than by individual size variant. One
+     * {@link ProductColorMedia} group is created/updated per submitted color; any group whose
+     * color wasn't included in this request is removed, mirroring {@link #applyVariants}'s own
+     * keep/remove pattern for variants no longer present.
+     */
+    private void applyColorImages(Product product, List<ColorImagesRequest> colorImagesRequests) {
+        if (colorImagesRequests == null) {
+            return;
+        }
+        Set<Long> keepColorIds = new HashSet<>();
+
+        for (ColorImagesRequest cr : colorImagesRequests) {
+            Color color = colorRepository.findById(cr.colorId())
+                    .orElseThrow(() -> {
+                        log.error("[1939] Color not found colorId={}", cr.colorId());
+                        return new NotFoundException("Color not found: " + cr.colorId());
+                    });
+            keepColorIds.add(cr.colorId());
+
+            ProductColorMedia media = product.getColorMedia().stream()
+                    .filter(cm -> cm.getColor().getId().equals(cr.colorId()))
+                    .findFirst()
+                    .orElse(null);
+            if (media == null) {
+                media = new ProductColorMedia();
+                media.setColor(color);
+                product.addColorMedia(media);
+            }
+
+            media.getImages().clear();
+            // Same ordering/primary-normalization rules as the old per-variant logic: the
+            // submitted list's own order is always what's persisted as displayOrder (a
+            // client-sent displayOrder value, if any, is ignored); if the client marked none
+            // (or, from a stale double-submit, more than one) as primary, the first image wins
+            // so exactly one image is ever primary.
+            boolean primaryAssigned = false;
+            int order = 0;
+            List<VariantImageRequest> images = cr.images() != null ? cr.images() : List.of();
+            for (VariantImageRequest imgReq : images) {
+                ProductImage image = new ProductImage();
+                image.setUrl(imgReq.url());
+                image.setMediaType(imgReq.mediaType() != null ? imgReq.mediaType() : MediaType.IMAGE);
+                image.setDisplayOrder(order++);
+                boolean wantsPrimary = Boolean.TRUE.equals(imgReq.primary());
+                image.setPrimary(wantsPrimary && !primaryAssigned);
+                if (image.isPrimary()) {
+                    primaryAssigned = true;
+                }
+                media.addImage(image);
+            }
+            if (!primaryAssigned && !media.getImages().isEmpty()) {
+                media.getImages().get(0).setPrimary(true);
+            }
+            log.info("[1940] Color images applied productId={} colorId={} imageCount={}", product.getId(), cr.colorId(), images.size());
+        }
+
+        Set<Long> removedColorIds = product.getColorMedia().stream()
+                .map(cm -> cm.getColor().getId())
+                .filter(colorId -> !keepColorIds.contains(colorId))
+                .collect(Collectors.toSet());
+        product.getColorMedia().removeIf(cm -> !keepColorIds.contains(cm.getColor().getId()));
+        if (!removedColorIds.isEmpty()) {
+            log.info("[1941] Color media groups removed productId={} removedColorIds={}", product.getId(), removedColorIds);
+        }
     }
 
     private void recordInitialStockTransactions(List<NewVariantStock> newVariantStocks, Long actingUserId) {
@@ -462,6 +508,7 @@ public class ProductService {
 
     private ProductAdminResponse toAdminResponse(Product product) {
         List<VariantAdminResponse> variants = product.getVariants().stream().map(this::toVariantAdminResponse).toList();
+        List<ColorImagesResponse> colorImages = product.getColorMedia().stream().map(this::toColorImagesResponse).toList();
         return new ProductAdminResponse(
                 product.getId(),
                 product.getCategory().getId(),
@@ -481,7 +528,8 @@ public class ProductService {
                 product.getBaseSku(),
                 product.getBaseSellingPrice(),
                 product.getBaseCostPrice(),
-                variants);
+                variants,
+                colorImages);
     }
 
     private ProductAdminSummaryResponse toAdminSummary(Product product) {
@@ -501,10 +549,6 @@ public class ProductService {
     }
 
     private VariantAdminResponse toVariantAdminResponse(ProductVariant v) {
-        List<VariantImageResponse> images = v.getImages().stream()
-                .sorted(ProductImage.displayOrderComparator())
-                .map(img -> new VariantImageResponse(img.getId(), img.getUrl(), img.getDisplayOrder(), img.isPrimary(), img.getMediaType()))
-                .toList();
         return new VariantAdminResponse(
                 v.getId(),
                 v.getSku(),
@@ -520,7 +564,14 @@ public class ProductService {
                 v.getDamagedQuantity(),
                 v.getAvailableQuantity(),
                 v.getLowStockThreshold(),
-                v.isActive(),
-                images);
+                v.isActive());
+    }
+
+    private ColorImagesResponse toColorImagesResponse(ProductColorMedia media) {
+        List<VariantImageResponse> images = media.getImages().stream()
+                .sorted(ProductImage.displayOrderComparator())
+                .map(img -> new VariantImageResponse(img.getId(), img.getUrl(), img.getDisplayOrder(), img.isPrimary(), img.getMediaType()))
+                .toList();
+        return new ColorImagesResponse(media.getColor().getId(), media.getColor().getName(), images);
     }
 }

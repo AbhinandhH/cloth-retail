@@ -34,7 +34,11 @@ public final class CheckoutTestSupport {
                         .content(body))
                 .andReturn();
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
-        return new CustomerSession(email, json.get("accessToken").asText());
+        // OTP verification is disabled in the test profile (application.yml), so registration
+        // completes immediately - see VerificationStatusResponse, whose "auth" field carries the
+        // real tokens once completed=true, same shape /auth/otp/verify returns once its OTP is
+        // confirmed.
+        return new CustomerSession(email, json.get("auth").get("accessToken").asText());
     }
 
     public static String adminAccessToken(MockMvc mockMvc, ObjectMapper objectMapper) throws Exception {

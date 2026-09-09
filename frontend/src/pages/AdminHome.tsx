@@ -101,6 +101,19 @@ function ConfigurationIcon() {
   );
 }
 
+function NotificationsIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.75}
+        d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+    </svg>
+  );
+}
+
 interface AdminModule {
   to: string;
   label: string;
@@ -117,6 +130,7 @@ const MODULES: AdminModule[] = [
   { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon /> },
   { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon /> },
   { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon /> },
+  { to: "/admin/notifications", label: "Notifications", description: "Email/SMS OTP on-off switches", icon: <NotificationsIcon /> },
 ];
 
 function ModuleCard({ mod }: { mod: AdminModule }) {

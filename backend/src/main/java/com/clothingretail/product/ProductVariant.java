@@ -3,18 +3,14 @@ package com.clothingretail.product;
 import com.clothingretail.common.BaseEntity;
 import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.Size;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -78,14 +74,21 @@ public class ProductVariant extends BaseEntity {
     @Column(nullable = false)
     private boolean active = true;
 
-    @EqualsAndHashCode.Exclude
-    @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("displayOrder ASC")
-    private List<ProductImage> images = new ArrayList<>();
-
-    public void addImage(ProductImage image) {
-        image.setProductVariant(this);
-        images.add(image);
+    /**
+     * Every size shares its color's image/video set (see {@link ProductColorMedia}) - a garment
+     * looks the same regardless of size, it only fits differently. Resolved by matching this
+     * variant's own color against the product's color-media groups rather than owned directly,
+     * so two variants of the same color are guaranteed to return the exact same list.
+     */
+    public List<ProductImage> getImages() {
+        if (product == null || color == null) {
+            return List.of();
+        }
+        return product.getColorMedia().stream()
+                .filter(cm -> cm.getColor() != null && cm.getColor().getId().equals(color.getId()))
+                .findFirst()
+                .map(ProductColorMedia::getImages)
+                .orElse(List.of());
     }
 
     /** Computed, never persisted: the physical count minus what's reserved and what's damaged. */
