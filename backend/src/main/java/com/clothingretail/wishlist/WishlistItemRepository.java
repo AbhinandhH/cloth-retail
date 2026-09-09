@@ -17,4 +17,9 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
     /** Just the ids - all a ProductCard grid needs to know which hearts to fill in. */
     @Query("SELECT w.product.id FROM WishlistItem w WHERE w.customerProfile.id = :customerProfileId")
     List<Long> findProductIdsByCustomerProfileId(@Param("customerProfileId") Long customerProfileId);
+
+    /** Same ids, most-recently-wishlisted first - for the wishlist page itself (order matters
+     * there; the heart-icon lookup above doesn't care). */
+    @Query("SELECT w.product.id FROM WishlistItem w WHERE w.customerProfile.id = :customerProfileId ORDER BY w.createdAt DESC")
+    List<Long> findProductIdsByCustomerProfileIdOrderByCreatedAtDesc(@Param("customerProfileId") Long customerProfileId);
 }

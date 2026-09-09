@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -108,6 +109,23 @@ public class ProductService {
         Page<ProductSummaryResponse> result = page.map(this::toSummary);
         log.info("[1901] Products listed totalElements={}", result.getTotalElements());
         return result;
+    }
+
+    /**
+     * Products for the customer wishlist page, in the caller's requested order (WishlistService
+     * passes ids most-recently-wishlisted-first) - findByIdInAndStatus's own result order isn't
+     * guaranteed, so this re-sorts by rebuilding from a lookup map. A since-archived/deleted
+     * product's id just silently drops out (filter(Objects::nonNull)) rather than erroring the
+     * whole page over one stale wishlist entry.
+     */
+    public List<ProductSummaryResponse> listByIds(List<Long> ids) {
+        log.info("[1938] List products by ids count={}", ids.size());
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Product> byId = productRepository.findByIdInAndStatus(ids, ProductStatus.ACTIVE).stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+        return ids.stream().map(byId::get).filter(Objects::nonNull).map(this::toSummary).toList();
     }
 
     public ProductDetailResponse getBySlug(String slug) {

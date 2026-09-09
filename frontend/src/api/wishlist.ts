@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Wishlist } from '../types'
+import type { ProductListItem, Wishlist } from '../types'
 
 /** GET /api/customer/wishlist — the full current set of wishlisted product ids. */
 export function fetchWishlist() {
@@ -14,4 +14,9 @@ export function addToWishlist(productId: number | string) {
 /** DELETE /api/customer/wishlist/{productId} — idempotent remove. Returns the FULL updated set. */
 export function removeFromWishlist(productId: number | string) {
   return api.delete<Wishlist>(`/customer/wishlist/${productId}`).then((r) => r.data)
+}
+
+/** GET /api/customer/wishlist/products — the wishlist page's data: full product cards, most-recently-wishlisted first. */
+export function fetchWishlistProducts() {
+  return api.get<ProductListItem[]>('/customer/wishlist/products').then((r) => r.data)
 }

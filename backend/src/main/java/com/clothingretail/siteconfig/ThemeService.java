@@ -112,6 +112,7 @@ public class ThemeService {
         theme.setBackgroundColor(request.backgroundColor());
         theme.setTextColor(request.textColor());
         theme.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
+        theme.setRichAmbient(request.richAmbient() != null ? request.richAmbient() : true);
     }
 
     private ThemeAdminResponse toAdminResponse(Theme theme) {
@@ -123,7 +124,8 @@ public class ThemeService {
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
-                theme.getDisplayOrder());
+                theme.getDisplayOrder(),
+                theme.isRichAmbient());
     }
 
     private PublicConfigurationResponse toPublicResponse(SiteConfiguration config) {
@@ -152,6 +154,7 @@ public class ThemeService {
                 theme.getSecondaryColor(),
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
-                theme.getTextColor());
+                theme.getTextColor(),
+                theme.isRichAmbient());
     }
 }

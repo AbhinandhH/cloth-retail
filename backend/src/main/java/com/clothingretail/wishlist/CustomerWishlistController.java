@@ -1,6 +1,8 @@
 package com.clothingretail.wishlist;
 
+import com.clothingretail.product.dto.ProductSummaryResponse;
 import com.clothingretail.wishlist.dto.WishlistResponse;
+import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,6 +27,12 @@ public class CustomerWishlistController {
     @GetMapping
     public WishlistResponse list(Authentication authentication) {
         return wishlistService.list(userId(authentication));
+    }
+
+    /** The wishlist page's data - full product cards, most-recently-wishlisted first. */
+    @GetMapping("/products")
+    public List<ProductSummaryResponse> listProducts(Authentication authentication) {
+        return wishlistService.listProducts(userId(authentication));
     }
 
     @PostMapping("/{productId}")

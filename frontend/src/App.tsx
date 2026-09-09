@@ -27,6 +27,7 @@ import AdminOrderDashboard from './pages/AdminOrderDashboard'
 import AdminOrderDetail from './pages/AdminOrderDetail'
 import AdminCustomerList from './pages/AdminCustomerList'
 import AdminCustomerDetail from './pages/AdminCustomerDetail'
+import WishlistPage from './pages/WishlistPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
@@ -235,6 +236,14 @@ export default function App() {
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/wishlist"
+          element={
+            <RequireAuth>
+              <WishlistPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/cart"
           element={

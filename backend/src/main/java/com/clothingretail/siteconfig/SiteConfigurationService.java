@@ -116,7 +116,8 @@ public class SiteConfigurationService {
                 theme.getSecondaryColor(),
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
-                theme.getTextColor());
+                theme.getTextColor(),
+                theme.isRichAmbient());
     }
 
     private ThemeAdminResponse toThemeAdminResponse(Theme theme) {
@@ -128,6 +129,7 @@ public class SiteConfigurationService {
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
-                theme.getDisplayOrder());
+                theme.getDisplayOrder(),
+                theme.isRichAmbient());
     }
 }

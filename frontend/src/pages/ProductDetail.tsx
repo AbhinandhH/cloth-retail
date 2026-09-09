@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext'
 import { useCategories } from '../context/MasterDataContext'
 import BackButton from '../components/BackButton'
 import ProductCard from '../components/ProductCard'
+import WishlistButton from '../components/WishlistButton'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonImage, SkeletonText } from '../components/Skeleton'
 import type { ProductDetail as ProductDetailType, ProductListItem, ProductVariant } from '../types'
@@ -199,7 +200,7 @@ export default function ProductDetail() {
         {/* Gallery */}
         <div className="relative">
           <BackButton className="absolute left-2 top-2 z-10 bg-white/90 shadow-soft backdrop-blur-sm sm:left-3 sm:top-3" />
-          <div className="aspect-[4/5] w-full overflow-hidden rounded-lg bg-zinc-100 sm:aspect-square">
+          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-zinc-100 sm:aspect-square">
             {images[activeImage] ? (
               <img
                 key={activeImage}
@@ -210,6 +211,9 @@ export default function ProductDetail() {
             ) : (
               <div className="flex h-full w-full items-center justify-center text-zinc-400">No image</div>
             )}
+            {/* Same bottom-right placement as ProductCard's grid heart, so the affordance
+                reads identically whether you're browsing the grid or a single product. */}
+            {product && <WishlistButton productId={product.id} className="absolute bottom-3 right-3" />}
           </div>
           {images.length > 1 && (
             <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">

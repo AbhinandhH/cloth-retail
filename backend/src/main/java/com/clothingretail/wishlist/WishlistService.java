@@ -3,8 +3,11 @@ package com.clothingretail.wishlist;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.product.ProductService;
+import com.clothingretail.product.dto.ProductSummaryResponse;
 import com.clothingretail.wishlist.dto.WishlistResponse;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,14 +27,17 @@ public class WishlistService {
     private final WishlistItemRepository wishlistItemRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final WishlistItemInserter wishlistItemInserter;
+    private final ProductService productService;
 
     public WishlistService(
             WishlistItemRepository wishlistItemRepository,
             CustomerProfileRepository customerProfileRepository,
-            WishlistItemInserter wishlistItemInserter) {
+            WishlistItemInserter wishlistItemInserter,
+            ProductService productService) {
         this.wishlistItemRepository = wishlistItemRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.wishlistItemInserter = wishlistItemInserter;
+        this.productService = productService;
     }
 
     @Transactional(readOnly = true)
@@ -41,6 +47,16 @@ public class WishlistService {
         Set<Long> productIds = new HashSet<>(wishlistItemRepository.findProductIdsByCustomerProfileId(profile.getId()));
         log.info("[1701] Wishlist listed userId={} profileId={} count={}", userId, profile.getId(), productIds.size());
         return new WishlistResponse(productIds);
+    }
+
+    /** The wishlist PAGE's data (full product cards), distinct from {@link #list} (just ids, for
+     * the heart-icon toggles on every product grid) - most-recently-wishlisted first. */
+    @Transactional(readOnly = true)
+    public List<ProductSummaryResponse> listProducts(Long userId) {
+        log.info("[1713] List wishlist products userId={}", userId);
+        CustomerProfile profile = resolveProfile(userId);
+        List<Long> productIds = wishlistItemRepository.findProductIdsByCustomerProfileIdOrderByCreatedAtDesc(profile.getId());
+        return productService.listByIds(productIds);
     }
 
     /**

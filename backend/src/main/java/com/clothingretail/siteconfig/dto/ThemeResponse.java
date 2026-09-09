@@ -7,4 +7,5 @@ public record ThemeResponse(
         String secondaryColor,
         String accentColor,
         String backgroundColor,
-        String textColor) {}
+        String textColor,
+        boolean richAmbient) {}

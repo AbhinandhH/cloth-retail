@@ -165,7 +165,7 @@ export default function AdminHome() {
     // compensating class to fake the same muted look.
     <div className="admin-modules-surface min-h-dvh">
       <style>{MODULE_STYLES}</style>
-      <AmbientBackground />
+      {config?.theme?.richAmbient !== false && <AmbientBackground />}
 
       <header className="sticky top-0 z-40 border-b border-[var(--admin-nav-border)] bg-[var(--brand-background,#ffffff)]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

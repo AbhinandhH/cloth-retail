@@ -8,4 +8,5 @@ public record ThemeAdminResponse(
         String accentColor,
         String backgroundColor,
         String textColor,
-        int displayOrder) {}
+        int displayOrder,
+        boolean richAmbient) {}

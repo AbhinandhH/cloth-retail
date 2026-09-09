@@ -38,4 +38,12 @@ public class Theme extends BaseEntity {
 
     @Column(name = "display_order", nullable = false)
     private int displayOrder = 0;
+
+    /**
+     * Whether the storefront's page-wide {@code AmbientBackground} wash shows for this theme.
+     * False reproduces the original, pre-redesign look: plain white behind the product list,
+     * with only BrandHero's own small local gold glow visible near the hero.
+     */
+    @Column(name = "rich_ambient", nullable = false)
+    private boolean richAmbient = true;
 }

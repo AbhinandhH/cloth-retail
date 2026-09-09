@@ -5,6 +5,7 @@ import { useSiteConfig } from '../context/SiteConfigContext'
 import { useCart } from '../context/CartContext'
 import BrandMark from './BrandMark'
 import Sheet from './Sheet'
+import { HeartIcon } from './WishlistButton'
 
 function CartIcon() {
   return (
@@ -76,6 +77,9 @@ export default function Navbar() {
           </Link>
           {isAuthenticated ? (
             <div className="flex items-center gap-5">
+              <Link to="/wishlist" className="text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]" aria-label="View wishlist">
+                <HeartIcon filled={false} className="h-6 w-6" />
+              </Link>
               <Link to="/cart" className="relative text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]" aria-label="View cart">
                 <CartIcon />
                 <CartBadge count={itemCount} />
@@ -172,10 +176,18 @@ export default function Navbar() {
                 )}
               </Link>
               <Link
-                to="/orders"
+                to="/wishlist"
                 onClick={closeDrawer}
                 className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
                 style={{ animationDelay: '100ms' }}
+              >
+                Wishlist
+              </Link>
+              <Link
+                to="/orders"
+                onClick={closeDrawer}
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                style={{ animationDelay: '140ms' }}
               >
                 My orders
               </Link>
@@ -183,14 +195,14 @@ export default function Navbar() {
                 to="/profile"
                 onClick={closeDrawer}
                 className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
-                style={{ animationDelay: '140ms' }}
+                style={{ animationDelay: '180ms' }}
               >
                 Account
               </Link>
 
               <div
                 className="animate-fade-in-up mt-3 border-t border-zinc-100 px-3 pt-4"
-                style={{ animationDelay: '180ms' }}
+                style={{ animationDelay: '220ms' }}
               >
                 <p className="text-xs text-zinc-400">Signed in as</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-zinc-700">{user?.fullName ?? user?.email}</p>
@@ -199,7 +211,7 @@ export default function Navbar() {
               <button
                 onClick={handleLogout}
                 className="animate-fade-in-up mt-2 rounded-lg px-3 py-3 text-left text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
-                style={{ animationDelay: '220ms' }}
+                style={{ animationDelay: '260ms' }}
               >
                 Log out
               </button>

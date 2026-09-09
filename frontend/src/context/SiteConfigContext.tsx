@@ -24,6 +24,10 @@ function applyThemeVariables(theme: ThemeColors | null | undefined) {
   if (theme.accentColor) root.setProperty('--brand-accent', theme.accentColor)
   if (theme.backgroundColor) root.setProperty('--brand-background', theme.backgroundColor)
   if (theme.textColor) root.setProperty('--brand-text', theme.textColor)
+  // Drives index.css's body-background rule — 'minimal' drops the page-wide
+  // gold tint entirely (see AmbientBackground.tsx / Home.tsx, which also
+  // skip rendering the full wash component for this theme).
+  document.documentElement.dataset.ambient = theme.richAmbient === false ? 'minimal' : 'rich'
 }
 
 /**

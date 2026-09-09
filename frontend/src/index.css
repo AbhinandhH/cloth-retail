@@ -62,6 +62,15 @@ body {
   background-attachment: fixed;
 }
 
+/* Classic/"standard" themes (Theme.richAmbient = false, set as a data
+   attribute by SiteConfigContext): plain background color everywhere, no
+   page-wide gold tint. The only gold left showing is BrandHero's own small
+   local glow, already scoped to the hero section itself. */
+:root[data-ambient="minimal"] body {
+  background: var(--brand-background, #ffffff);
+  background-attachment: scroll;
+}
+
 /* --- Animation system -----------------------------------------------------
  * A small, fixed vocabulary of GPU-only (transform/opacity) keyframes plus a
  * scroll-reveal utility pair driven by the useInView hook (adds/removes

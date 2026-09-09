@@ -107,6 +107,8 @@ export interface Theme {
   backgroundColor: string;
   textColor: string;
   displayOrder?: number;
+  /** False reproduces the pre-redesign look: no page-wide ambient wash, just BrandHero's own local hero glow. */
+  richAmbient: boolean;
 }
 
 /** The color set embedded in SiteConfiguration — same shape as Theme minus id/displayOrder. */
@@ -117,6 +119,7 @@ export interface ThemeColors {
   accentColor: string | null;
   backgroundColor: string;
   textColor: string;
+  richAmbient: boolean;
 }
 
 export interface SiteConfiguration {

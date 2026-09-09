@@ -10,4 +10,5 @@ public record ThemeAdminRequest(
         @Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "must be a hex color, e.g. #111827") String accentColor,
         @NotBlank(message = "must not be blank") @Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "must be a hex color, e.g. #111827") String backgroundColor,
         @NotBlank(message = "must not be blank") @Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "must be a hex color, e.g. #111827") String textColor,
-        Integer displayOrder) {}
+        Integer displayOrder,
+        Boolean richAmbient) {}
