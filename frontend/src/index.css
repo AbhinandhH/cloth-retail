@@ -90,6 +90,115 @@ body {
   background-attachment: scroll;
 }
 
+/* --- Theme motif ------------------------------------------------------------
+ * A second, independent axis from data-ambient above: not the background wash,
+ * but the site's actual visual language. "signature" (the default, and every
+ * theme shipped before this) is the storefront's original ornate/gilded/serif
+ * look. "studio" and "elan" are both quiet, editorial alternatives - no
+ * shimmer, no hero ornamentation, no scroll-triggered hero "melt" - that
+ * differ only in typeface and corner radius (studio: geometric sans,
+ * near-square; elan: warm serif, gently rounded). An admin picks one via a
+ * theme's own motif field (see Theme.java / SiteConfigContext.tsx). Every
+ * rule here is scoped to [data-motif="..."], so existing "signature" themes
+ * render exactly as before.
+ *
+ * --radius-cta is consumed by BrandHero's call-to-action button.
+ * --surface/--surface-elevated/--text-secondary/--border-subtle are the
+ * centralized, theme-derived design tokens every component should reach for
+ * instead of a hardcoded zinc-* shade (see ProductCard.tsx for the reference
+ * usage) - "elevated" surfaces (cards, modals) sit one step brighter than the
+ * page background in a light theme, one step brighter than it in a dark one,
+ * via color-mix rather than a second hardcoded color, so they track whichever
+ * theme is active automatically.
+ */
+:root {
+  --radius-cta: 9999px;
+  --surface: color-mix(in srgb, var(--brand-background, #ffffff) 100%, var(--brand-text, #18181b) 0%);
+  --surface-elevated: color-mix(in srgb, var(--brand-background, #ffffff) 96%, var(--brand-text, #18181b) 4%);
+  --text-secondary: color-mix(in srgb, var(--brand-text, #18181b) 58%, var(--brand-background, #ffffff) 42%);
+  --border-subtle: color-mix(in srgb, var(--brand-text, #18181b) 12%, var(--brand-background, #ffffff) 88%);
+  /* Champagne/bronze on Élan, falls back to the theme's own secondary for every
+     other theme (accentColor is null on all of them) rather than a fixed hex -
+     see .shimmer-text below for the one other place this fallback chain repeats. */
+  --accent-token: var(--brand-accent, var(--brand-secondary, #b8860b));
+}
+:root[data-motif="studio"],
+:root[data-motif="elan"] {
+  --surface-elevated: color-mix(in srgb, var(--brand-background, #ffffff) 98%, var(--brand-text, #18181b) 2%);
+}
+:root[data-motif="studio"] {
+  /* Overrides the @theme-declared --font-display above (same custom property,
+     just re-scoped to a higher-specificity selector) - every "font-display"
+     heading across the app (BrandHero, Footer, and every page's own <h1>)
+     switches typeface with this one declaration. */
+  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --radius-cta: 10px;
+}
+:root[data-motif="elan"] {
+  /* A warmer, softer-contrast serif than Signature's Playfair Display - editorial
+     rather than ornate, chosen so Élan reads as "premium boutique", not "generic
+     gold-foil e-commerce" or "geometric tech-brand" (studio's Archivo). */
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  /* Refined, not square (studio) and not a pill (signature) - the single detail
+     the whole "quietly expensive, not loudly rounded" brief comes down to. */
+  --radius-cta: 6px;
+}
+
+/* Brand text (BrandMark's navbar wordmark, BrandHero's heading) sweeps a moving
+   gold highlight through the glyphs on every theme, including the quiet motifs -
+   see .shimmer-text below. Kept even though studio/elan drop every other piece
+   of "signature" ornamentation, per explicit instruction: the brand name itself
+   should always catch the light, regardless of which motif is active. */
+
+/* BrandHero's diagonal light bands and radial gold glow blobs are pure
+   ornamentation (see the .hero-ornament wrapper in BrandHero.tsx) - both quiet
+   motifs' hero is meant to read as calm, so this hides them entirely rather
+   than re-theming their color. */
+[data-motif="studio"] .hero-ornament,
+[data-motif="elan"] .hero-ornament {
+  display: none;
+}
+
+/* BrandHero's scroll-triggered "melt" dissolve (see its own HERO_MELT_STYLES)
+   is a deliberate flourish for the ornate signature look - one more animation
+   than a "calm, not decorative" premium boutique brief wants, so both quiet
+   motifs just let the hero scroll away plainly instead (a fully normal,
+   unbroken fallback - see BrandHero's own comment on this animation). */
+[data-motif="studio"] .hero-melt-surface,
+[data-motif="elan"] .hero-melt-surface {
+  animation: none;
+}
+
+/* Product cards (ProductCard.tsx): signature's default corner radius reads as
+   friendly/boutique-casual; both quiet motifs want it to read as a catalogue
+   plate instead - a hairline border in place of any hover shadow, and a
+   smaller, consistent radius. */
+[data-motif="studio"] .product-card-surface,
+[data-motif="elan"] .product-card-surface {
+  box-shadow: none;
+  border: 1px solid var(--border-subtle);
+}
+[data-motif="studio"] .product-card-surface:hover,
+[data-motif="elan"] .product-card-surface:hover {
+  border-color: color-mix(in srgb, var(--border-subtle) 60%, var(--brand-text, #18181b) 40%);
+}
+[data-motif="elan"] .product-card-surface {
+  border-radius: 3px;
+}
+[data-motif="elan"] .product-card-image {
+  border-radius: 2px;
+}
+
+/* One consistent primary-CTA radius, reused everywhere the app's established "rounded-full
+   dark-fill" primary button pattern appears (Navbar's Sign up, FilterSheet's Show results,
+   EmptyState's action, Cart/Checkout's Place order, ProductDetail's Add to cart) - swap
+   Tailwind's literal rounded-full for this class so every primary button across the app tracks
+   the same --radius-cta BrandHero already uses, instead of a fixed pill that only Élan/Studio's
+   hero would otherwise escape. */
+.btn-primary-radius {
+  border-radius: var(--radius-cta, 9999px);
+}
+
 /* --- Animation system -----------------------------------------------------
  * A small, fixed vocabulary of GPU-only (transform/opacity) keyframes plus a
  * scroll-reveal utility pair driven by the useInView hook (adds/removes
@@ -169,10 +278,14 @@ body {
   to { background-position: 100% 0; }
 }
 .shimmer-text {
+  /* A fixed gold (not var(--brand-secondary)) so the sweep reads as gold foil on every
+     theme - most themes' own secondary color isn't gold at all (e.g. Rose & Charcoal's
+     is near-black, Élan's is a muted taupe), which made this look tinted whatever color
+     the theme happened to be rather than the "gold foil" the effect is named for. */
   background-image: linear-gradient(
     100deg,
     var(--shimmer-base) 42%,
-    color-mix(in srgb, var(--brand-secondary, #d4af37) 70%, white) 50%,
+    color-mix(in srgb, #d4af37 70%, white) 50%,
     var(--shimmer-base) 58%
   );
   background-size: 260% 100%;

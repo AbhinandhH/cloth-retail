@@ -231,7 +231,7 @@ export default function AdminHome() {
       {/* Same pt trim as Home.tsx's identical wrapper, for the same reason: the sticky
           header already carries its own height, so a full py-6 here doubled up as empty
           air above the hero's logo mark. */}
-      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pt-4">
+      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-0 sm:px-6 lg:px-8">
         <BrandHero
           eyebrow="Admin console"
           heading={config?.businessName || <>Loom Atelier Studio</>}

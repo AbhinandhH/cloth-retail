@@ -17,15 +17,15 @@ interface EmptyStateProps {
 export default function EmptyState({ icon, title, message, ctaLabel, ctaTo, onCta }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center px-4 py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">{icon}</div>
-      <p className="mt-5 text-base font-medium text-zinc-900">{title}</p>
-      {message && <p className="mt-1.5 max-w-xs text-sm text-zinc-500">{message}</p>}
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface-elevated)] text-[var(--text-secondary)]">{icon}</div>
+      <p className="mt-5 text-base font-medium text-[var(--brand-text,#18181b)]">{title}</p>
+      {message && <p className="mt-1.5 max-w-xs text-sm text-[var(--text-secondary)]">{message}</p>}
       {ctaLabel && (ctaTo || onCta) && (
         <>
           {ctaTo ? (
             <Link
               to={ctaTo}
-              className="mt-6 rounded-full bg-[var(--brand-primary,#18181b)] px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="mt-6 btn-primary-radius bg-[var(--brand-primary,#18181b)] px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               {ctaLabel}
             </Link>
@@ -33,7 +33,7 @@ export default function EmptyState({ icon, title, message, ctaLabel, ctaTo, onCt
             <button
               type="button"
               onClick={onCta}
-              className="mt-6 rounded-full bg-[var(--brand-primary,#18181b)] px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="mt-6 btn-primary-radius bg-[var(--brand-primary,#18181b)] px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               {ctaLabel}
             </button>

@@ -24,9 +24,12 @@ export default function ProductCard({ product, index = 0 }: { product: ProductLi
     <div ref={ref} className={`reveal ${isInView ? 'is-visible' : ''}`} style={{ transitionDelay: `${delayMs}ms` }}>
       <Link
         to={`/product/${product.slug}`}
-        className="group block rounded-xl p-1 transition-shadow duration-300 hover:shadow-soft"
+        // product-card-surface: a quiet-motif hook (see index.css) that drops the hover shadow
+        // and, on Élan, tightens the radius - the "signature" theme's own rounded-xl/shadow-soft
+        // classes below still apply as the default for every theme that isn't studio/elan.
+        className="product-card-surface group block rounded-xl p-1 transition-shadow duration-300 hover:shadow-soft"
       >
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-zinc-100">
+        <div className="product-card-image relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-[var(--surface-elevated)]">
           <img
             src={toMediaUrl(product.primaryImageUrl) ?? undefined}
             alt={product.name}
@@ -66,19 +69,19 @@ export default function ProductCard({ product, index = 0 }: { product: ProductLi
         </div>
 
         <div className="px-1 pt-2.5 sm:pt-3">
-          <p className="truncate text-[10px] font-medium uppercase tracking-wide text-zinc-500 sm:text-xs">{product.brand}</p>
-          <h3 className="mt-0.5 truncate text-xs font-medium text-zinc-900 sm:text-sm">{product.name}</h3>
+          <p className="truncate text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)] sm:text-xs">{product.brand}</p>
+          <h3 className="mt-0.5 truncate text-xs font-medium text-[var(--brand-text,#18181b)] sm:text-sm">{product.name}</h3>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 sm:mt-1.5">
-            <span className="text-xs font-semibold text-zinc-900 sm:text-sm">
+            <span className="text-xs font-semibold text-[var(--brand-text,#18181b)] sm:text-sm">
               {priceRange ? `${formatPrice(discountedPrice)}+` : formatPrice(discountedPrice)}
             </span>
             {hasDiscount && (
-              <span className="text-[10px] text-zinc-400 line-through sm:text-xs">{formatPrice(product.minPrice)}</span>
+              <span className="text-[10px] text-[var(--text-secondary)] line-through sm:text-xs">{formatPrice(product.minPrice)}</span>
             )}
           </div>
 
-          <span className="mt-1.5 hidden truncate rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 sm:mt-2 sm:inline-block">
+          <span className="mt-1.5 hidden truncate rounded-full bg-[var(--surface-elevated)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] sm:mt-2 sm:inline-block">
             {product.categoryName}
           </span>
         </div>

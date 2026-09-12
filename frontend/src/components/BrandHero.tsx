@@ -160,12 +160,18 @@ export default function BrandHero({
       // top margin below) lets that grid peek into view on load without touching
       // anything's width or removing/overlapping any element - it's purely less
       // empty space above and below the same content.
-      className="hero-melt-surface relative left-1/2 right-1/2 -mx-[50vw] mb-6 w-screen overflow-hidden px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-14"
+      // pt is a fixed, near-zero 10px (not part of the pb scale below): the gap between
+      // the sticky Navbar and the logo mark right below it, called out separately since
+      // the Navbar already carries its own height/padding - this doesn't need to grow
+      // with the breakpoint the way the hero's bottom spacing does.
+      className="hero-melt-surface relative left-1/2 right-1/2 -mx-[50vw] mb-6 w-screen overflow-hidden px-4 pb-8 pt-[10px] sm:px-6 sm:pb-12 lg:px-8 lg:pb-14"
     >
       <style>{HERO_MELT_STYLES}</style>
       <style>{MARK_STYLES}</style>
 
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {/* hero-ornament: hidden outright under the "studio" theme motif (see index.css) -
+          this whole group is pure decoration, and studio's hero is meant to read as quiet. */}
+      <div className="hero-ornament pointer-events-none absolute inset-0" aria-hidden="true">
         {/* The diagonal light bands and gold corner blobs below are uniform
             patterns that would otherwise get truncated in a hard line right at
             this section's top/bottom edge (courtesy of its own overflow-hidden).
@@ -251,10 +257,13 @@ export default function BrandHero({
           <button
             type="button"
             onClick={cta.onClick}
-            className="animate-fade-in-up mt-8 inline-flex items-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-semibold ring-1 transition-transform hover:scale-[1.02] sm:mt-10"
+            className="animate-fade-in-up mt-8 inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-semibold ring-1 transition-transform hover:scale-[1.02] sm:mt-10"
             style={{
               backgroundColor: INK,
               color: ON_INK,
+              // Pill-shaped by default; the "studio" theme motif squares this off via
+              // --radius-cta (see index.css) instead of a fixed rounded-full class.
+              borderRadius: "var(--radius-cta, 9999px)",
               ["--tw-ring-color" as string]: `color-mix(in srgb, ${ACCENT} 50%, transparent)`,
               animationDelay: "200ms",
             }}

@@ -117,7 +117,8 @@ public class SiteConfigurationService {
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
-                theme.isRichAmbient());
+                theme.isRichAmbient(),
+                theme.getMotif());
     }
 
     private ThemeAdminResponse toThemeAdminResponse(Theme theme) {
@@ -130,6 +131,7 @@ public class SiteConfigurationService {
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
                 theme.getDisplayOrder(),
-                theme.isRichAmbient());
+                theme.isRichAmbient(),
+                theme.getMotif());
     }
 }

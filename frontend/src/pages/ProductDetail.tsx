@@ -411,7 +411,7 @@ export default function ProductDetail() {
             type="button"
             onClick={handleAddToCart}
             disabled={!inStock || addingToCart}
-            className="mt-4 w-full rounded-full bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
+            className="mt-4 w-full btn-primary-radius bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
           >
             {!inStock ? 'Out of stock' : addingToCart ? 'Adding…' : 'Add to cart'}
           </button>

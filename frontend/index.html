@@ -7,8 +7,14 @@
     <title>Loom Atelier Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Playfair Display: the "Signature" theme motif's display face (ornate/serif).
+         Archivo: the "Studio" motif's display face (clean/geometric). Fraunces: the "Élan"
+         motif's display face (warm, soft-contrast editorial serif) - see index.css's
+         [data-motif="..."] overrides of --font-display. All three are loaded unconditionally
+         since which one is actually used depends on the admin-configured active theme, decided
+         at runtime, not at build time. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Archivo:wght@500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
       rel="stylesheet"
     />
   </head>

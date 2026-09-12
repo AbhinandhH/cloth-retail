@@ -9,4 +9,5 @@ public record ThemeAdminResponse(
         String backgroundColor,
         String textColor,
         int displayOrder,
-        boolean richAmbient) {}
+        boolean richAmbient,
+        String motif) {}

@@ -220,7 +220,7 @@ export default function Home() {
           full py-6 here doubled up as visible empty air between it and the hero's logo mark
           right above the fold - see BrandHero.tsx's own py cut for the matching change below
           the hero. pb is left alone; it isn't the gap being complained about. */}
-      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pt-4">
+      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-0 sm:px-6 lg:px-8">
         <ShopHero
           businessName={config?.businessName ?? null}
           tagline={config?.tagline ?? null}

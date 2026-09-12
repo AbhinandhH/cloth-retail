@@ -8,4 +8,5 @@ public record ThemeResponse(
         String accentColor,
         String backgroundColor,
         String textColor,
-        boolean richAmbient) {}
+        boolean richAmbient,
+        String motif) {}

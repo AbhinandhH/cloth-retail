@@ -3,7 +3,7 @@
  * from the same shimmer/radius language instead of one-off `animate-pulse`
  * divs with inconsistent rounding.
  */
-const BASE = 'animate-pulse rounded-md bg-zinc-100'
+const BASE = 'animate-pulse rounded-md bg-[var(--surface-elevated)]'
 
 export function SkeletonBlock({ className = '' }: { className?: string }) {
   return <div className={`${BASE} ${className}`} />

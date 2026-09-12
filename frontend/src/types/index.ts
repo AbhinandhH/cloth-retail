@@ -164,6 +164,8 @@ export interface Theme {
   displayOrder?: number;
   /** False reproduces the pre-redesign look: no page-wide ambient wash, just BrandHero's own local hero glow. */
   richAmbient: boolean;
+  /** "SIGNATURE" (ornate/serif/shimmer, the default) or "STUDIO" (calm/geometric/flat) — see index.css's [data-motif] rules. */
+  motif: string;
 }
 
 /** The color set embedded in SiteConfiguration — same shape as Theme minus id/displayOrder. */
@@ -175,6 +177,7 @@ export interface ThemeColors {
   backgroundColor: string;
   textColor: string;
   richAmbient: boolean;
+  motif: string;
 }
 
 export interface SiteConfiguration {

@@ -113,6 +113,7 @@ public class ThemeService {
         theme.setTextColor(request.textColor());
         theme.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
         theme.setRichAmbient(request.richAmbient() != null ? request.richAmbient() : true);
+        theme.setMotif(request.motif() != null && !request.motif().isBlank() ? request.motif() : "SIGNATURE");
     }
 
     private ThemeAdminResponse toAdminResponse(Theme theme) {
@@ -125,7 +126,8 @@ public class ThemeService {
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
                 theme.getDisplayOrder(),
-                theme.isRichAmbient());
+                theme.isRichAmbient(),
+                theme.getMotif());
     }
 
     private PublicConfigurationResponse toPublicResponse(SiteConfiguration config) {
@@ -155,6 +157,7 @@ public class ThemeService {
                 theme.getAccentColor(),
                 theme.getBackgroundColor(),
                 theme.getTextColor(),
-                theme.isRichAmbient());
+                theme.isRichAmbient(),
+                theme.getMotif());
     }
 }

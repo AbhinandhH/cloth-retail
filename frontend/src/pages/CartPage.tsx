@@ -235,7 +235,7 @@ export default function CartPage() {
 
       <Link
         to="/checkout"
-        className="mt-4 block w-full rounded-full bg-[var(--brand-primary,#18181b)] py-3.5 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        className="mt-4 block w-full btn-primary-radius bg-[var(--brand-primary,#18181b)] py-3.5 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90"
       >
         Proceed to checkout
       </Link>

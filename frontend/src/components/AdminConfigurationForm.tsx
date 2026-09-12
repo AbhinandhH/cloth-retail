@@ -30,6 +30,25 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
   }
 }
 
+/**
+ * Curated copy for a theme's motif (see Theme.java's own doc comment for what each one changes
+ * visually) - no backend field for this since it's editorial copy about the *motif*, shared by
+ * every theme that picks it, not a per-theme admin-editable field like the other Theme columns.
+ */
+const MOTIF_INFO: Record<string, { label: string; description: string; badgeClass: string } | undefined> = {
+  STUDIO: {
+    label: 'Studio',
+    description: 'A calm, geometric look: a clean sans display face, no shimmer or hero glow, and a squared-off call-to-action.',
+    badgeClass: 'bg-indigo-50 text-indigo-600',
+  },
+  ELAN: {
+    label: 'Élan',
+    description:
+      'A refined editorial-inspired fashion theme combining warm neutrals, sophisticated typography, subtle contrast, and elegant interactions to create a premium boutique shopping experience.',
+    badgeClass: 'bg-amber-50 text-amber-700',
+  },
+}
+
 /** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {
   return (
@@ -165,6 +184,7 @@ export default function AdminConfigurationForm() {
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {themes.map((theme) => {
               const isActive = String(theme.id) === String(activeThemeId)
+              const motifInfo = MOTIF_INFO[theme.motif]
               return (
                 <div
                   key={theme.id}
@@ -175,6 +195,14 @@ export default function AdminConfigurationForm() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-zinc-900">{theme.name}</span>
                     <div className="flex items-center gap-1.5">
+                      {motifInfo && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${motifInfo.badgeClass}`}
+                          title={motifInfo.description}
+                        >
+                          {motifInfo.label}
+                        </span>
+                      )}
                       {!theme.richAmbient && (
                         <span
                           className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-500"
@@ -190,6 +218,7 @@ export default function AdminConfigurationForm() {
                       )}
                     </div>
                   </div>
+                  {motifInfo && <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{motifInfo.description}</p>}
                   <div className="mt-3 flex items-center gap-2">
                     <Swatch color={theme.primaryColor} label="Primary" />
                     <Swatch color={theme.secondaryColor} label="Secondary" />

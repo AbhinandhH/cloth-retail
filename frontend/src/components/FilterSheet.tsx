@@ -81,7 +81,7 @@ export default function FilterSheet({ open, onClose, categories, sizes, colors, 
           <button
             type="button"
             onClick={() => onApply(draft)}
-            className="ml-auto flex-1 rounded-full bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="ml-auto flex-1 btn-primary-radius bg-[var(--brand-primary,#18181b)] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Show results
           </button>

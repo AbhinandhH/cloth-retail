@@ -46,4 +46,16 @@ public class Theme extends BaseEntity {
      */
     @Column(name = "rich_ambient", nullable = false)
     private boolean richAmbient = true;
+
+    /**
+     * Which visual language this theme uses, beyond just its 5 colors - "SIGNATURE" (default,
+     * the storefront's existing ornate/gilded/serif look), "STUDIO" (a calmer, geometric-sans
+     * look with no shimmer/glow ornamentation and a squared CTA), or "ELAN" (a premium editorial
+     * boutique look: a warm serif display face, the same quiet no-shimmer/no-ornament treatment
+     * as Studio, and a refined, barely-rounded CTA rather than square or pill). A plain string
+     * rather than a Java enum to match this entity's existing fields, which are all validated at
+     * the DTO boundary (see ThemeAdminRequest) rather than via JPA typing.
+     */
+    @Column(nullable = false, length = 20)
+    private String motif = "SIGNATURE";
 }
