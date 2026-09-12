@@ -1,8 +1,11 @@
 # Backend (Maven / Spring Boot)
 backend/target/
-backend/.mvn/
 backend/*.log
 backend/HELP.md
+# backend/.mvn/ is NOT ignored - it's the Maven Wrapper (mvnw's jar + config), meant to be
+# committed so a build works with no local Maven install. It was wrongly ignored here, which
+# silently broke every Dockerfile/CI build that runs `mvnw` in a fresh clone (no local .mvn/
+# cache to fall back on, unlike a machine that already had it) - see docker/backend.Dockerfile.
 
 # Frontend (Node / Vite)
 frontend/node_modules/
