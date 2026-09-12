@@ -9,6 +9,16 @@ import { useLocation } from 'react-router-dom'
  * "opened from the bottom" instead of the top. Mounted once near the root
  * (see App.tsx), resetting scroll on every pathname change.
  */
+// The browser's own scroll restoration (default 'auto') restores a route's PRE-navigation
+// scroll position on a back/forward transition - which fights with both the reset below and
+// Home/AdminHome's own "skip the hero on a return trip" scroll (see their HOME_VISITED_KEY /
+// ADMIN_HOME_VISITED_KEY effects), since native restoration can win a race against a React
+// effect on a popstate navigation. Set once, outside the component, since it's a one-time global
+// browser setting, not something that needs re-applying per navigation.
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+
 export default function ScrollToTop() {
   const { pathname } = useLocation()
 

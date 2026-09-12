@@ -29,6 +29,8 @@ public class NotificationSettingsService {
         NotificationSettings settings = loadSingleton();
         settings.setEmailVerificationEnabled(request.emailVerificationEnabled());
         settings.setMobileVerificationEnabled(request.mobileVerificationEnabled());
+        settings.setEmailSubject(request.emailSubject());
+        settings.setMessageTemplate(request.messageTemplate());
         settings = notificationSettingsRepository.save(settings);
         log.info("[1971] Notification settings updated emailVerificationEnabled={} mobileVerificationEnabled={}",
                 settings.isEmailVerificationEnabled(), settings.isMobileVerificationEnabled());
@@ -46,6 +48,10 @@ public class NotificationSettingsService {
     }
 
     private NotificationSettingsResponse toResponse(NotificationSettings settings) {
-        return new NotificationSettingsResponse(settings.isEmailVerificationEnabled(), settings.isMobileVerificationEnabled());
+        return new NotificationSettingsResponse(
+                settings.isEmailVerificationEnabled(),
+                settings.isMobileVerificationEnabled(),
+                settings.getEmailSubject(),
+                settings.getMessageTemplate());
     }
 }

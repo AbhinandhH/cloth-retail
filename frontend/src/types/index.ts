@@ -40,10 +40,41 @@ export interface VerificationStatusResponse {
   auth: AuthResponse | null;
 }
 
-/** Admin-controllable on/off switches for the OTP notification channels — see the Notifications admin module. */
+/**
+ * Admin-controllable on/off switches for the OTP notification channels, plus the message
+ * content — see the Notifications admin module. messageTemplate is shared by both channels and
+ * supports {code}/{ttlMinutes} placeholders; emailSubject is email-only.
+ */
 export interface NotificationSettings {
   emailVerificationEnabled: boolean;
   mobileVerificationEnabled: boolean;
+  emailSubject: string;
+  messageTemplate: string;
+}
+
+/** The real password is never returned by the backend — passwordConfigured just says whether one is set. */
+export interface SmtpSettings {
+  host: string | null;
+  port: number;
+  username: string | null;
+  passwordConfigured: boolean;
+  fromAddress: string | null;
+  useStarttls: boolean;
+}
+
+/** password omitted/blank means "keep the currently stored password" — see SmtpSettings.passwordConfigured. */
+export interface SmtpSettingsUpdate {
+  host: string | null;
+  port: number;
+  username: string | null;
+  password?: string;
+  fromAddress: string | null;
+  useStarttls: boolean;
+}
+
+export interface SmtpTestResult {
+  success: boolean;
+  message: string;
 }
 
 export interface FieldError {

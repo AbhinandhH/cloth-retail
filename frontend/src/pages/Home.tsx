@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "../api/products";
 import { getErrorMessage } from "../api/client";
@@ -21,6 +21,10 @@ import type { ProductListItem } from "../types";
 
 const PAGE_SIZE = 20;
 const RESULTS_ANCHOR_ID = "shop-results";
+// Set once Home has been shown this session, so a later return trip (e.g. opening a product then
+// hitting back, or the navbar's "Shop" link) can tell "first visit, show the hero" apart from
+// "already browsed, skip straight back to the product grid" - see the effect below.
+const HOME_VISITED_KEY = "home:visited";
 
 /**
  * Premium, typography-forward brand intro. Renders immediately with sensible
@@ -72,6 +76,30 @@ export default function Home() {
   // the debounced value is what actually drives the URL/query.
   const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(searchInput, 400);
+
+  // First-ever visit this session -> show the hero as normal. Any later remount (opening a
+  // product and coming back via the page's own back button, or the navbar's "Shop" link) ->
+  // skip straight to the product grid instead of re-showing the hero. A plain useEffect (not
+  // useLayoutEffect) is required here: ScrollToTop (mounted near the root, see App.tsx) resets
+  // scroll to 0 on every route change via its own useEffect, and sibling passive effects fire in
+  // tree order, so this one only runs - and only wins - by firing after that reset, not before it.
+  //
+  // hasCheckedVisited guards against StrictMode's dev-only double-invoke of effects (mount ->
+  // cleanup -> mount again, same component instance): without it, a genuine first-ever visit
+  // would read sessionStorage as unset, correctly skip the scroll, write "true" - then the
+  // second (StrictMode-simulated) invocation reads that just-written "true" and incorrectly
+  // scrolls anyway, on every single visit including the very first one. The ref persists across
+  // that double-invoke (same instance), so the second pass is a no-op.
+  const hasCheckedVisited = useRef(false);
+  useEffect(() => {
+    if (hasCheckedVisited.current) return;
+    hasCheckedVisited.current = true;
+    const alreadyVisited = sessionStorage.getItem(HOME_VISITED_KEY) === "true";
+    sessionStorage.setItem(HOME_VISITED_KEY, "true");
+    if (alreadyVisited) {
+      document.getElementById(RESULTS_ANCHOR_ID)?.scrollIntoView({ block: "start" });
+    }
+  }, []);
 
   const page = Number(searchParams.get("page") ?? "0") || 0;
   const categoryId = searchParams.get("categoryId") ?? "";
@@ -188,7 +216,11 @@ export default function Home() {
   return (
     <>
       {config?.theme?.richAmbient !== false && <AmbientBackground />}
-      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* pt trimmed well below pb: the sticky Navbar already carries its own height, so a
+          full py-6 here doubled up as visible empty air between it and the hero's logo mark
+          right above the fold - see BrandHero.tsx's own py cut for the matching change below
+          the hero. pb is left alone; it isn't the gap being complained about. */}
+      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pt-4">
         <ShopHero
           businessName={config?.businessName ?? null}
           tagline={config?.tagline ?? null}

@@ -1,3 +1,7 @@
 package com.clothingretail.notification.dto;
 
-public record NotificationSettingsResponse(boolean emailVerificationEnabled, boolean mobileVerificationEnabled) {}
+public record NotificationSettingsResponse(
+        boolean emailVerificationEnabled,
+        boolean mobileVerificationEnabled,
+        String emailSubject,
+        String messageTemplate) {}

@@ -154,7 +154,13 @@ export default function BrandHero({
       // the standard viewport-relative breakout: it centers a 100vw-wide box
       // on the actual browser viewport regardless of the parent's own width
       // or offset, so this reaches both edges on any screen size.
-      className="hero-melt-surface relative left-1/2 right-1/2 -mx-[50vw] mb-8 w-screen overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-28"
+      // Shorter vertical padding than an earlier version: on most screens the hero
+      // used to fill the entire first viewport on its own, leaving a visitor no hint
+      // that a product grid sits right below it. Trimming this (and the CTA's own
+      // top margin below) lets that grid peek into view on load without touching
+      // anything's width or removing/overlapping any element - it's purely less
+      // empty space above and below the same content.
+      className="hero-melt-surface relative left-1/2 right-1/2 -mx-[50vw] mb-6 w-screen overflow-hidden px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-14"
     >
       <style>{HERO_MELT_STYLES}</style>
       <style>{MARK_STYLES}</style>
@@ -245,7 +251,7 @@ export default function BrandHero({
           <button
             type="button"
             onClick={cta.onClick}
-            className="animate-fade-in-up mt-12 inline-flex items-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-semibold ring-1 transition-transform hover:scale-[1.02] sm:mt-16"
+            className="animate-fade-in-up mt-8 inline-flex items-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-semibold ring-1 transition-transform hover:scale-[1.02] sm:mt-10"
             style={{
               backgroundColor: INK,
               color: ON_INK,

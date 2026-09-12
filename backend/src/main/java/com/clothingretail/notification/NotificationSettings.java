@@ -30,4 +30,12 @@ public class NotificationSettings extends BaseEntity {
 
     @Column(name = "mobile_verification_enabled", nullable = false)
     private boolean mobileVerificationEnabled = false;
+
+    /** Email-only - SMS has no subject line. */
+    @Column(name = "email_subject", nullable = false, length = 255)
+    private String emailSubject = "Verify your email";
+
+    /** Shared by both channels - see OtpService, which substitutes {code} and {ttlMinutes} into this at send time. */
+    @Column(name = "message_template", nullable = false, length = 1000)
+    private String messageTemplate = "Your verification code is {code}. It expires in {ttlMinutes} minutes.";
 }

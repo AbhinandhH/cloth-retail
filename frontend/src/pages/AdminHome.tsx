@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -7,6 +8,10 @@ import BrandHero from "../components/BrandHero";
 import BrandMark from "../components/BrandMark";
 
 const MODULES_ANCHOR_ID = "admin-modules";
+// Set once the admin home page has been shown this session, so a later return trip (e.g. opening
+// a module then hitting back) can skip straight to the module grid instead of re-showing the
+// hero - see the effect in AdminHome() below, and Home.tsx's identical HOME_VISITED_KEY pattern.
+const ADMIN_HOME_VISITED_KEY = "adminHome:visited";
 
 // Same theme-derived-token pattern as Footer.tsx: scoped custom properties so
 // Tailwind's arbitrary-value classes (including hover: variants) can each
@@ -170,6 +175,26 @@ export default function AdminHome() {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // First-ever visit this session -> show the hero as normal. Any later remount (opening a
+  // module and coming back via its own back link) -> skip straight to the module grid. A plain
+  // useEffect (not useLayoutEffect) is required: ScrollToTop (mounted near the root, see App.tsx)
+  // resets scroll to 0 on every route change via its own useEffect, and sibling passive effects
+  // fire in tree order, so this one only wins by firing after that reset, not before it.
+  //
+  // hasCheckedVisited guards against StrictMode's dev-only double-invoke of effects (mount ->
+  // cleanup -> mount again, same component instance) - see Home.tsx's identical guard for the
+  // full explanation of why skipping it makes even a genuine first-ever visit scroll incorrectly.
+  const hasCheckedVisited = useRef(false);
+  useEffect(() => {
+    if (hasCheckedVisited.current) return;
+    hasCheckedVisited.current = true;
+    const alreadyVisited = sessionStorage.getItem(ADMIN_HOME_VISITED_KEY) === "true";
+    sessionStorage.setItem(ADMIN_HOME_VISITED_KEY, "true");
+    if (alreadyVisited) {
+      document.getElementById(MODULES_ANCHOR_ID)?.scrollIntoView({ block: "start" });
+    }
+  }, []);
+
   return (
     // No bg-white: Home's own Layout wrapper lost this class too (see its own
     // comment) since an opaque background here sat between AmbientBackground
@@ -203,7 +228,10 @@ export default function AdminHome() {
         </div>
       </header>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* Same pt trim as Home.tsx's identical wrapper, for the same reason: the sticky
+          header already carries its own height, so a full py-6 here doubled up as empty
+          air above the hero's logo mark. */}
+      <div className="relative mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pt-4">
         <BrandHero
           eyebrow="Admin console"
           heading={config?.businessName || <>Loom Atelier Studio</>}

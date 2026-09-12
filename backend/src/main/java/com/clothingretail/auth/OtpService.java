@@ -1,6 +1,8 @@
 package com.clothingretail.auth;
 
 import com.clothingretail.common.ConflictException;
+import com.clothingretail.notification.NotificationSettings;
+import com.clothingretail.notification.NotificationSettingsRepository;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +26,7 @@ public class OtpService {
     private final JwtService jwtService;
     private final EmailSender emailSender;
     private final SmsSender smsSender;
+    private final NotificationSettingsRepository notificationSettingsRepository;
 
     private final int codeLength;
     private final int ttlMinutes;
@@ -35,6 +38,7 @@ public class OtpService {
             JwtService jwtService,
             EmailSender emailSender,
             SmsSender smsSender,
+            NotificationSettingsRepository notificationSettingsRepository,
             @Value("${app.otp.code-length:6}") int codeLength,
             @Value("${app.otp.ttl-minutes:10}") int ttlMinutes,
             @Value("${app.otp.max-attempts:5}") int maxAttempts,
@@ -43,6 +47,7 @@ public class OtpService {
         this.jwtService = jwtService;
         this.emailSender = emailSender;
         this.smsSender = smsSender;
+        this.notificationSettingsRepository = notificationSettingsRepository;
         this.codeLength = codeLength;
         this.ttlMinutes = ttlMinutes;
         this.maxAttempts = maxAttempts;
@@ -73,12 +78,28 @@ public class OtpService {
         otpCodeRepository.save(otp);
         log.info("[1954] OTP generated registrationId={} channel={} expiresAt={}", registration.getId(), channel, otp.getExpiresAt());
 
-        String message = "Your verification code is " + code + ". It expires in " + ttlMinutes + " minutes.";
+        NotificationSettings settings = loadNotificationSettings();
+        String message = renderMessage(settings.getMessageTemplate(), code);
         if (channel == OtpChannel.EMAIL) {
-            emailSender.send(registration.getEmail(), "Verify your email", message);
+            emailSender.send(registration.getEmail(), settings.getEmailSubject(), message);
         } else {
             smsSender.send(registration.getMobileNumber(), message);
         }
+    }
+
+    /** Substitutes {code}/{ttlMinutes} into the admin-configured template - see NotificationSettings.messageTemplate. */
+    private String renderMessage(String template, String code) {
+        return template.replace("{code}", code).replace("{ttlMinutes}", String.valueOf(ttlMinutes));
+    }
+
+    private NotificationSettings loadNotificationSettings() {
+        return notificationSettingsRepository.findById(NotificationSettings.SINGLETON_ID)
+                .orElseThrow(() -> {
+                    log.error("[1990] Singleton notification_settings row (id={}) is missing", NotificationSettings.SINGLETON_ID);
+                    return new IllegalStateException(
+                            "Singleton notification_settings row (id=1) is missing - this is a startup-time misconfiguration, "
+                                    + "check that V16__notification_settings.sql ran");
+                });
     }
 
     /** Returns true if the code matches; false (never throws for a wrong code) so the caller can surface a clean "incorrect code" message. */
