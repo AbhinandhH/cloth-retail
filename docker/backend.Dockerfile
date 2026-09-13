@@ -1,4 +1,6 @@
 # Multi-stage build for the clothing-retail Spring Boot backend.
+# build-rev: 2026-09-13-uploads-perm-fix (bump this comment to force a genuinely fresh build on
+# a host that's serving a stale cached image despite new source - see git history for why)
 
 # ---- Build stage ----
 FROM eclipse-temurin:25-jdk AS build
