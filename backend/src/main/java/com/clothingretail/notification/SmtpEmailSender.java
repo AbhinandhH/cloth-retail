@@ -76,6 +76,16 @@ public class SmtpEmailSender implements EmailSender {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", String.valueOf(settings.isUseStarttls()));
+        // Without these, an unreachable/misconfigured SMTP host (wrong port, blocked outbound
+        // connection, typo'd hostname) hangs this call indefinitely - JavaMailSenderImpl sets no
+        // timeout by default. That's not just slow: it blocks the calling request thread forever,
+        // which for a caller like registration (see OtpService.generateAndSend, called
+        // synchronously from AuthService.register) means the customer's signup request itself
+        // never returns. 10s each is generous for a real SMTP handshake but still fails fast
+        // enough to surface as a clear error instead of an indefinite hang.
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
         return mailSender;
     }
 }
