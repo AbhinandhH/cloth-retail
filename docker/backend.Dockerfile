@@ -34,7 +34,11 @@ RUN printf '%s\n' \
   'set -e' \
   'mkdir -p /app/uploads' \
   'chown -R appuser:appuser /app/uploads' \
-  'exec su -s /bin/sh appuser -c "exec java -jar /app/app.jar"' \
+  '# su resets PATH for the target user, so a bare `java` lookup inside its shell fails' \
+  '# ("java: not found") even though it is installed - resolve the absolute path here,' \
+  '# as root (whose PATH is correct), and hand su a literal path instead of a bare name.' \
+  'JAVA_BIN=$(command -v java)' \
+  'exec su -s /bin/sh appuser -c "exec $JAVA_BIN -jar /app/app.jar"' \
   > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 EXPOSE 8080
