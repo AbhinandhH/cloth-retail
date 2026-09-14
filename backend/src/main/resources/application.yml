@@ -67,6 +67,14 @@ app:
     # cleanup job (OrderReservationCleanupJob) releases it and cancels the order.
     reservation-ttl-minutes: ${ORDER_RESERVATION_TTL_MINUTES:15}
   payment:
+    # "mock" (default): MockPaymentGateway, the fake dev/test gateway - no real gateway account
+    # needed, drives /api/payments/mock/simulate and the OrderConcurrencyIntegrationTest suite.
+    # "razorpay": RazorpayPaymentGateway, a real gateway - see the razorpay.* keys below, both
+    # required in that mode. Switching this is the only step needed; nothing else in the app
+    # changes code paths at runtime, and MockPaymentGateway keeps working unchanged either way
+    # (PaymentService's dev-only simulate endpoint always depends on it directly, regardless of
+    # which gateway is actually live) - see PaymentConfig for how the two beans coexist.
+    provider: ${PAYMENT_PROVIDER:mock}
     mock:
       # Local-dev-only shared secret for MockPaymentGateway's HMAC-SHA256 webhook signing/verification.
       # Same story as app.jwt.secret above - override via env var in any non-local environment.
@@ -80,6 +88,16 @@ app:
     ttl-minutes: ${OTP_TTL_MINUTES:10}
     max-attempts: ${OTP_MAX_ATTEMPTS:5}
     resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:30}
+
+# Only consulted when app.payment.provider=razorpay (see above) - a test-mode key pair works
+# unchanged here, since Razorpay's test and live modes use the same API shape, just different
+# key prefixes (rzp_test_... vs rzp_live_...). webhook-secret is set separately in the Razorpay
+# dashboard when creating the webhook (Settings -> Webhooks -> add
+# https://<your-backend>/api/payments/razorpay/webhook) - it is NOT the same value as key-secret.
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:}
+  key-secret: ${RAZORPAY_KEY_SECRET:}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
 
 springdoc:
   swagger-ui:

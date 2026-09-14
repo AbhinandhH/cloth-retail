@@ -63,6 +63,10 @@ public class SecurityConfig {
                         // not Spring Security. See PaymentController.webhook / MockPaymentGateway.
                         .requestMatchers(HttpMethod.POST, "/api/payments/webhook")
                         .permitAll()
+                        // Same reasoning as the mock webhook above, for Razorpay's own delivery -
+                        // see RazorpayWebhookController and RazorpayPaymentGateway.verifySignature.
+                        .requestMatchers(HttpMethod.POST, "/api/payments/razorpay/webhook")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/products/**",
                                 "/api/categories",
@@ -74,6 +78,7 @@ public class SecurityConfig {
                                 "/api/vendors",
                                 "/api/damage-reasons",
                                 "/api/configuration",
+                                "/api/payments/config",
                                 "/media/**")
                         .permitAll()
                         .requestMatchers(
