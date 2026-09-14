@@ -928,12 +928,19 @@ export interface Wishlist {
 }
 
 // --- Customer payments -------------------------------------------------
-// /api/payments — dev/simulation gateway only (see PaymentPage.tsx).
+// /api/payments — dev/simulation gateway, and (when configured) a real Razorpay checkout. See PaymentPage.tsx.
+
+/** GET /api/payments/config — tells the frontend which checkout UI to render. keyId is only present (and only needed) when provider is "razorpay". */
+export interface PaymentConfig {
+  provider: "mock" | "razorpay" | string;
+  keyId: string | null;
+}
 
 export interface PaymentInitiateResponse {
   paymentId: number | string;
   orderId: number | string;
   amount: number;
+  /** The mock gateway's fake reference under "mock"; Razorpay's real order id (its own Checkout needs this exact value as order_id) under "razorpay". */
   gatewayReference: string;
 }
 

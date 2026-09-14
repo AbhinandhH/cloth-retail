@@ -38,10 +38,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     // of re-reading it - see PaymentWebhookService.handleWebhook, which always re-fetches by id
     // right after calling this.
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Payment p SET p.status = :status, p.webhookEventId = :webhookEventId WHERE p.id = :id AND p.status = :expectedCurrentStatus")
+    @Query("UPDATE Payment p SET p.status = :status, p.webhookEventId = :webhookEventId, p.gatewayPaymentId = COALESCE(:gatewayPaymentId, p.gatewayPaymentId) WHERE p.id = :id AND p.status = :expectedCurrentStatus")
     int markProcessed(
             @Param("id") Long id,
             @Param("status") PaymentStatus status,
             @Param("webhookEventId") String webhookEventId,
-            @Param("expectedCurrentStatus") PaymentStatus expectedCurrentStatus);
+            @Param("expectedCurrentStatus") PaymentStatus expectedCurrentStatus,
+            @Param("gatewayPaymentId") String gatewayPaymentId);
 }

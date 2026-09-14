@@ -1,13 +1,16 @@
 package com.clothingretail.payment;
 
 import com.clothingretail.payment.dto.InitiatePaymentRequest;
+import com.clothingretail.payment.dto.PaymentConfigResponse;
 import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -20,10 +23,27 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final PaymentWebhookService paymentWebhookService;
+    private final String paymentProvider;
+    // Blank (never null-crashes .isBlank()) when provider is "mock" or unset - see application.yml,
+    // RAZORPAY_KEY_ID is only required/validated when app.payment.provider=razorpay.
+    private final String razorpayKeyId;
 
-    public PaymentController(PaymentService paymentService, PaymentWebhookService paymentWebhookService) {
+    public PaymentController(
+            PaymentService paymentService,
+            PaymentWebhookService paymentWebhookService,
+            @Value("${app.payment.provider}") String paymentProvider,
+            @Value("${razorpay.key-id:}") String razorpayKeyId) {
         this.paymentService = paymentService;
         this.paymentWebhookService = paymentWebhookService;
+        this.paymentProvider = paymentProvider;
+        this.razorpayKeyId = razorpayKeyId;
+    }
+
+    /** Public, unauthenticated - see PaymentConfigResponse. Lets the frontend pick which checkout UI to render before/without a customer session. */
+    @GetMapping("/config")
+    public PaymentConfigResponse config() {
+        boolean isRazorpay = "razorpay".equals(paymentProvider);
+        return new PaymentConfigResponse(paymentProvider, isRazorpay ? razorpayKeyId : null);
     }
 
     @PostMapping("/initiate")

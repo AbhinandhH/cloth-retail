@@ -70,20 +70,34 @@ public class PaymentWebhookService {
 
         WebhookPayload parsed = parse(payload);
         log.info("[1814] Webhook parsed eventId={}, gatewayReference={}, outcome={}", parsed.eventId(), parsed.gatewayReference(), parsed.outcome());
+        return applyOutcome(parsed.eventId(), parsed.gatewayReference(), parsed.outcome(), null);
+    }
 
+    /**
+     * The gateway-agnostic core every real webhook path funnels into, once that path has already
+     * verified its own signature and parsed its own payload shape into these plain arguments - see
+     * {@link #handleWebhook} above (MockPaymentGateway's custom JSON) and RazorpayWebhookController
+     * (Razorpay's real webhook JSON). {@code eventId} only needs to be stable and unique per
+     * logical event *for this gateway* - MockPaymentGateway mints a random one per simulated call;
+     * Razorpay has no single dedicated event-id field in its webhook body, so its caller derives one
+     * from the event type + payment id instead, which is equally sufficient for this method's
+     * idempotency check.
+     */
+    @Transactional
+    public WebhookResult applyOutcome(String eventId, String gatewayReference, PaymentOutcome outcome, String gatewayPaymentId) {
         // Fast idempotency path: this exact event id was already applied - a pure no-op replay.
-        Optional<Payment> alreadyByEvent = paymentRepository.findByWebhookEventId(parsed.eventId());
+        Optional<Payment> alreadyByEvent = paymentRepository.findByWebhookEventId(eventId);
         if (alreadyByEvent.isPresent()) {
             log.info(
                     "[1815] Webhook idempotent replay - eventId={} already applied, paymentId={}, status={}",
-                    parsed.eventId(), alreadyByEvent.get().getId(), alreadyByEvent.get().getStatus());
+                    eventId, alreadyByEvent.get().getId(), alreadyByEvent.get().getStatus());
             return toResult(alreadyByEvent.get());
         }
 
-        Payment payment = paymentRepository.findByGatewayReference(parsed.gatewayReference())
+        Payment payment = paymentRepository.findByGatewayReference(gatewayReference)
                 .orElseThrow(() -> {
-                    log.error("[1816] Webhook failed - unknown payment reference={}", parsed.gatewayReference());
-                    return new NotFoundException("Unknown payment reference: " + parsed.gatewayReference());
+                    log.error("[1816] Webhook failed - unknown payment reference={}", gatewayReference);
+                    return new NotFoundException("Unknown payment reference: " + gatewayReference);
                 });
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
@@ -93,7 +107,7 @@ public class PaymentWebhookService {
             return toResult(payment);
         }
 
-        PaymentStatus newStatus = parsed.outcome() == PaymentOutcome.SUCCESS ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+        PaymentStatus newStatus = outcome == PaymentOutcome.SUCCESS ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
         // Safe to read before markProcessed's clearing bulk update below: .getId() on a lazy
         // proxy never needs to hit the DB or the persistence context, it's already known from
         // the FK column used to build the proxy in the first place.
@@ -110,13 +124,13 @@ public class PaymentWebhookService {
             // stock reservation. clearAutomatically=true on this query means every entity
             // reference obtained BEFORE this call (including `payment`) is now detached - only
             // re-fetch by id from here on, never reuse those references for anything but their id.
-            claimed = paymentRepository.markProcessed(payment.getId(), newStatus, parsed.eventId(), PaymentStatus.PENDING);
+            claimed = paymentRepository.markProcessed(payment.getId(), newStatus, eventId, PaymentStatus.PENDING, gatewayPaymentId);
             log.info("[1819] Atomic payment status claim result paymentId={}, claimed={}, newStatus={}", payment.getId(), claimed, newStatus);
         } catch (DataIntegrityViolationException raceOnEventId) {
             // A concurrent delivery carrying the exact same event id won the unique-constraint
             // race - re-fetch by event id and report its outcome instead of erroring.
-            log.error("[1820] Webhook lost eventId unique-constraint race - eventId={}, paymentId={}", parsed.eventId(), payment.getId());
-            Payment resolved = paymentRepository.findByWebhookEventId(parsed.eventId()).orElseThrow(() -> raceOnEventId);
+            log.error("[1820] Webhook lost eventId unique-constraint race - eventId={}, paymentId={}", eventId, payment.getId());
+            Payment resolved = paymentRepository.findByWebhookEventId(eventId).orElseThrow(() -> raceOnEventId);
             return toResult(resolved);
         }
 

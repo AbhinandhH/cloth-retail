@@ -39,6 +39,10 @@ public class Payment extends BaseEntity {
     @Column(name = "webhook_event_id", unique = true, length = 100)
     private String webhookEventId;
 
+    /** The gateway's own payment-attempt id (as opposed to {@link #gatewayReference}'s order-level id) - only set by gateways that distinguish the two, e.g. Razorpay's "pay_..." id, needed to issue a refund. Null under MockPaymentGateway. */
+    @Column(name = "gateway_payment_id", length = 100)
+    private String gatewayPaymentId;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
