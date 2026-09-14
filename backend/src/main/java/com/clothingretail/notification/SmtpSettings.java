@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Singleton row (id is always 1) holding admin-configurable SMTP credentials - see
- * SmtpEmailSender, which builds a fresh JavaMailSenderImpl from this on every send rather than
- * relying on Spring Boot's spring.mail.* auto-configuration, so an admin change here takes effect
- * on the very next email, no restart needed. Created only by the V18 seed migration, same
- * convention as NotificationSettings/SiteConfiguration.
+ * Singleton row (id is always 1) holding admin-configurable email credentials, for either of two
+ * providers (see {@link #provider}) - see EmailSenderImpl, which builds a fresh sender from this
+ * on every send rather than relying on Spring Boot's spring.mail.* auto-configuration, so an
+ * admin change here takes effect on the very next email, no restart needed. Created only by the
+ * V18 seed migration, same convention as NotificationSettings/SiteConfiguration.
  */
 @Entity
 @Table(name = "smtp_settings")
@@ -44,7 +44,17 @@ public class SmtpSettings extends BaseEntity {
     @Column(name = "use_starttls", nullable = false)
     private boolean useStarttls = true;
 
+    /** "SMTP" (default) or "RESEND" - see EmailSenderImpl, which dispatches on this. */
+    @Column(nullable = false, length = 20)
+    private String provider = "SMTP";
+
+    /** Only used when provider is "RESEND" - same plaintext-storage posture as password above. */
+    @Column(name = "api_key", length = 255)
+    private String apiKey;
+
     public boolean isConfigured() {
-        return host != null && !host.isBlank();
+        return "RESEND".equals(provider)
+                ? apiKey != null && !apiKey.isBlank()
+                : host != null && !host.isBlank();
     }
 }

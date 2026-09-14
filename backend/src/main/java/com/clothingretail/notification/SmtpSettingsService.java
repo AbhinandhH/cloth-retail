@@ -44,6 +44,11 @@ public class SmtpSettingsService {
         }
         settings.setFromAddress(blankToNull(request.fromAddress()));
         settings.setUseStarttls(request.useStarttls());
+        settings.setProvider(request.provider() != null && !request.provider().isBlank() ? request.provider() : "SMTP");
+        // Same "blank means keep what's stored" rule as password above.
+        if (request.apiKey() != null && !request.apiKey().isBlank()) {
+            settings.setApiKey(request.apiKey().trim());
+        }
         settings = smtpSettingsRepository.save(settings);
         log.info("[1981] SMTP settings updated host={} configured={}", settings.getHost(), settings.isConfigured());
         return toResponse(settings);
@@ -85,6 +90,8 @@ public class SmtpSettingsService {
                 settings.getUsername(),
                 settings.getPassword() != null && !settings.getPassword().isBlank(),
                 settings.getFromAddress(),
-                settings.isUseStarttls());
+                settings.isUseStarttls(),
+                settings.getProvider(),
+                settings.getApiKey() != null && !settings.getApiKey().isBlank());
     }
 }
