@@ -203,12 +203,14 @@ function SmtpSettingsForm() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
+  const [provider, setProvider] = useState<'SMTP' | 'RESEND'>('SMTP')
   const [host, setHost] = useState('')
   const [port, setPort] = useState('587')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [fromAddress, setFromAddress] = useState('')
   const [useStarttls, setUseStarttls] = useState(true)
+  const [apiKey, setApiKey] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -223,6 +225,7 @@ function SmtpSettingsForm() {
       .fetchSmtpSettings()
       .then((data) => {
         setSettings(data)
+        setProvider(data.provider === 'RESEND' ? 'RESEND' : 'SMTP')
         setHost(data.host ?? '')
         setPort(String(data.port))
         setUsername(data.username ?? '')
@@ -246,11 +249,14 @@ function SmtpSettingsForm() {
         password: password.trim() === '' ? undefined : password,
         fromAddress: fromAddress.trim() === '' ? null : fromAddress.trim(),
         useStarttls,
+        provider,
+        apiKey: apiKey.trim() === '' ? undefined : apiKey.trim(),
       })
       setSettings(saved)
-      // Never keep a submitted password sitting in the field/state longer than needed - the
-      // backend never echoes it back either (see SmtpSettings.passwordConfigured).
+      // Never keep a submitted secret sitting in the field/state longer than needed - the
+      // backend never echoes either back either (see SmtpSettings.passwordConfigured/apiKeyConfigured).
       setPassword('')
+      setApiKey('')
       setSaveMessage('SMTP settings saved.')
     } catch (err) {
       setSaveError(getErrorMessage(err))
@@ -286,11 +292,11 @@ function SmtpSettingsForm() {
 
   return (
     <div className="rounded-xl border border-zinc-200 p-4">
-      <p className="text-sm font-medium text-zinc-900">SMTP settings</p>
+      <p className="text-sm font-medium text-zinc-900">Email settings</p>
       <p className="mt-0.5 text-xs text-zinc-500">
-        For Gmail: host <code className="rounded bg-zinc-100 px-1 py-0.5">smtp.gmail.com</code>, port 587, and an
-        App Password (not your normal Gmail password) from Google Account → Security → 2-Step Verification → App
-        passwords.
+        Many hosts (including most cloud platforms this app might be deployed on) block outbound
+        SMTP connections entirely - if test emails hang or time out, switch to Resend below rather
+        than troubleshooting SMTP credentials further.
       </p>
 
       {saveError && (
@@ -303,32 +309,88 @@ function SmtpSettingsForm() {
       )}
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextField label="Host" value={host} onChange={(v) => setHost(v ?? '')} />
-          <TextField label="Port" type="number" value={port} onChange={(v) => setPort(v ?? '587')} />
-          <TextField label="Username" value={username} onChange={(v) => setUsername(v ?? '')} />
-          <TextField
-            label={settings.passwordConfigured ? 'Password (leave blank to keep current)' : 'Password'}
-            type="password"
-            value={password}
-            onChange={(v) => setPassword(v ?? '')}
-          />
-          <TextField
-            label="From address (optional)"
-            value={fromAddress}
-            onChange={(v) => setFromAddress(v ?? '')}
-          />
+        <div className="flex gap-2 rounded-lg bg-zinc-100 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setProvider('SMTP')}
+            className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
+              provider === 'SMTP' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            SMTP
+          </button>
+          <button
+            type="button"
+            onClick={() => setProvider('RESEND')}
+            className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
+              provider === 'RESEND' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+            }`}
+          >
+            Resend (HTTP API)
+          </button>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <input
-            type="checkbox"
-            checked={useStarttls}
-            onChange={(e) => setUseStarttls(e.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300"
-          />
-          Use STARTTLS
-        </label>
+        {provider === 'SMTP' ? (
+          <>
+            <p className="text-xs text-zinc-500">
+              For Gmail: host <code className="rounded bg-zinc-100 px-1 py-0.5">smtp.gmail.com</code>, port 587, and
+              an App Password (not your normal Gmail password) from Google Account → Security → 2-Step Verification
+              → App passwords.
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField label="Host" value={host} onChange={(v) => setHost(v ?? '')} />
+              <TextField label="Port" type="number" value={port} onChange={(v) => setPort(v ?? '587')} />
+              <TextField label="Username" value={username} onChange={(v) => setUsername(v ?? '')} />
+              <TextField
+                label={settings.passwordConfigured ? 'Password (leave blank to keep current)' : 'Password'}
+                type="password"
+                value={password}
+                onChange={(v) => setPassword(v ?? '')}
+              />
+              <TextField
+                label="From address (optional)"
+                value={fromAddress}
+                onChange={(v) => setFromAddress(v ?? '')}
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <input
+                type="checkbox"
+                checked={useStarttls}
+                onChange={(e) => setUseStarttls(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-300"
+              />
+              Use STARTTLS
+            </label>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-zinc-500">
+              A plain HTTPS call to{' '}
+              <a href="https://resend.com" target="_blank" rel="noreferrer" className="underline">
+                Resend
+              </a>{' '}
+              instead of a raw SMTP connection - works from hosts that block SMTP outbound. Sign up (free tier
+              available), create an API key, and paste it below.
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField
+                label={settings.apiKeyConfigured ? 'API key (leave blank to keep current)' : 'API key'}
+                type="password"
+                value={apiKey}
+                onChange={(v) => setApiKey(v ?? '')}
+              />
+              <div>
+                <TextField label="From address" value={fromAddress} onChange={(v) => setFromAddress(v ?? '')} />
+                <p className="mt-1 text-xs text-zinc-500">
+                  Must be on a domain you've verified with Resend - leave blank to use their shared
+                  onboarding@resend.dev address for testing.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
 
         <button
           type="submit"

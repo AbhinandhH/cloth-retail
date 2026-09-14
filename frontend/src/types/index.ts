@@ -60,9 +60,12 @@ export interface SmtpSettings {
   passwordConfigured: boolean;
   fromAddress: string | null;
   useStarttls: boolean;
+  /** "SMTP" (raw SMTP, the original approach) or "RESEND" (HTTP API — recommended when hosted somewhere that blocks outbound SMTP, e.g. most PaaS platforms). */
+  provider: string;
+  apiKeyConfigured: boolean;
 }
 
-/** password omitted/blank means "keep the currently stored password" — see SmtpSettings.passwordConfigured. */
+/** password/apiKey omitted/blank means "keep the currently stored value" — see SmtpSettings.passwordConfigured/apiKeyConfigured. */
 export interface SmtpSettingsUpdate {
   host: string | null;
   port: number;
@@ -70,6 +73,8 @@ export interface SmtpSettingsUpdate {
   password?: string;
   fromAddress: string | null;
   useStarttls: boolean;
+  provider: string;
+  apiKey?: string;
 }
 
 export interface SmtpTestResult {

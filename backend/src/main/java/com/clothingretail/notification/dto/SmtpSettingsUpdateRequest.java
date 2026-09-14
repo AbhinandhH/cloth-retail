@@ -3,11 +3,12 @@ package com.clothingretail.notification.dto;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 /**
- * {@code password} is optional: null/blank means "keep the currently stored password" (so
- * changing, say, the from-address doesn't force re-entering it) - only a non-blank value replaces
- * it. See SmtpSettingsService.update().
+ * {@code password}/{@code apiKey} are each optional: null/blank means "keep the currently stored
+ * value" (so changing, say, the from-address doesn't force re-entering a secret) - only a
+ * non-blank value replaces it. See SmtpSettingsService.update().
  */
 public record SmtpSettingsUpdateRequest(
         String host,
@@ -16,4 +17,6 @@ public record SmtpSettingsUpdateRequest(
         String username,
         String password,
         String fromAddress,
-        @NotNull(message = "must not be null") Boolean useStarttls) {}
+        @NotNull(message = "must not be null") Boolean useStarttls,
+        @Pattern(regexp = "^(SMTP|RESEND)$", message = "must be SMTP or RESEND") String provider,
+        String apiKey) {}
