@@ -40,6 +40,7 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
+  const [addedToCart, setAddedToCart] = useState(false)
   const [cartNotice, setCartNotice] = useState<string | null>(null)
   const [cartNoticeIsError, setCartNoticeIsError] = useState(false)
 
@@ -131,6 +132,7 @@ export default function ProductDetail() {
     setQuantity(1)
     setCartNotice(null)
     setCartNoticeIsError(false)
+    setAddedToCart(false)
   }, [selectedVariant?.id])
 
   if (loading) {
@@ -189,12 +191,17 @@ export default function ProductDetail() {
       await addItem(variant.id, quantity)
       setCartNotice('Added to cart.')
       setCartNoticeIsError(false)
+      setAddedToCart(true)
     } catch (err) {
       setCartNotice(getErrorMessage(err))
       setCartNoticeIsError(true)
     } finally {
       setAddingToCart(false)
     }
+  }
+
+  const handleBuyNow = () => {
+    navigate('/checkout')
   }
 
   return (
@@ -386,7 +393,10 @@ export default function ProductDetail() {
               <div className="flex items-center rounded-full border border-zinc-300">
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  onClick={() => {
+                    setQuantity((q) => Math.max(1, q - 1))
+                    setAddedToCart(false)
+                  }}
                   disabled={quantity <= 1}
                   className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Decrease quantity"
@@ -396,7 +406,10 @@ export default function ProductDetail() {
                 <span className="min-w-[2rem] text-center text-sm font-medium text-zinc-900">{quantity}</span>
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.min(variant?.stockQuantity ?? 1, q + 1))}
+                  onClick={() => {
+                    setQuantity((q) => Math.min(variant?.stockQuantity ?? 1, q + 1))
+                    setAddedToCart(false)
+                  }}
                   disabled={quantity >= (variant?.stockQuantity ?? 1)}
                   className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Increase quantity"
@@ -409,11 +422,11 @@ export default function ProductDetail() {
 
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={addedToCart ? handleBuyNow : handleAddToCart}
             disabled={!inStock || addingToCart}
             className="mt-4 w-full btn-primary-radius bg-[var(--brand-primary,#18181b)] py-3 text-sm font-semibold text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 disabled:ring-0"
           >
-            {!inStock ? 'Out of stock' : addingToCart ? 'Adding…' : 'Add to cart'}
+            {!inStock ? 'Out of stock' : addingToCart ? 'Adding…' : addedToCart ? 'Buy now' : 'Add to cart'}
           </button>
           {cartNotice && (
             <p className={`mt-2 text-center text-xs ${cartNoticeIsError ? 'text-rose-600' : 'text-zinc-500'}`}>
