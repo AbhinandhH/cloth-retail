@@ -209,6 +209,13 @@ export interface SiteConfiguration {
   loginPromoImageUrl: string | null;
   loginPromoText: string | null;
   registrationImageUrl: string | null;
+  /**
+   * Minutes a placed-but-unpaid order's stock reservation is held before it's released and the
+   * order cancelled - admin-only, absent from the public /configuration response, so optional
+   * here rather than required like every field above it (all of which the public shape genuinely
+   * always has).
+   */
+  orderReservationTtlMinutes?: number | null;
 }
 
 /**

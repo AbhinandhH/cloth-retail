@@ -17,4 +17,5 @@ public record SiteConfigurationAdminResponse(
         String loginBackgroundImageUrl,
         String loginPromoImageUrl,
         String loginPromoText,
-        String registrationImageUrl) {}
+        String registrationImageUrl,
+        Integer orderReservationTtlMinutes) {}

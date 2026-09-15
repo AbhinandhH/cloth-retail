@@ -67,10 +67,6 @@ app:
     # public static resource handler (see ReturnEvidenceStorageServiceImpl's own doc comment) -
     # damage-claim videos are private, unlike product photos under /media/**.
     upload-dir: ${RETURN_EVIDENCE_UPLOAD_DIR:./return-evidence}
-  order:
-    # Minutes an order's stock reservation is held while awaiting payment before the scheduled
-    # cleanup job (OrderReservationCleanupJob) releases it and cancels the order.
-    reservation-ttl-minutes: ${ORDER_RESERVATION_TTL_MINUTES:15}
   payment:
     # "mock" (default): MockPaymentGateway, the fake dev/test gateway - no real gateway account
     # needed, drives /api/payments/mock/simulate and the OrderConcurrencyIntegrationTest suite.

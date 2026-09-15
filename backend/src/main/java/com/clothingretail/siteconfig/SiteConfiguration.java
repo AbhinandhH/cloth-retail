@@ -74,4 +74,13 @@ public class SiteConfiguration extends BaseEntity {
 
     @Column(name = "registration_image_url", length = 500)
     private String registrationImageUrl;
+
+    /**
+     * Minutes a placed-but-unpaid order's stock reservation stays held before
+     * {@link com.clothingretail.order.service.OrderReservationCleanupJob} releases it and
+     * cancels the order - read fresh from this row by {@code OrderCreationService} on every
+     * new order, so an admin change here takes effect immediately, no redeploy needed.
+     */
+    @Column(name = "order_reservation_ttl_minutes", nullable = false)
+    private Integer orderReservationTtlMinutes = 15;
 }

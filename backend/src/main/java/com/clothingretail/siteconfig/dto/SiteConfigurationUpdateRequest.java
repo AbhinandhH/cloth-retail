@@ -1,6 +1,9 @@
 package com.clothingretail.siteconfig.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /** Body for {@code PUT /api/admin/configuration}. activeTheme is deliberately excluded - it only changes via POST /api/admin/themes/{id}/activate. */
 public record SiteConfigurationUpdateRequest(
@@ -17,4 +20,6 @@ public record SiteConfigurationUpdateRequest(
         String loginBackgroundImageUrl,
         String loginPromoImageUrl,
         String loginPromoText,
-        String registrationImageUrl) {}
+        String registrationImageUrl,
+        @NotNull(message = "must not be null") @Min(value = 1, message = "must be at least 1 minute")
+                @Max(value = 1440, message = "must not exceed 1440 minutes (24 hours)") Integer orderReservationTtlMinutes) {}

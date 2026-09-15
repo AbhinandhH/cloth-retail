@@ -20,6 +20,8 @@ import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
+import com.clothingretail.siteconfig.SiteConfiguration;
+import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import com.clothingretail.tax.TaxSettings;
 import com.clothingretail.tax.repository.TaxSettingsRepository;
 import java.math.BigDecimal;
@@ -32,7 +34,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,7 +66,7 @@ class OrderCreationService {
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryService orderStatusHistoryService;
     private final TaxSettingsRepository taxSettingsRepository;
-    private final int reservationTtlMinutes;
+    private final SiteConfigurationRepository siteConfigurationRepository;
 
     OrderCreationService(
             CustomerProfileRepository customerProfileRepository,
@@ -75,7 +76,7 @@ class OrderCreationService {
             OrderRepository orderRepository,
             OrderStatusHistoryService orderStatusHistoryService,
             TaxSettingsRepository taxSettingsRepository,
-            @Value("${app.order.reservation-ttl-minutes:15}") int reservationTtlMinutes) {
+            SiteConfigurationRepository siteConfigurationRepository) {
         this.customerProfileRepository = customerProfileRepository;
         this.addressRepository = addressRepository;
         this.cartRepository = cartRepository;
@@ -83,7 +84,7 @@ class OrderCreationService {
         this.orderRepository = orderRepository;
         this.orderStatusHistoryService = orderStatusHistoryService;
         this.taxSettingsRepository = taxSettingsRepository;
-        this.reservationTtlMinutes = reservationTtlMinutes;
+        this.siteConfigurationRepository = siteConfigurationRepository;
     }
 
     @Transactional
@@ -127,7 +128,14 @@ class OrderCreationService {
         order.setContactName(profile.getUser().getFullName());
         order.setContactPhone(hasText(request.contactPhone()) ? request.contactPhone() : profile.getUser().getMobileNumber());
         order.setShippingCharge(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-        // Reservation TTL - hold released by OrderReservationCleanupJob if payment never completes in time.
+        // Reservation TTL - hold released by OrderReservationCleanupJob if payment never completes
+        // in time. Read fresh from SiteConfiguration on every order (not injected once at startup
+        // via @Value) so an admin's change on the Site Configuration screen takes effect
+        // immediately for new orders, no redeploy needed - see SiteConfiguration's own doc comment
+        // on this field.
+        int reservationTtlMinutes = siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
+                .map(SiteConfiguration::getOrderReservationTtlMinutes)
+                .orElse(15);
         order.setReservationExpiresAt(Instant.now().plus(reservationTtlMinutes, ChronoUnit.MINUTES));
         log.info("[1605] Order shell prepared: orderNumber={}, customerProfileId={}, reservationExpiresAt={}",
                 order.getOrderNumber(), profile.getId(), order.getReservationExpiresAt());

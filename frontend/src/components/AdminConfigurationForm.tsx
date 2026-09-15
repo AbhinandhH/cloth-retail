@@ -27,6 +27,10 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
     loginPromoImageUrl: config?.loginPromoImageUrl ?? null,
     loginPromoText: config?.loginPromoText ?? null,
     registrationImageUrl: config?.registrationImageUrl ?? null,
+    // Backend requires a value (1-1440) on save - default to its own 15-minute fallback rather
+    // than null, so a first-ever save (or a config fetch that somehow omits it) doesn't fail
+    // validation on a field the admin never touched.
+    orderReservationTtlMinutes: config?.orderReservationTtlMinutes ?? 15,
   }
 }
 
@@ -269,6 +273,26 @@ export default function AdminConfigurationForm() {
               label="Favicon"
               value={form.faviconUrl}
               onUploaded={(url) => updateField('faviconUrl', url)}
+            />
+          </div>
+        </section>
+
+        {/* Checkout / inventory */}
+        <section className="mt-10 border-t border-zinc-200 pt-8">
+          <h2 className="text-lg font-semibold text-zinc-900">Checkout &amp; inventory</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            How long a placed-but-unpaid order holds its stock before it's released back and the
+            order is automatically cancelled.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <TextField
+              label="Order reservation timeout (minutes)"
+              type="number"
+              value={form.orderReservationTtlMinutes != null ? String(form.orderReservationTtlMinutes) : null}
+              onChange={(v) =>
+                updateField('orderReservationTtlMinutes', v === null || v.trim() === '' ? null : Number(v))
+              }
             />
           </div>
         </section>
