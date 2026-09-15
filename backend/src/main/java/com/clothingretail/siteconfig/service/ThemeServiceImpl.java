@@ -1,36 +1,34 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.siteconfig.SiteConfiguration;
+import com.clothingretail.siteconfig.Theme;
 import com.clothingretail.siteconfig.dto.PublicConfigurationResponse;
 import com.clothingretail.siteconfig.dto.ThemeAdminRequest;
 import com.clothingretail.siteconfig.dto.ThemeAdminResponse;
 import com.clothingretail.siteconfig.dto.ThemeResponse;
+import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
+import com.clothingretail.siteconfig.repository.ThemeRepository;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Theme CRUD, plus the activate-theme workflow: activating a theme also
- * updates the singleton {@link SiteConfiguration} row's active-theme pointer,
- * so this service reaches into {@link SiteConfigurationRepository} directly
- * for that one operation (mirroring how ProductService reaches into other
- * modules' repositories for FK lookups).
- */
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class ThemeService {
+public class ThemeServiceImpl implements ThemeService {
 
     private final ThemeRepository themeRepository;
     private final SiteConfigurationRepository siteConfigurationRepository;
 
-    public ThemeService(ThemeRepository themeRepository, SiteConfigurationRepository siteConfigurationRepository) {
+    public ThemeServiceImpl(ThemeRepository themeRepository, SiteConfigurationRepository siteConfigurationRepository) {
         this.themeRepository = themeRepository;
         this.siteConfigurationRepository = siteConfigurationRepository;
     }
 
+    @Override
     public List<ThemeAdminResponse> listAdmin() {
         List<ThemeAdminResponse> themes = themeRepository.findAllByOrderByDisplayOrderAscNameAsc().stream()
                 .map(this::toAdminResponse)
@@ -39,6 +37,7 @@ public class ThemeService {
         return themes;
     }
 
+    @Override
     @Transactional
     public ThemeAdminResponse create(ThemeAdminRequest request) {
         log.info("[1668] Creating theme: name={}", request.name());
@@ -53,6 +52,7 @@ public class ThemeService {
         return response;
     }
 
+    @Override
     @Transactional
     public ThemeAdminResponse update(Long id, ThemeAdminRequest request) {
         log.info("[1671] Updating theme: id={}, name={}", id, request.name());
@@ -63,6 +63,7 @@ public class ThemeService {
         return response;
     }
 
+    @Override
     @Transactional
     public void delete(Long id) {
         log.info("[1673] Deleting theme: id={}", id);
@@ -76,6 +77,7 @@ public class ThemeService {
         log.info("[1675] Theme deleted: id={}", id);
     }
 
+    @Override
     @Transactional
     public PublicConfigurationResponse activate(Long id) {
         log.info("[1676] Activating theme: id={}", id);

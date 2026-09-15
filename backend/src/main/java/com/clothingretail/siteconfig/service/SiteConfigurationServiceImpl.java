@@ -1,41 +1,41 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.service;
 
+import com.clothingretail.siteconfig.SiteConfiguration;
+import com.clothingretail.siteconfig.Theme;
 import com.clothingretail.siteconfig.dto.PublicConfigurationResponse;
 import com.clothingretail.siteconfig.dto.SiteConfigurationAdminResponse;
 import com.clothingretail.siteconfig.dto.SiteConfigurationUpdateRequest;
 import com.clothingretail.siteconfig.dto.ThemeAdminResponse;
 import com.clothingretail.siteconfig.dto.ThemeResponse;
+import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Owns the singleton site_configuration row (branding, contact info,
- * login-page visuals) - reads for the public and admin endpoints, and the
- * admin update. The active theme itself only changes via
- * {@link ThemeService#activate}.
- */
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class SiteConfigurationService {
+public class SiteConfigurationServiceImpl implements SiteConfigurationService {
 
     private final SiteConfigurationRepository repository;
 
-    public SiteConfigurationService(SiteConfigurationRepository repository) {
+    public SiteConfigurationServiceImpl(SiteConfigurationRepository repository) {
         this.repository = repository;
     }
 
+    @Override
     public SiteConfigurationAdminResponse getAdmin() {
         log.info("[1662] Fetching admin site configuration");
         return toAdminResponse(loadSingleton());
     }
 
+    @Override
     public PublicConfigurationResponse getPublic() {
         log.info("[1663] Fetching public site configuration");
         return toPublicResponse(loadSingleton());
     }
 
+    @Override
     @Transactional
     public SiteConfigurationAdminResponse update(SiteConfigurationUpdateRequest request) {
         log.info("[1664] Updating site configuration: businessName={}, contactEmail={}, contactPhone={}",

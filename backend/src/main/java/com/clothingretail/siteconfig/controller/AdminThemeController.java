@@ -1,8 +1,9 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.controller;
 
 import com.clothingretail.siteconfig.dto.PublicConfigurationResponse;
 import com.clothingretail.siteconfig.dto.ThemeAdminRequest;
 import com.clothingretail.siteconfig.dto.ThemeAdminResponse;
+import com.clothingretail.siteconfig.service.ThemeService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

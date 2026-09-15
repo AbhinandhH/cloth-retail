@@ -1,4 +1,4 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.service;
 
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.siteconfig.dto.MediaUploadResponse;
@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 @Log4j2
-public class MediaStorageService {
+public class MediaStorageServiceImpl implements MediaStorageService {
 
     private static final long IMAGE_MAX_BYTES = 5L * 1024 * 1024;
     private static final long VIDEO_MAX_BYTES = 50L * 1024 * 1024;
@@ -48,10 +48,11 @@ public class MediaStorageService {
 
     private final Path uploadDir;
 
-    public MediaStorageService(@Value("${app.media.upload-dir}") String uploadDir) {
+    public MediaStorageServiceImpl(@Value("${app.media.upload-dir}") String uploadDir) {
         this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
     }
 
+    @Override
     public MediaUploadResponse store(MultipartFile file) {
         log.info("[1657] Storing uploaded media: originalFilename={}, contentType={}, size={}",
                 file.getOriginalFilename(), file.getContentType(), file.getSize());
@@ -73,7 +74,7 @@ public class MediaStorageService {
 
         long maxBytes = isVideo ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
         if (file.getSize() > maxBytes) {
-            log.error("[1662] Media upload rejected: file too large size={} maxBytes={} contentType={} (originalFilename={})",
+            log.error("[1997] Media upload rejected: file too large size={} maxBytes={} contentType={} (originalFilename={})",
                     file.getSize(), maxBytes, contentType, file.getOriginalFilename());
             throw new BadRequestException(
                     "File is too large: " + (isVideo ? "videos" : "images") + " must not exceed " + (maxBytes / (1024 * 1024)) + "MB");

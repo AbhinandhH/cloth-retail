@@ -1,7 +1,8 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.controller;
 
 import com.clothingretail.siteconfig.dto.SiteConfigurationAdminResponse;
 import com.clothingretail.siteconfig.dto.SiteConfigurationUpdateRequest;
+import com.clothingretail.siteconfig.service.SiteConfigurationService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

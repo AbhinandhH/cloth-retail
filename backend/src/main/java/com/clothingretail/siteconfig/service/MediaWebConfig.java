@@ -1,4 +1,4 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.service;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

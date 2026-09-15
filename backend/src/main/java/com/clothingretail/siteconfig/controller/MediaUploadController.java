@@ -1,6 +1,7 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.controller;
 
 import com.clothingretail.siteconfig.dto.MediaUploadResponse;
+import com.clothingretail.siteconfig.service.MediaStorageService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
