@@ -1,5 +1,6 @@
-package com.clothingretail.siteconfig;
+package com.clothingretail.siteconfig.repository;
 
+import com.clothingretail.siteconfig.Theme;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
