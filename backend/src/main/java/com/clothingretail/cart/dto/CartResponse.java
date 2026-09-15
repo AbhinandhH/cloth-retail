@@ -9,9 +9,17 @@ public record CartResponse(
         BigDecimal subtotal,
         BigDecimal discountTotal,
         BigDecimal total,
+        // GST already included within `total` (tax-inclusive pricing - see
+        // OrderCreationService's own doc comment on the same extraction) - shown here so the
+        // customer sees the tax breakdown before placing the order, not just after.
+        BigDecimal cgstPercent,
+        BigDecimal cgstAmount,
+        BigDecimal sgstPercent,
+        BigDecimal sgstAmount,
         int itemCount) {
 
     public static CartResponse empty() {
-        return new CartResponse(null, List.of(), BigDecimal.ZERO.setScale(2), BigDecimal.ZERO.setScale(2), BigDecimal.ZERO.setScale(2), 0);
+        BigDecimal zero = BigDecimal.ZERO.setScale(2);
+        return new CartResponse(null, List.of(), zero, zero, zero, zero, zero, zero, zero, 0);
     }
 }

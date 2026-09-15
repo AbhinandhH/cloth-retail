@@ -935,6 +935,11 @@ export interface Cart {
   subtotal: number;
   discountTotal: number;
   total: number;
+  /** GST already included within `total` (tax-inclusive pricing), broken out for display. */
+  cgstPercent: number;
+  cgstAmount: number;
+  sgstPercent: number;
+  sgstAmount: number;
   itemCount: number;
 }
 

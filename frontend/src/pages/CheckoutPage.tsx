@@ -10,6 +10,7 @@ import { formatPrice } from "../lib/formatPrice";
 import { randomUUID } from "../lib/uuid";
 import BackButton from "../components/BackButton";
 import { SkeletonBlock } from "../components/Skeleton";
+import TaxIncludedNote from "../components/TaxIncludedNote";
 import TextField from "../components/customer/TextField";
 import type { Address, AddressRequest } from "../types";
 
@@ -45,6 +46,17 @@ export default function CheckoutPage() {
   const orderSubtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const orderTotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
   const orderDiscountTotal = orderSubtotal - orderTotal;
+
+  // Tax is already inside orderTotal (tax-inclusive pricing, see OrderCreationService's own doc
+  // comment) - this just extracts the CGST/SGST breakdown for display, the same reverse-GST split
+  // the backend uses. Rates come from the cart response (same for the whole cart regardless of
+  // Buy Now scoping); the amount itself is recomputed on orderTotal since Buy Now scopes to a
+  // subset the cart's own cgstAmount/sgstAmount (computed on the whole cart) wouldn't reflect.
+  const cgstPercent = cart?.cgstPercent ?? 0;
+  const sgstPercent = cart?.sgstPercent ?? 0;
+  const inclusiveDivisor = 100 + cgstPercent + sgstPercent;
+  const orderCgstAmount = Math.round(((orderTotal * cgstPercent) / inclusiveDivisor) * 100) / 100;
+  const orderSgstAmount = Math.round(((orderTotal * sgstPercent) / inclusiveDivisor) * 100) / 100;
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
@@ -339,6 +351,12 @@ export default function CheckoutPage() {
             <span>Total</span>
             <span>{formatPrice(orderTotal)}</span>
           </div>
+          <TaxIncludedNote
+            cgstPercent={cgstPercent}
+            cgstAmount={orderCgstAmount}
+            sgstPercent={sgstPercent}
+            sgstAmount={orderSgstAmount}
+          />
         </section>
 
         {placeError && (

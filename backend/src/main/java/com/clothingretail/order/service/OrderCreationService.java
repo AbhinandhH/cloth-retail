@@ -189,8 +189,13 @@ class OrderCreationService {
 
         // GST, snapshotted from the live admin-configured rate - see TaxSettings' own doc comment
         // on why the rate AND the amount it produced are both stored on the order rather than just
-        // referencing the (possibly since-changed) settings row. Computed on the goods total after
-        // discount, before shipping - "for each product", not on the shipping charge itself.
+        // referencing the (possibly since-changed) settings row. Product prices are tax-INCLUSIVE
+        // (the admin-entered selling price already has GST baked in), so this extracts cgst/sgst
+        // out of the post-discount goods total rather than adding them on top of it - a ₹1000 item
+        // at 12%+12% yields cgstAmount=sgstAmount≈₹96.77 (₹193.55 total tax "inside" that ₹1000),
+        // not ₹1120+. Standard reverse-GST split: each component's share of `total` is
+        // total * componentRate / (100 + combinedRate). Computed on the goods total after discount,
+        // before shipping - shipping itself carries no tax and is added on top, untaxed, below.
         TaxSettings taxSettings = taxSettingsRepository.findById(TaxSettings.SINGLETON_ID)
                 .orElseThrow(() -> {
                     log.error("[1996] Singleton tax_settings row (id={}) is missing", TaxSettings.SINGLETON_ID);
@@ -198,16 +203,19 @@ class OrderCreationService {
                             "Singleton tax_settings row (id=1) is missing - this is a startup-time misconfiguration, "
                                     + "check that V24__tax_settings.sql ran");
                 });
+        BigDecimal combinedRate = taxSettings.getCgstPercent().add(taxSettings.getSgstPercent());
+        BigDecimal inclusiveDivisor = BigDecimal.valueOf(100).add(combinedRate);
         BigDecimal cgstAmount = total.multiply(taxSettings.getCgstPercent())
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                .divide(inclusiveDivisor, 2, RoundingMode.HALF_UP);
         BigDecimal sgstAmount = total.multiply(taxSettings.getSgstPercent())
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                .divide(inclusiveDivisor, 2, RoundingMode.HALF_UP);
         order.setCgstPercent(taxSettings.getCgstPercent());
         order.setCgstAmount(cgstAmount);
         order.setSgstPercent(taxSettings.getSgstPercent());
         order.setSgstAmount(sgstAmount);
 
-        order.setTotalAmount(total.add(order.getShippingCharge()).add(cgstAmount).add(sgstAmount));
+        // cgst/sgst are already inside `total` (tax-inclusive pricing) - not added again here.
+        order.setTotalAmount(total.add(order.getShippingCharge()));
         log.info(
                 "[1609] Order totals computed: subtotal={}, discountTotal={}, cgstPercent={}, cgstAmount={}, sgstPercent={}, sgstAmount={}, totalAmount={}",
                 subtotal, order.getDiscountTotal(), order.getCgstPercent(), cgstAmount, order.getSgstPercent(), sgstAmount, order.getTotalAmount());

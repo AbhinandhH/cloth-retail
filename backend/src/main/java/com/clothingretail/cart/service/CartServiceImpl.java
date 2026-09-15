@@ -16,6 +16,8 @@ import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
+import com.clothingretail.tax.TaxSettings;
+import com.clothingretail.tax.repository.TaxSettingsRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -32,16 +34,19 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final TaxSettingsRepository taxSettingsRepository;
 
     public CartServiceImpl(
             CartRepository cartRepository,
             CartItemRepository cartItemRepository,
             CustomerProfileRepository customerProfileRepository,
-            ProductVariantRepository productVariantRepository) {
+            ProductVariantRepository productVariantRepository,
+            TaxSettingsRepository taxSettingsRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.customerProfileRepository = customerProfileRepository;
         this.productVariantRepository = productVariantRepository;
+        this.taxSettingsRepository = taxSettingsRepository;
     }
 
     @Transactional(readOnly = true)
@@ -214,7 +219,18 @@ public class CartServiceImpl implements CartService {
         total = total.setScale(2, RoundingMode.HALF_UP);
         BigDecimal discountTotal = subtotal.subtract(total).setScale(2, RoundingMode.HALF_UP);
 
-        return new CartResponse(cart.getId(), items, subtotal, discountTotal, total, itemCount);
+        // Same tax-inclusive extraction as OrderCreationService (see its doc comment) - shown here
+        // so the customer sees the GST breakdown before placing the order, not just after. `total`
+        // doesn't change: this only breaks out how much of it is tax, it isn't added on top.
+        TaxSettings taxSettings = taxSettingsRepository.findById(TaxSettings.SINGLETON_ID).orElse(null);
+        BigDecimal cgstPercent = taxSettings != null ? taxSettings.getCgstPercent() : BigDecimal.ZERO;
+        BigDecimal sgstPercent = taxSettings != null ? taxSettings.getSgstPercent() : BigDecimal.ZERO;
+        BigDecimal inclusiveDivisor = BigDecimal.valueOf(100).add(cgstPercent).add(sgstPercent);
+        BigDecimal cgstAmount = total.multiply(cgstPercent).divide(inclusiveDivisor, 2, RoundingMode.HALF_UP);
+        BigDecimal sgstAmount = total.multiply(sgstPercent).divide(inclusiveDivisor, 2, RoundingMode.HALF_UP);
+
+        return new CartResponse(
+                cart.getId(), items, subtotal, discountTotal, total, cgstPercent, cgstAmount, sgstPercent, sgstAmount, itemCount);
     }
 
     private CartItemResponse toItemResponse(CartItem item) {

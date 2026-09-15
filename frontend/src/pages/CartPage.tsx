@@ -6,6 +6,7 @@ import { formatPrice } from '../lib/formatPrice'
 import BackButton from '../components/BackButton'
 import EmptyState from '../components/EmptyState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
+import TaxIncludedNote from '../components/TaxIncludedNote'
 import ConfirmDialog from '../components/customer/ConfirmDialog'
 import type { CartItem } from '../types'
 
@@ -231,6 +232,12 @@ export default function CartPage() {
           <span>Total</span>
           <span>{formatPrice(cart?.total ?? 0)}</span>
         </div>
+        <TaxIncludedNote
+          cgstPercent={cart?.cgstPercent ?? 0}
+          cgstAmount={cart?.cgstAmount ?? 0}
+          sgstPercent={cart?.sgstPercent ?? 0}
+          sgstAmount={cart?.sgstAmount ?? 0}
+        />
       </div>
 
       <Link

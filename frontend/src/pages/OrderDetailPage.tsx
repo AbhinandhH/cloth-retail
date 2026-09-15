@@ -4,6 +4,7 @@ import { fetchOrderById } from '../api/orders'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
 import { useCart } from '../context/CartContext'
+import TaxIncludedNote from '../components/TaxIncludedNote'
 import { OrderStatusBadge } from './OrderHistoryPage'
 import BackButton from '../components/BackButton'
 import ErrorState from '../components/ErrorState'
@@ -201,18 +202,6 @@ export default function OrderDetailPage() {
               <dd className="text-emerald-600">&minus;{formatPrice(order.discountTotal)}</dd>
             </div>
           )}
-          {order.cgstAmount > 0 && (
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">CGST ({order.cgstPercent}%)</dt>
-              <dd className="text-zinc-900">{formatPrice(order.cgstAmount)}</dd>
-            </div>
-          )}
-          {order.sgstAmount > 0 && (
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">SGST ({order.sgstPercent}%)</dt>
-              <dd className="text-zinc-900">{formatPrice(order.sgstAmount)}</dd>
-            </div>
-          )}
           <div className="flex justify-between">
             <dt className="text-zinc-500">Shipping</dt>
             <dd className="text-zinc-900">{order.shippingCharge > 0 ? formatPrice(order.shippingCharge) : 'Free'}</dd>
@@ -222,6 +211,14 @@ export default function OrderDetailPage() {
             <dd className="text-zinc-900">{formatPrice(order.totalAmount)}</dd>
           </div>
         </dl>
+        <div className="mt-1.5">
+          <TaxIncludedNote
+            cgstPercent={order.cgstPercent}
+            cgstAmount={order.cgstAmount}
+            sgstPercent={order.sgstPercent}
+            sgstAmount={order.sgstAmount}
+          />
+        </div>
       </div>
 
       {/* Shipping & contact */}
