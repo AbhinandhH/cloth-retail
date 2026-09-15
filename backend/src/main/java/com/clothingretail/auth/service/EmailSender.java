@@ -1,4 +1,4 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
 /** Outbound email, abstracted so the OTP flow doesn't depend on a specific provider. */
 public interface EmailSender {

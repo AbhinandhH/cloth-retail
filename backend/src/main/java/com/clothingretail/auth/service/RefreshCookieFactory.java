@@ -1,5 +1,6 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.controller.AuthController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;

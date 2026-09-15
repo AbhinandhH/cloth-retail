@@ -1,5 +1,6 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.RoleName;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -32,7 +33,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Log4j2
-public class JwtService {
+public class JwtServiceImpl implements JwtService {
 
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_TYPE = "type";
@@ -43,7 +44,7 @@ public class JwtService {
     private final long accessTokenTtlSeconds;
     private final long refreshTokenTtlSeconds;
 
-    public JwtService(
+    public JwtServiceImpl(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.access-token-ttl-minutes:15}") long accessTokenTtlMinutes,
             @Value("${app.jwt.refresh-token-ttl-days:30}") long refreshTokenTtlDays) {
@@ -52,14 +53,17 @@ public class JwtService {
         this.refreshTokenTtlSeconds = Duration.ofDays(refreshTokenTtlDays).toSeconds();
     }
 
+    @Override
     public long getAccessTokenTtlSeconds() {
         return accessTokenTtlSeconds;
     }
 
+    @Override
     public long getRefreshTokenTtlSeconds() {
         return refreshTokenTtlSeconds;
     }
 
+    @Override
     public String generateAccessToken(Long userId, String email, Set<RoleName> roles) {
         Instant now = Instant.now();
         List<String> roleNames = roles.stream().map(Enum::name).collect(Collectors.toList());
@@ -78,6 +82,7 @@ public class JwtService {
         return token;
     }
 
+    @Override
     public String generateRefreshToken(Long userId) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(refreshTokenTtlSeconds);
@@ -94,6 +99,7 @@ public class JwtService {
     }
 
     /** Parses and signature/expiry-validates a token. Throws {@link JwtException} (or a subtype) if invalid. */
+    @Override
     public Claims parseClaims(String token) {
         try {
             return Jwts.parser()
@@ -107,6 +113,7 @@ public class JwtService {
         }
     }
 
+    @Override
     public boolean isValid(String token) {
         try {
             parseClaims(token);
@@ -117,6 +124,7 @@ public class JwtService {
         }
     }
 
+    @Override
     public boolean isExpired(String token) {
         try {
             parseClaims(token);
@@ -130,6 +138,7 @@ public class JwtService {
         }
     }
 
+    @Override
     public Long extractUserId(Claims claims) {
         Long userId = Long.valueOf(claims.getSubject());
         log.info("[1041] Extracted userId={} from token claims", userId);
@@ -137,6 +146,7 @@ public class JwtService {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public Set<String> extractRoles(Claims claims) {
         Object raw = claims.get(CLAIM_ROLES);
         Set<String> roles;
@@ -149,6 +159,7 @@ public class JwtService {
         return roles;
     }
 
+    @Override
     public boolean isRefreshToken(Claims claims) {
         String tokenType = claims.get(CLAIM_TYPE, String.class);
         boolean isRefresh = TYPE_REFRESH.equals(tokenType);
@@ -157,6 +168,7 @@ public class JwtService {
     }
 
     /** SHA-256 hex digest, used so refresh tokens are never persisted in plaintext. */
+    @Override
     public String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

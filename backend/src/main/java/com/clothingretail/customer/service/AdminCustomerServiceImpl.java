@@ -1,7 +1,7 @@
 package com.clothingretail.customer.service;
 
 import com.clothingretail.auth.User;
-import com.clothingretail.auth.UserRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.dto.AdminCustomerDetailResponse;
 import com.clothingretail.customer.repository.CustomerProfileRepository;

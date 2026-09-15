@@ -1,6 +1,6 @@
 package com.clothingretail.notification.service;
 
-import com.clothingretail.auth.EmailSender;
+import com.clothingretail.auth.service.EmailSender;
 import com.clothingretail.notification.SmtpSettings;
 import com.clothingretail.notification.dto.SmtpSettingsResponse;
 import com.clothingretail.notification.dto.SmtpSettingsUpdateRequest;

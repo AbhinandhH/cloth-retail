@@ -1,5 +1,9 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.OtpChannel;
+import com.clothingretail.auth.OtpCode;
+import com.clothingretail.auth.PendingRegistration;
+import com.clothingretail.auth.repository.OtpCodeRepository;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.notification.NotificationSettings;
 import com.clothingretail.notification.repository.NotificationSettingsRepository;
@@ -18,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class OtpService {
+public class OtpServiceImpl implements OtpService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -33,7 +37,7 @@ public class OtpService {
     private final int maxAttempts;
     private final int resendCooldownSeconds;
 
-    public OtpService(
+    public OtpServiceImpl(
             OtpCodeRepository otpCodeRepository,
             JwtService jwtService,
             EmailSender emailSender,
@@ -56,6 +60,7 @@ public class OtpService {
 
     /** Invalidates any outstanding code for this (pending registration, channel), generates a fresh one, and sends it. */
     @Transactional
+    @Override
     public void generateAndSend(PendingRegistration registration, OtpChannel channel) {
         List<OtpCode> outstanding =
                 otpCodeRepository.findByPendingRegistrationIdAndChannelAndConsumedAtIsNull(registration.getId(), channel);
@@ -104,6 +109,7 @@ public class OtpService {
 
     /** Returns true if the code matches; false (never throws for a wrong code) so the caller can surface a clean "incorrect code" message. */
     @Transactional
+    @Override
     public boolean verify(PendingRegistration registration, OtpChannel channel, String code) {
         OtpCode otp = otpCodeRepository
                 .findFirstByPendingRegistrationIdAndChannelAndConsumedAtIsNullOrderByCreatedAtDesc(registration.getId(), channel)

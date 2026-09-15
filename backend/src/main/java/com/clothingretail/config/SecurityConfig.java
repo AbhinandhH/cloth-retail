@@ -1,7 +1,7 @@
 package com.clothingretail.config;
 
-import com.clothingretail.auth.JwtAuthenticationFilter;
-import com.clothingretail.auth.JwtService;
+import com.clothingretail.auth.service.JwtAuthenticationFilter;
+import com.clothingretail.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;

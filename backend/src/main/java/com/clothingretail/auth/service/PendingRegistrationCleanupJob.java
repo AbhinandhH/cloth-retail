@@ -1,5 +1,7 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.PendingRegistration;
+import com.clothingretail.auth.repository.PendingRegistrationRepository;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;

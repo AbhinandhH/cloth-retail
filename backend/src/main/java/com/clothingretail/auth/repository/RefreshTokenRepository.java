@@ -1,5 +1,6 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.repository;
 
+import com.clothingretail.auth.RefreshToken;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
