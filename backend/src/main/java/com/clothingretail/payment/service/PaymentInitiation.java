@@ -1,4 +1,4 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 /** What a {@link PaymentGateway} hands back after starting a payment attempt. */
 public record PaymentInitiation(String gatewayReference) {}

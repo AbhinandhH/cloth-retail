@@ -1,4 +1,4 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
@@ -8,16 +8,19 @@ import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.OrderStatusHistoryService;
+import com.clothingretail.payment.Payment;
+import com.clothingretail.payment.PaymentStatus;
 import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
+import com.clothingretail.payment.repository.PaymentRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
-public class PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -27,7 +30,7 @@ public class PaymentService {
     private final PaymentWebhookService paymentWebhookService;
     private final OrderStatusHistoryService orderStatusHistoryService;
 
-    public PaymentService(
+    public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             OrderRepository orderRepository,
             CustomerProfileRepository customerProfileRepository,
@@ -44,6 +47,7 @@ public class PaymentService {
         this.orderStatusHistoryService = orderStatusHistoryService;
     }
 
+    @Override
     @Transactional
     public PaymentInitiateResponse initiate(Long userId, Long orderId, String paymentMethod) {
         log.info("[1800] Initiating payment userId={}, orderId={}, paymentMethod={}", userId, orderId, paymentMethod);
@@ -95,6 +99,7 @@ public class PaymentService {
      * simply joins this same transaction rather than opening a second one, which is fine - the
      * ownership check and the processing it gates belong together atomically anyway.
      */
+    @Override
     @Transactional
     public SimulatePaymentResponse simulate(Long userId, SimulatePaymentRequest request) {
         log.info("[1807] Simulating payment webhook userId={}, gatewayReference={}, outcome={}", userId, request.gatewayReference(), request.outcome());

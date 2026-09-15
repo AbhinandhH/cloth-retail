@@ -1,15 +1,18 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderItem;
 import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.OrderStatusHistoryService;
+import com.clothingretail.payment.Payment;
+import com.clothingretail.payment.PaymentStatus;
+import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,16 +23,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * The one and only place a payment webhook (real or simulated - see {@code PaymentService#simulate})
- * is actually processed. Kept as its own bean (distinct from {@link PaymentService}) purely so
- * both {@code PaymentController.webhook} and {@code PaymentService.simulate} can call the exact
- * same {@code @Transactional} method through Spring's proxy without running into the
- * self-invocation trap (see {@code OrderCreationService}'s javadoc for the same concern).
- */
 @Service
 @Log4j2
-public class PaymentWebhookService {
+public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     private final PaymentGateway paymentGateway;
     private final PaymentRepository paymentRepository;
@@ -42,7 +38,7 @@ public class PaymentWebhookService {
     // classic com.fasterxml.jackson ObjectMapper.
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PaymentWebhookService(
+    public PaymentWebhookServiceImpl(
             PaymentGateway paymentGateway,
             PaymentRepository paymentRepository,
             OrderRepository orderRepository,
@@ -57,6 +53,7 @@ public class PaymentWebhookService {
         this.orderStatusHistoryService = orderStatusHistoryService;
     }
 
+    @Override
     @Transactional
     public WebhookResult handleWebhook(String payload, String signature) {
         log.info("[1811] Webhook received payloadLength={}, signaturePresent={}", payload == null ? 0 : payload.length(), signature != null);
@@ -83,6 +80,7 @@ public class PaymentWebhookService {
      * from the event type + payment id instead, which is equally sufficient for this method's
      * idempotency check.
      */
+    @Override
     @Transactional
     public WebhookResult applyOutcome(String eventId, String gatewayReference, PaymentOutcome outcome, String gatewayPaymentId) {
         // Fast idempotency path: this exact event id was already applied - a pure no-op replay.

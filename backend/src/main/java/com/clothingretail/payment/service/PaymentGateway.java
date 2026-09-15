@@ -1,6 +1,7 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 import com.clothingretail.order.Order;
+import com.clothingretail.payment.Payment;
 import java.math.BigDecimal;
 
 /**

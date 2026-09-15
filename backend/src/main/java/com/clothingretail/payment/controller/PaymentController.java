@@ -1,10 +1,13 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.controller;
 
 import com.clothingretail.payment.dto.InitiatePaymentRequest;
 import com.clothingretail.payment.dto.PaymentConfigResponse;
 import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
+import com.clothingretail.payment.service.MockPaymentGateway;
+import com.clothingretail.payment.service.PaymentService;
+import com.clothingretail.payment.service.PaymentWebhookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
