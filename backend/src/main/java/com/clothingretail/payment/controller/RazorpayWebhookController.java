@@ -65,12 +65,29 @@ public class RazorpayWebhookController {
         String razorpayPaymentId = textOrNull(paymentEntity, "id");
         String razorpayOrderId = textOrNull(paymentEntity, "order_id");
 
-        PaymentOutcome outcome;
-        if ("payment.captured".equals(event)) {
-            outcome = PaymentOutcome.SUCCESS;
-        } else if ("payment.failed".equals(event)) {
-            outcome = PaymentOutcome.FAILURE;
-        } else {
+        if ("payment.failed".equals(event)) {
+            // Deliberately NOT forwarded to applyOutcome as a FAILURE outcome. A single Razorpay
+            // Order (our gatewayReference) can have several payment ATTEMPTS - e.g. a declined
+            // card retried with a different one, all within the same Checkout session - each
+            // producing its own razorpay_payment_id against the same order_id. applyOutcome's
+            // atomic PENDING -> newStatus claim only lets ONE outcome ever resolve a Payment row:
+            // treating this attempt-level failure as the order's terminal outcome would lock the
+            // row to FAILED the instant the first attempt fails, and silently discard a later
+            // successful retry's payment.captured as a no-op "already resolved" replay - exactly
+            // the customer-visible bug this guards against (a genuinely successful payment ending
+            // up shown as PAYMENT_FAILED). So a failed attempt is just logged here: the Payment
+            // stays PENDING, still eligible to be resolved by a later payment.captured for the
+            // same order. If no attempt ever succeeds, OrderReservationCleanupJob's existing
+            // reservation-expiry timeout - not this webhook - is what eventually gives up and
+            // cancels the order.
+            log.info(
+                    "[1883] Razorpay webhook - payment attempt failed razorpayOrderId={} razorpayPaymentId={} "
+                            + "(Payment left PENDING - may still be resolved by a retried attempt's payment.captured)",
+                    razorpayOrderId, razorpayPaymentId);
+            return ResponseEntity.ok().build();
+        }
+
+        if (!"payment.captured".equals(event)) {
             // Some other event this app doesn't act on (e.g. order.paid, refund.processed) -
             // acknowledge it anyway so Razorpay doesn't keep retrying.
             log.info("[1880] Razorpay webhook ignored - unhandled event={}", event);
@@ -87,7 +104,7 @@ public class RazorpayWebhookController {
         // PaymentWebhookService's idempotency check (see its own doc comment on this parameter).
         String eventId = event + ":" + razorpayPaymentId;
         log.info("[1882] Razorpay webhook parsed event={} razorpayOrderId={} razorpayPaymentId={}", event, razorpayOrderId, razorpayPaymentId);
-        paymentWebhookService.applyOutcome(eventId, razorpayOrderId, outcome, razorpayPaymentId);
+        paymentWebhookService.applyOutcome(eventId, razorpayOrderId, PaymentOutcome.SUCCESS, razorpayPaymentId);
         return ResponseEntity.ok().build();
     }
 
