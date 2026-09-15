@@ -1,5 +1,6 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.repository;
 
+import com.clothingretail.payment.Refund;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

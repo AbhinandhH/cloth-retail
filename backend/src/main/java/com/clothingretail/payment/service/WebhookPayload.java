@@ -1,4 +1,4 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 import java.math.BigDecimal;
 

@@ -1,4 +1,4 @@
-package com.clothingretail.payment;
+package com.clothingretail.payment.service;
 
 /** What a {@link PaymentGateway} hands back after starting a refund attempt - same shape as {@link PaymentInitiation}. */
 public record RefundInitiation(String reference) {}

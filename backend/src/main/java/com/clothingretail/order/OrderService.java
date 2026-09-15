@@ -11,7 +11,7 @@ import com.clothingretail.order.dto.OrderItemResponse;
 import com.clothingretail.order.dto.OrderShippingAddressResponse;
 import com.clothingretail.order.dto.OrderSummaryResponse;
 import com.clothingretail.payment.Payment;
-import com.clothingretail.payment.PaymentRepository;
+import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
