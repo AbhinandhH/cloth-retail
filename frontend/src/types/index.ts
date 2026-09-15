@@ -888,6 +888,104 @@ export interface AdminOrderDetail {
   updatedAt: string;
 }
 
+// --- Returns / size exchange / damaged-product refund ---------------------
+// /api/returns (customer) and /api/admin/returns (admin) — see backend's
+// com.clothingretail.returns package. requestType/status/evidenceStatus are
+// plain string-union enums (mirroring the backend's own Java enums), not
+// hardcoded dropdown values scattered across components.
+
+export type ReturnRequestType = "SIZE_EXCHANGE" | "DAMAGED_PRODUCT";
+export type ReturnRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "REFUNDED";
+export type EvidenceStatus = "NOT_SUBMITTED" | "SUBMITTED";
+
+export interface ReplacementSizeOption {
+  variantId: number | string;
+  sizeName: string;
+  availableQuantity: number;
+}
+
+export interface EligibleOrderItem {
+  orderItemId: number | string;
+  productName: string;
+  sku: string;
+  colorName: string;
+  sizeName: string;
+  quantity: number;
+  imageUrl: string | null;
+  alreadyHasActiveRequest: boolean;
+  /** Set only when alreadyHasActiveRequest is true - lets the return page show that request's live status instead of a dead end. */
+  activeRequestId: number | string | null;
+  replacementSizes: ReplacementSizeOption[];
+}
+
+/** Customer-facing view of their own request — GET /returns/{id} and the create-request responses. */
+export interface ReturnRequestDetail {
+  id: number | string;
+  orderId: number | string;
+  orderItemId: number | string;
+  productName: string;
+  requestType: ReturnRequestType;
+  status: ReturnRequestStatus;
+  reason: string | null;
+  requestedSizeName: string | null;
+  evidenceStatus: EvidenceStatus;
+  evidenceReferenceCode: string | null;
+  whatsappLink: string | null;
+  adminNote: string | null;
+  createdAt: string;
+}
+
+export interface ReturnRequestSummary {
+  id: number | string;
+  orderId: number | string;
+  productName: string;
+  requestType: ReturnRequestType;
+  status: ReturnRequestStatus;
+  evidenceStatus: EvidenceStatus;
+  createdAt: string;
+}
+
+/** One row of GET /admin/returns (list). */
+export interface AdminReturnRow {
+  id: number | string;
+  orderId: number | string;
+  orderNumber: string;
+  customerName: string;
+  productName: string;
+  sku: string;
+  originalSizeName: string;
+  requestedSizeName: string | null;
+  requestType: ReturnRequestType;
+  reason: string | null;
+  status: ReturnRequestStatus;
+  evidenceStatus: EvidenceStatus;
+  createdAt: string;
+}
+
+export interface AdminReturnDetail {
+  id: number | string;
+  orderId: number | string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  productName: string;
+  sku: string;
+  originalSizeName: string;
+  requestedSizeName: string | null;
+  requestType: ReturnRequestType;
+  reason: string | null;
+  status: ReturnRequestStatus;
+  evidenceStatus: EvidenceStatus;
+  evidenceVideoAvailable: boolean;
+  evidenceReferenceCode: string | null;
+  adminNote: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  refund: AdminOrderRefund | null;
+  createdAt: string;
+}
+
 // --- Customer addresses --------------------------------------------------
 // /api/customer/addresses — used by CheckoutPage to pick/create a shipping
 // address ahead of order placement.

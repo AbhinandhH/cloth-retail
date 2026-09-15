@@ -7,13 +7,17 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.UUID;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import static com.clothingretail.siteconfig.service.MediaValidation.ALLOWED_IMAGE_CONTENT_TYPES;
+import static com.clothingretail.siteconfig.service.MediaValidation.ALLOWED_VIDEO_CONTENT_TYPES;
+import static com.clothingretail.siteconfig.service.MediaValidation.IMAGE_MAX_BYTES;
+import static com.clothingretail.siteconfig.service.MediaValidation.VIDEO_MAX_BYTES;
 
 /**
  * Validates and persists generic image/video uploads used by the site-configuration
@@ -30,21 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Log4j2
 public class MediaStorageServiceImpl implements MediaStorageService {
-
-    private static final long IMAGE_MAX_BYTES = 5L * 1024 * 1024;
-    private static final long VIDEO_MAX_BYTES = 50L * 1024 * 1024;
-
-    private static final Map<String, String> ALLOWED_IMAGE_CONTENT_TYPES = Map.of(
-            "image/png", "png",
-            "image/jpeg", "jpg",
-            "image/webp", "webp",
-            "image/svg+xml", "svg",
-            "image/heic", "heic");
-
-    private static final Map<String, String> ALLOWED_VIDEO_CONTENT_TYPES = Map.of(
-            "video/mp4", "mp4",
-            "video/webm", "webm",
-            "video/quicktime", "mov");
 
     private final Path uploadDir;
 

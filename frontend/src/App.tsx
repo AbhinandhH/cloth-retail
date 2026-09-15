@@ -28,6 +28,8 @@ import AdminVendors from './pages/AdminVendors'
 import AdminDamageReasons from './pages/AdminDamageReasons'
 import AdminOrderDashboard from './pages/AdminOrderDashboard'
 import AdminOrderDetail from './pages/AdminOrderDetail'
+import AdminReturnList from './pages/AdminReturnList'
+import AdminReturnDetail from './pages/AdminReturnDetail'
 import AdminCustomerList from './pages/AdminCustomerList'
 import AdminCustomerDetail from './pages/AdminCustomerDetail'
 import WishlistPage from './pages/WishlistPage'
@@ -36,6 +38,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import PaymentPage from './pages/PaymentPage'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import ReturnRequestPage from './pages/ReturnRequestPage'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
@@ -233,6 +236,22 @@ export default function App() {
         }
       />
       <Route
+        path="/admin/returns"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminReturnList />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/returns/:id"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminReturnDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/admin/customers"
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
@@ -309,6 +328,14 @@ export default function App() {
           element={
             <RequireAuth>
               <Profile />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/orders/:orderId/items/:itemId/return"
+          element={
+            <RequireAuth>
+              <ReturnRequestPage />
             </RequireAuth>
           }
         />

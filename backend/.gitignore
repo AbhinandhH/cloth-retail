@@ -9,5 +9,9 @@ target/
 # must never be committed.
 /uploads/
 
+# Local storage for app.return-evidence.upload-dir (default ./return-evidence) - private
+# damage-claim evidence videos, must never be committed.
+/return-evidence/
+
 # Log4j2 file appender output (see log4j2.xml) - runtime logs, never committed.
 /log/

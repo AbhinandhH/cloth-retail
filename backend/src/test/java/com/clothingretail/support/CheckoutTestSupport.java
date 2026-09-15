@@ -143,4 +143,22 @@ public final class CheckoutTestSupport {
                         .content(body))
                 .andReturn();
     }
+
+    public static MvcResult updateAdminOrderStatus(MockMvc mockMvc, String adminAccessToken, Long orderId, String toStatus) throws Exception {
+        String body = """
+                {"toStatus":"%s"}
+                """.formatted(toStatus);
+        return mockMvc.perform(post("/api/admin/orders/" + orderId + "/status")
+                        .header("Authorization", "Bearer " + adminAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andReturn();
+    }
+
+    /** Walks a CONFIRMED order through PROCESSING -> PACKED -> SHIPPED -> DELIVERED via the admin status endpoint - the return/exchange flow's own setup precondition. */
+    public static void driveOrderToDelivered(MockMvc mockMvc, String adminAccessToken, Long orderId) throws Exception {
+        for (String status : new String[] {"PROCESSING", "PACKED", "SHIPPED", "DELIVERED"}) {
+            updateAdminOrderStatus(mockMvc, adminAccessToken, orderId, status);
+        }
+    }
 }

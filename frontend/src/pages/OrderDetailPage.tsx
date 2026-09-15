@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchOrderById } from '../api/orders'
+import { fetchEligibleItems } from '../api/returns'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
 import { useCart } from '../context/CartContext'
@@ -9,7 +10,7 @@ import { OrderStatusBadge } from './OrderHistoryPage'
 import BackButton from '../components/BackButton'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import type { OrderDetail, PaymentStatus } from '../types'
+import type { EligibleOrderItem, OrderDetail, PaymentStatus } from '../types'
 
 const PAYMENT_STATUS_LABEL: Record<Exclude<PaymentStatus, null>, string> = {
   PENDING: 'Payment pending',
@@ -68,6 +69,20 @@ export default function OrderDetailPage() {
       refreshCart()
     }
   }, [order?.paymentStatus, refreshCart])
+
+  // Return/exchange eligibility per item - only meaningful once delivered (see
+  // ReturnRequestServiceImpl's own eligibility gate), fetched separately from the order itself
+  // since it's a distinct concern (this app's own returns module, not order data).
+  const [eligibleItems, setEligibleItems] = useState<EligibleOrderItem[] | null>(null)
+  useEffect(() => {
+    if (!order || order.status !== 'DELIVERED') {
+      setEligibleItems(null)
+      return
+    }
+    fetchEligibleItems(order.id)
+      .then(setEligibleItems)
+      .catch(() => setEligibleItems(null))
+  }, [order?.id, order?.status])
 
   if (loading) {
     return (
@@ -168,24 +183,53 @@ export default function OrderDetailPage() {
           <h2 className="text-sm font-semibold text-zinc-900">Items</h2>
         </div>
         <ul className="divide-y divide-zinc-100">
-          {order.items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-zinc-900">{item.productName}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                  {item.colorName} &middot; {item.sizeName} &middot; Qty {item.quantity}
-                </p>
-                <p className="mt-0.5 text-xs text-zinc-400">{item.sku}</p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold text-zinc-900">{formatPrice(item.lineTotal)}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                  {formatPrice(item.unitPrice)} each
-                  {item.discountPercent > 0 ? ` · ${item.discountPercent}% off` : ''}
-                </p>
-              </div>
-            </li>
-          ))}
+          {order.items.map((item) => {
+            const eligible = eligibleItems?.find((e) => String(e.orderItemId) === String(item.id))
+            return (
+              <li key={item.id} className="px-4 py-3 sm:px-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-900">{item.productName}</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {item.colorName} &middot; {item.sizeName} &middot; Qty {item.quantity}
+                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-400">{item.sku}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-zinc-900">{formatPrice(item.lineTotal)}</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {formatPrice(item.unitPrice)} each
+                      {item.discountPercent > 0 ? ` · ${item.discountPercent}% off` : ''}
+                    </p>
+                  </div>
+                </div>
+                {eligible && (
+                  <div className="mt-2.5">
+                    {eligible.alreadyHasActiveRequest ? (
+                      <span className="inline-block rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-600">
+                        Return/exchange request in progress
+                      </span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/orders/${order.id}/items/${item.id}/return?type=exchange`}
+                          className="min-h-[36px] rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                        >
+                          Request Size Exchange
+                        </Link>
+                        <Link
+                          to={`/orders/${order.id}/items/${item.id}/return?type=damage`}
+                          className="min-h-[36px] rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                        >
+                          Report Damaged Product
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </div>
 

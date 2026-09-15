@@ -62,6 +62,11 @@ app:
     cookie-same-site: ${COOKIE_SAME_SITE:Lax}
   media:
     upload-dir: ${MEDIA_UPLOAD_DIR:./uploads}
+  return-evidence:
+    # Deliberately a separate directory from app.media.upload-dir, and NEVER registered as a
+    # public static resource handler (see ReturnEvidenceStorageServiceImpl's own doc comment) -
+    # damage-claim videos are private, unlike product photos under /media/**.
+    upload-dir: ${RETURN_EVIDENCE_UPLOAD_DIR:./return-evidence}
   order:
     # Minutes an order's stock reservation is held while awaiting payment before the scheduled
     # cleanup job (OrderReservationCleanupJob) releases it and cancels the order.

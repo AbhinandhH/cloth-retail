@@ -80,4 +80,30 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Query("UPDATE ProductVariant v SET v.stockQuantity = v.stockQuantity + :qty, v.version = v.version + 1 "
             + "WHERE v.id = :id")
     int restoreStockOnCancellation(@Param("id") Long id, @Param("qty") int qty);
+
+    /**
+     * Atomically decrements stock for an approved size-exchange replacement - conditional on
+     * availability at approval time (stock could have moved since the customer's original
+     * request), same locking/condition shape as {@link #reserveStock}. Returns 0 if insufficient
+     * available stock, which the caller must treat as a hard failure, not a silent no-op. See
+     * ReturnAdminServiceImpl#approveExchange.
+     */
+    @Modifying
+    @Query("UPDATE ProductVariant v SET v.stockQuantity = v.stockQuantity - :qty, v.version = v.version + 1 "
+            + "WHERE v.id = :id AND (v.stockQuantity - v.reservedQuantity - v.damagedQuantity) >= :qty")
+    int decrementStockForExchange(@Param("id") Long id, @Param("qty") int qty);
+
+    /**
+     * Atomically restocks the original variant on an approved size-exchange - this app has no
+     * separate "customer's returned item physically received" checkpoint, so approval is the
+     * trust point (same as this app's existing lack of an RMA-receipt step anywhere else).
+     * Mirror image of {@link #restoreStockOnCancellation}. See ReturnAdminServiceImpl#approveExchange.
+     */
+    @Modifying
+    @Query("UPDATE ProductVariant v SET v.stockQuantity = v.stockQuantity + :qty, v.version = v.version + 1 "
+            + "WHERE v.id = :id")
+    int restockOnReturn(@Param("id") Long id, @Param("qty") int qty);
+
+    /** Sibling variants (other sizes) of the same product+color - the data source for "only show sizes actually in stock" on a size-exchange request. */
+    List<ProductVariant> findByProductIdAndColorId(Long productId, Long colorId);
 }

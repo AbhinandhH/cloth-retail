@@ -78,6 +78,15 @@ function OrdersIcon() {
   );
 }
 
+function ReturnsIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 8l4-4m-4 4l4 4m-4-4h11a5 5 0 015 5v1" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20 16l-4 4m4-4l-4-4m4 4H9a5 5 0 01-5-5v-1" />
+    </svg>
+  );
+}
+
 function CustomersIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -132,6 +141,7 @@ const MODULES: AdminModule[] = [
   { to: "/admin/inventory", label: "Inventory", description: "Stock movements", icon: <InventoryIcon /> },
   { to: "/admin/inventory/stock", label: "Stock", description: "On-hand levels", icon: <StockIcon /> },
   { to: "/admin/orders", label: "Orders", description: "Fulfilment queue", icon: <OrdersIcon /> },
+  { to: "/admin/returns", label: "Returns", description: "Exchanges & damage claims", icon: <ReturnsIcon /> },
   { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon /> },
   { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon /> },
   { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon /> },
