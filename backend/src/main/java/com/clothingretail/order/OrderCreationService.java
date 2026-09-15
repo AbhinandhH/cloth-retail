@@ -17,7 +17,7 @@ import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
 import com.clothingretail.tax.TaxSettings;
-import com.clothingretail.tax.TaxSettingsRepository;
+import com.clothingretail.tax.repository.TaxSettingsRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
