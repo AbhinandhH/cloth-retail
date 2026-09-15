@@ -1,9 +1,10 @@
-package com.clothingretail.notification;
+package com.clothingretail.notification.controller;
 
 import com.clothingretail.notification.dto.SmtpSettingsResponse;
 import com.clothingretail.notification.dto.SmtpSettingsUpdateRequest;
 import com.clothingretail.notification.dto.SmtpTestRequest;
 import com.clothingretail.notification.dto.SmtpTestResponse;
+import com.clothingretail.notification.service.SmtpSettingsService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

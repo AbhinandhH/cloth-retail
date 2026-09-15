@@ -1,9 +1,11 @@
-package com.clothingretail.notification;
+package com.clothingretail.notification.service;
 
 import com.clothingretail.auth.EmailSender;
+import com.clothingretail.notification.SmtpSettings;
 import com.clothingretail.notification.dto.SmtpSettingsResponse;
 import com.clothingretail.notification.dto.SmtpSettingsUpdateRequest;
 import com.clothingretail.notification.dto.SmtpTestResponse;
+import com.clothingretail.notification.repository.SmtpSettingsRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,20 +13,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class SmtpSettingsService {
+public class SmtpSettingsServiceImpl implements SmtpSettingsService {
 
     private final SmtpSettingsRepository smtpSettingsRepository;
     private final EmailSender emailSender;
 
-    public SmtpSettingsService(SmtpSettingsRepository smtpSettingsRepository, EmailSender emailSender) {
+    public SmtpSettingsServiceImpl(SmtpSettingsRepository smtpSettingsRepository, EmailSender emailSender) {
         this.smtpSettingsRepository = smtpSettingsRepository;
         this.emailSender = emailSender;
     }
 
+    @Override
     public SmtpSettingsResponse get() {
         return toResponse(loadSingleton());
     }
 
+    @Override
     @Transactional
     public SmtpSettingsResponse update(SmtpSettingsUpdateRequest request) {
         log.info("[1980] Updating SMTP settings host={} port={} username={} useStarttls={}",
@@ -55,6 +59,7 @@ public class SmtpSettingsService {
     }
 
     /** Always returns 200 with success/message rather than letting the real failure get flattened by GlobalExceptionHandler's catch-all. */
+    @Override
     public SmtpTestResponse sendTest(String toEmail) {
         log.info("[1982] Sending SMTP test email to={}", toEmail);
         try {

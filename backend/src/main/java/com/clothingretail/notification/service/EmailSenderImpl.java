@@ -1,6 +1,8 @@
-package com.clothingretail.notification;
+package com.clothingretail.notification.service;
 
 import com.clothingretail.auth.EmailSender;
+import com.clothingretail.notification.SmtpSettings;
+import com.clothingretail.notification.repository.SmtpSettingsRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
