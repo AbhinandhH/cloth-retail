@@ -27,7 +27,7 @@ const SIZE_GUIDE_ROWS = [
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { isAuthenticated } = useAuth()
-  const { addItem } = useCart()
+  const { cart, addItem } = useCart()
   const navigate = useNavigate()
   const location = useLocation()
   const { data: categories } = useCategories()
@@ -40,9 +40,12 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
+  // Whether the current variant is already sitting in the cart - drives the Add to
+  // cart/Buy now button swap. Derived from the cart itself (see the effect below), not just
+  // this session's own Add to cart clicks.
   const [addedToCart, setAddedToCart] = useState(false)
-  // The cart line id the just-added item landed on — captured from addItem's returned cart so
-  // Buy Now can scope checkout to just this line, leaving the rest of the cart untouched.
+  // The matching cart line's id, so Buy Now can scope checkout to just this line (leaving the
+  // rest of the cart untouched) instead of guessing which line is "the" one.
   const [buyNowCartItemId, setBuyNowCartItemId] = useState<string | number | null>(null)
   const [cartNotice, setCartNotice] = useState<string | null>(null)
   const [cartNoticeIsError, setCartNoticeIsError] = useState(false)
@@ -135,9 +138,20 @@ export default function ProductDetail() {
     setQuantity(1)
     setCartNotice(null)
     setCartNoticeIsError(false)
-    setAddedToCart(false)
-    setBuyNowCartItemId(null)
   }, [selectedVariant?.id])
+
+  // Whether to show "Add to cart" or "Buy now" is derived from the cart itself, not just
+  // this session's own clicks — reopening a product whose variant is already sitting in the
+  // cart (from an earlier visit, another tab, etc.) should show Buy Now immediately, not make
+  // the customer re-add it first. Re-derives whenever the variant selection changes or the
+  // cart itself changes (e.g. this same Add to cart call below, or a removal on /cart).
+  useEffect(() => {
+    const existing = selectedVariant
+      ? cart?.items.find((i) => String(i.productVariantId) === String(selectedVariant.id))
+      : undefined
+    setAddedToCart(Boolean(existing))
+    setBuyNowCartItemId(existing?.id ?? null)
+  }, [selectedVariant, cart])
 
   if (loading) {
     return (
@@ -192,12 +206,11 @@ export default function ProductDetail() {
     setCartNotice(null)
     setCartNoticeIsError(false)
     try {
-      const updatedCart = await addItem(variant.id, quantity)
+      // addedToCart/buyNowCartItemId aren't set here directly - the effect above re-derives
+      // them from the cart context as soon as addItem's setCart(data) below propagates.
+      await addItem(variant.id, quantity)
       setCartNotice('Added to cart.')
       setCartNoticeIsError(false)
-      setAddedToCart(true)
-      const matchedItem = updatedCart.items.find((i) => String(i.productVariantId) === String(variant.id))
-      setBuyNowCartItemId(matchedItem?.id ?? null)
     } catch (err) {
       setCartNotice(getErrorMessage(err))
       setCartNoticeIsError(true)
