@@ -64,4 +64,15 @@ public class OrderItem extends BaseEntity {
     /** Snapshot of the variant's primary image URL at order-creation time - same resolution as ProductService's primary-image logic. Nullable: a variant may have no images. */
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    /**
+     * The cart_items row this line was created from - a soft reference (no FK) used only to
+     * remove the matching cart line once payment succeeds (see
+     * PaymentWebhookServiceImpl#applyOutcome), since OrderCreationService no longer clears the
+     * cart at order-creation time. May end up pointing at an already-deleted row (the customer
+     * removed it manually before payment completed, or a re-delivered webhook already cleaned it
+     * up) - callers must tolerate that as a silent no-op, not an error.
+     */
+    @Column(name = "source_cart_item_id")
+    private Long sourceCartItemId;
 }

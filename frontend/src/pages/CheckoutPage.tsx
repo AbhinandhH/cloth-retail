@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import * as addressesApi from "../api/addresses";
@@ -25,9 +25,26 @@ const EMPTY_ADDRESS: AddressRequest = {
 };
 
 export default function CheckoutPage() {
-  const { cart, refresh: refreshCart, markCartEmptied } = useCart();
+  const { cart, refresh: refreshCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Buy Now (ProductDetail) navigates here with a specific cart line id to scope checkout to —
+  // undefined/absent means the normal "check out the whole cart" flow.
+  const scopedCartItemIds = (location.state as { cartItemIds?: (number | string)[] } | null)
+    ?.cartItemIds;
+
+  const orderItems = useMemo(() => {
+    if (!cart) return [];
+    if (!scopedCartItemIds || scopedCartItemIds.length === 0) return cart.items;
+    const idSet = new Set(scopedCartItemIds.map(String));
+    return cart.items.filter((item) => idSet.has(String(item.id)));
+  }, [cart, scopedCartItemIds]);
+
+  const orderSubtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const orderTotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const orderDiscountTotal = orderSubtotal - orderTotal;
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
@@ -99,7 +116,7 @@ export default function CheckoutPage() {
 
   const canPlaceOrder =
     (showNewForm ? formValid : Boolean(selectedAddressId)) &&
-    (cart?.items.length ?? 0) > 0;
+    orderItems.length > 0;
 
   const handlePlaceOrder = async (e: FormEvent) => {
     e.preventDefault();
@@ -124,19 +141,17 @@ export default function CheckoutPage() {
         idempotencyKey: idempotencyKeyRef.current,
         shippingAddressId,
         contactPhone: contactPhone.trim() || undefined,
+        cartItemIds:
+          scopedCartItemIds && scopedCartItemIds.length > 0 ? scopedCartItemIds : undefined,
       });
-      // The backend already clears the cart the moment the order row is
-      // created (OrderCreationService.create), but CheckoutPage calls
-      // ordersApi directly rather than going through CartContext, so its
-      // in-memory `cart` never learns that happened — the navbar badge and
-      // /cart page would keep showing the just-ordered item(s) otherwise.
-      // markCartEmptied() updates that state immediately and synchronously
-      // (the outcome is already certain, no refetch needed); refreshCart()
-      // is still fired in the background as a best-effort reconcile, but
-      // unlike markCartEmptied it silently no-ops the UI on a failed/slow
-      // refetch (e.g. a flaky mobile connection), so it must never be the
-      // only thing clearing the badge.
-      markCartEmptied();
+      // The cart is NOT cleared just because the order was created
+      // (OrderCreationService leaves every line — ordered or not — exactly
+      // as it was; PaymentWebhookServiceImpl only removes the ordered
+      // line(s) once payment actually succeeds). So there's nothing to
+      // optimistically clear here — refreshCart() just re-syncs the
+      // navbar badge/cart page with the server's current state, which
+      // still correctly holds the just-ordered line(s) until payment
+      // resolves.
       refreshCart();
       navigate(`/checkout/payment/${order.id}`);
     } catch (err) {
@@ -312,17 +327,17 @@ export default function CheckoutPage() {
           </p>
           <div className="flex justify-between text-zinc-600">
             <span>Subtotal</span>
-            <span>{formatPrice(cart?.subtotal ?? 0)}</span>
+            <span>{formatPrice(orderSubtotal)}</span>
           </div>
-          {(cart?.discountTotal ?? 0) > 0 && (
+          {orderDiscountTotal > 0 && (
             <div className="flex justify-between text-emerald-600">
               <span>Discount</span>
-              <span>−{formatPrice(cart?.discountTotal ?? 0)}</span>
+              <span>−{formatPrice(orderDiscountTotal)}</span>
             </div>
           )}
           <div className="mt-2 flex justify-between border-t border-zinc-200 pt-2 text-base font-semibold text-zinc-900">
             <span>Total</span>
-            <span>{formatPrice(cart?.total ?? 0)}</span>
+            <span>{formatPrice(orderTotal)}</span>
           </div>
         </section>
 

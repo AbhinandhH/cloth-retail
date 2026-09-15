@@ -26,7 +26,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,8 +46,13 @@ import org.springframework.transaction.annotation.Transactional;
  * non-transactional one. Routing through a second bean forces the call through the proxy, so the
  * transaction (and its rollback-on-exception behaviour) is real.
  *
- * Pure DB work only, as required: validate -> loop reserve -> create Order+OrderItems -> clear
- * cart -> return. No payment-gateway or other external/slow call ever happens in here.
+ * Pure DB work only, as required: validate -> loop reserve -> create Order+OrderItems -> return.
+ * No payment-gateway or other external/slow call ever happens in here.
+ *
+ * The cart is deliberately NOT cleared here: a freshly-created order is only PENDING_PAYMENT, not
+ * a guaranteed sale, so its cart line(s) must survive a failed/expired payment untouched - see
+ * {@code OrderItem.sourceCartItemId} and {@code PaymentWebhookServiceImpl#applyOutcome}, which
+ * removes exactly the ordered line(s) once (and only once) payment actually succeeds.
  */
 @Service
 @Log4j2
@@ -98,7 +107,8 @@ class OrderCreationService {
                     log.error("[1603] Cart not found for customerProfileId={}", profile.getId());
                     return new BadRequestException("Cart is empty");
                 });
-        if (cart.getItems().isEmpty()) {
+        List<CartItem> itemsToOrder = resolveItemsToOrder(cart, request.cartItemIds(), profile.getId());
+        if (itemsToOrder.isEmpty()) {
             log.error("[1604] Cart is empty for customerProfileId={}", profile.getId());
             throw new BadRequestException("Cart is empty");
         }
@@ -129,7 +139,7 @@ class OrderCreationService {
         // transaction. The first one to fail throws immediately, which rolls back everything
         // reserved so far in this same loop - no partial reservation is ever visible to any
         // other transaction.
-        for (CartItem cartItem : cart.getItems()) {
+        for (CartItem cartItem : itemsToOrder) {
             ProductVariant variant = cartItem.getProductVariant();
             boolean productActive = variant.getProduct().getStatus() == ProductStatus.ACTIVE;
             if (!variant.isActive() || !productActive) {
@@ -165,6 +175,7 @@ class OrderCreationService {
             item.setDiscountPercent(discountPercent);
             item.setLineTotal(lineTotal);
             item.setImageUrl(primaryImageUrl(variant));
+            item.setSourceCartItemId(cartItem.getId());
             order.addItem(item);
 
             subtotal = subtotal.add(unitPrice.multiply(BigDecimal.valueOf(quantity)));
@@ -210,11 +221,34 @@ class OrderCreationService {
         // previousStatus is null - this is the order's first-ever status row.
         orderStatusHistoryService.record(saved, null, OrderStatus.PENDING_PAYMENT, null, null);
 
-        cart.getItems().clear();
-        cartRepository.save(cart);
-        log.info("[1611] Cart cleared for customerProfileId={} after order {}", profile.getId(), saved.getId());
+        log.info(
+                "[1998] Order {} created from {} cart item(s) for customerProfileId={} - cart left intact pending payment outcome",
+                saved.getId(), itemsToOrder.size(), profile.getId());
 
         return saved;
+    }
+
+    /**
+     * Null/empty {@code requestedCartItemIds} means "the entire cart" (Proceed to Checkout); a
+     * non-empty list scopes the order to just those lines (Buy Now), which must each belong to
+     * the caller's own cart - a stale/foreign id fails loudly rather than silently ordering
+     * something else or the whole cart instead.
+     */
+    private List<CartItem> resolveItemsToOrder(Cart cart, List<Long> requestedCartItemIds, Long customerProfileId) {
+        if (requestedCartItemIds == null || requestedCartItemIds.isEmpty()) {
+            return cart.getItems();
+        }
+        Map<Long, CartItem> byId = cart.getItems().stream().collect(Collectors.toMap(CartItem::getId, ci -> ci));
+        List<CartItem> resolved = new ArrayList<>();
+        for (Long id : requestedCartItemIds) {
+            CartItem item = byId.get(id);
+            if (item == null) {
+                log.error("[1999] Buy-now checkout failed - cart item {} not found in cart for customerProfileId={}", id, customerProfileId);
+                throw new NotFoundException("Cart item not found: " + id);
+            }
+            resolved.add(item);
+        }
+        return resolved;
     }
 
     /** Same resolution ProductService.toSummary() uses for a product's primary image, applied to a single variant: the image marked primary, or its lowest displayOrder one, or null if it has none. */

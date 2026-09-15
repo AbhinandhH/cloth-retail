@@ -680,6 +680,8 @@ export interface CreateOrderRequest {
   idempotencyKey: string;
   shippingAddressId: number | string;
   contactPhone?: string | null;
+  /** Scope the order to just these cart line ids (Buy Now) — omit/empty for the whole cart. */
+  cartItemIds?: (number | string)[];
 }
 
 // --- Admin orders ---------------------------------------------------------

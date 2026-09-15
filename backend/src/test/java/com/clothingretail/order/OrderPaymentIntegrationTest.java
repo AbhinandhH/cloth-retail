@@ -210,8 +210,10 @@ class OrderPaymentIntegrationTest {
 
         Long firstOrderId = createOrderExpectOk(session, addressId, idempotencyKey);
 
-        // Cart was cleared by the first call - re-add the same item so a second identical
-        // request has something to (attempt to) reserve again, if the idempotency guard failed.
+        // The cart is deliberately left intact by order creation now (see
+        // OrderCreationService), so the original line is still sitting there - add another 5 on
+        // top of it so a second identical request would have extra stock to (attempt to) reserve
+        // again, if the idempotency guard failed.
         CheckoutTestSupport.addToCart(mockMvc, session.accessToken(), variant.getId(), 5);
         MvcResult secondResult = CheckoutTestSupport.createOrder(mockMvc, session.accessToken(), idempotencyKey, addressId);
         assertThat(secondResult.getResponse().getStatus()).isEqualTo(200);
@@ -256,6 +258,91 @@ class OrderPaymentIntegrationTest {
 
         Payment payment = paymentRepository.findByGatewayReference(gatewayReference).orElseThrow();
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+    }
+
+    @Test
+    void cartLineStaysInCartAfterOrderCreationAndIsOnlyRemovedOncePaymentSucceeds() throws Exception {
+        ProductVariant variant = createTestVariant("CARTLINGER", 10);
+        CustomerSession session = setUpCustomerWithCartItem("cartlingers", variant, 2);
+        Long addressId = CheckoutTestSupport.createDefaultAddress(mockMvc, objectMapper, session.accessToken());
+
+        Long orderId = createOrderExpectOk(session, addressId, UUID.randomUUID().toString());
+
+        // PENDING_PAYMENT is not a guaranteed sale yet - the ordered line must still be visible
+        // (and editable) in the cart.
+        MvcResult cartAfterOrder = CheckoutTestSupport.getCart(mockMvc, session.accessToken());
+        JsonNode cartAfterOrderJson = objectMapper.readTree(cartAfterOrder.getResponse().getContentAsString());
+        assertThat(cartAfterOrderJson.get("items").size()).isEqualTo(1);
+        assertThat(cartAfterOrderJson.get("items").get(0).get("quantity").asInt()).isEqualTo(2);
+
+        MvcResult initiateResult = CheckoutTestSupport.initiatePayment(mockMvc, session.accessToken(), orderId);
+        String gatewayReference = objectMapper.readTree(initiateResult.getResponse().getContentAsString()).get("gatewayReference").asText();
+        CheckoutTestSupport.simulatePayment(mockMvc, session.accessToken(), gatewayReference, "SUCCESS");
+
+        // Only now, once payment has actually succeeded, is the cart line removed.
+        MvcResult cartAfterPayment = CheckoutTestSupport.getCart(mockMvc, session.accessToken());
+        JsonNode cartAfterPaymentJson = objectMapper.readTree(cartAfterPayment.getResponse().getContentAsString());
+        assertThat(cartAfterPaymentJson.get("items").size()).isEqualTo(0);
+    }
+
+    @Test
+    void cartLineRemainsInCartWhenPaymentFails() throws Exception {
+        ProductVariant variant = createTestVariant("CARTKEEP", 10);
+        CustomerSession session = setUpCustomerWithCartItem("cartkeep", variant, 2);
+        Long addressId = CheckoutTestSupport.createDefaultAddress(mockMvc, objectMapper, session.accessToken());
+
+        Long orderId = createOrderExpectOk(session, addressId, UUID.randomUUID().toString());
+
+        MvcResult initiateResult = CheckoutTestSupport.initiatePayment(mockMvc, session.accessToken(), orderId);
+        String gatewayReference = objectMapper.readTree(initiateResult.getResponse().getContentAsString()).get("gatewayReference").asText();
+        CheckoutTestSupport.simulatePayment(mockMvc, session.accessToken(), gatewayReference, "FAILURE");
+
+        MvcResult cartAfterFailure = CheckoutTestSupport.getCart(mockMvc, session.accessToken());
+        JsonNode cartAfterFailureJson = objectMapper.readTree(cartAfterFailure.getResponse().getContentAsString());
+        assertThat(cartAfterFailureJson.get("items").size()).isEqualTo(1);
+        assertThat(cartAfterFailureJson.get("items").get(0).get("quantity").asInt()).isEqualTo(2);
+    }
+
+    @Test
+    void buyNowScopedOrderLeavesOtherCartLinesUntouchedAndOnlyRemovesTheOrderedOneOnSuccess() throws Exception {
+        ProductVariant variantA = createTestVariant("BUYNOWA", 10);
+        ProductVariant variantB = createTestVariant("BUYNOWB", 10);
+        CustomerSession session = CheckoutTestSupport.registerCustomer(mockMvc, objectMapper, "buynow");
+        Long addressId = CheckoutTestSupport.createDefaultAddress(mockMvc, objectMapper, session.accessToken());
+
+        MvcResult addA = CheckoutTestSupport.addToCart(mockMvc, session.accessToken(), variantA.getId(), 1);
+        Long cartItemIdA =
+                objectMapper.readTree(addA.getResponse().getContentAsString()).get("items").get(0).get("id").asLong();
+        CheckoutTestSupport.addToCart(mockMvc, session.accessToken(), variantB.getId(), 1);
+
+        // Buy Now on variant A only - variant B's line must never be reserved or included.
+        MvcResult orderResult = CheckoutTestSupport.createOrder(
+                mockMvc, session.accessToken(), UUID.randomUUID().toString(), addressId, List.of(cartItemIdA));
+        assertThat(orderResult.getResponse().getStatus()).isEqualTo(200);
+        JsonNode orderJson = objectMapper.readTree(orderResult.getResponse().getContentAsString());
+        assertThat(orderJson.get("items").size()).isEqualTo(1);
+        assertThat(orderJson.get("items").get(0).get("sku").asText()).isEqualTo(variantA.getSku());
+        Long orderId = orderJson.get("id").asLong();
+
+        ProductVariant variantBAfterOrder = productVariantRepository.findById(variantB.getId()).orElseThrow();
+        assertThat(variantBAfterOrder.getReservedQuantity()).isEqualTo(0);
+
+        // Both lines still present right after order creation - Buy Now must not touch the rest
+        // of the cart.
+        MvcResult cartAfterOrder = CheckoutTestSupport.getCart(mockMvc, session.accessToken());
+        JsonNode cartAfterOrderJson = objectMapper.readTree(cartAfterOrder.getResponse().getContentAsString());
+        assertThat(cartAfterOrderJson.get("items").size()).isEqualTo(2);
+
+        MvcResult initiateResult = CheckoutTestSupport.initiatePayment(mockMvc, session.accessToken(), orderId);
+        String gatewayReference = objectMapper.readTree(initiateResult.getResponse().getContentAsString()).get("gatewayReference").asText();
+        CheckoutTestSupport.simulatePayment(mockMvc, session.accessToken(), gatewayReference, "SUCCESS");
+
+        // Only variant A's line was removed on success - variant B is still sitting in the cart,
+        // completely untouched throughout.
+        MvcResult cartAfterPayment = CheckoutTestSupport.getCart(mockMvc, session.accessToken());
+        JsonNode cartAfterPaymentJson = objectMapper.readTree(cartAfterPayment.getResponse().getContentAsString());
+        assertThat(cartAfterPaymentJson.get("items").size()).isEqualTo(1);
+        assertThat(cartAfterPaymentJson.get("items").get(0).get("sku").asText()).isEqualTo(variantB.getSku());
     }
 
     @Test

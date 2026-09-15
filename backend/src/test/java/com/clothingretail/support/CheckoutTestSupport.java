@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -100,9 +101,16 @@ public final class CheckoutTestSupport {
     }
 
     public static MvcResult createOrder(MockMvc mockMvc, String accessToken, String idempotencyKey, Long addressId) throws Exception {
+        return createOrder(mockMvc, accessToken, idempotencyKey, addressId, null);
+    }
+
+    /** {@code cartItemIds} scopes the order to just those cart lines (Buy Now) - null for the whole cart. */
+    public static MvcResult createOrder(
+            MockMvc mockMvc, String accessToken, String idempotencyKey, Long addressId, List<Long> cartItemIds) throws Exception {
+        String cartItemIdsJson = cartItemIds == null ? "null" : cartItemIds.toString();
         String body = """
-                {"idempotencyKey":"%s","shippingAddressId":%d}
-                """.formatted(idempotencyKey, addressId);
+                {"idempotencyKey":"%s","shippingAddressId":%d,"cartItemIds":%s}
+                """.formatted(idempotencyKey, addressId, cartItemIdsJson);
         return mockMvc.perform(post("/api/orders")
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
