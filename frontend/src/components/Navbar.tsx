@@ -76,7 +76,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-10 md:flex">
           <Link to="/" className="text-sm font-medium tracking-wide text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
             Shop
           </Link>
@@ -103,13 +103,13 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-5">
               <Link to="/login" className="text-sm font-medium text-[var(--nav-text)] transition-colors hover:text-[var(--nav-text-strong)]">
                 Log in
               </Link>
               <Link
                 to="/register"
-                className="text-sm font-semibold text-[var(--nav-text-strong)] transition-colors hover:underline"
+                className="btn-primary-radius bg-[var(--brand-primary,#18181b)] px-4 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Sign up
               </Link>
@@ -234,7 +234,7 @@ export default function Navbar() {
               <Link
                 to="/register"
                 onClick={closeDrawer}
-                className="animate-fade-in-up mt-1 rounded-lg px-3 py-3 text-base font-semibold text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
+                className="animate-fade-in-up btn-primary-radius mt-3 bg-[var(--brand-primary,#18181b)] px-3 py-3 text-center text-base font-semibold text-white transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]"
                 style={{ animationDelay: '100ms' }}
               >
                 Sign up
