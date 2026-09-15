@@ -189,6 +189,18 @@ export default function OrderDetailPage() {
               <dd className="text-emerald-600">&minus;{formatPrice(order.discountTotal)}</dd>
             </div>
           )}
+          {order.cgstAmount > 0 && (
+            <div className="flex justify-between">
+              <dt className="text-zinc-500">CGST ({order.cgstPercent}%)</dt>
+              <dd className="text-zinc-900">{formatPrice(order.cgstAmount)}</dd>
+            </div>
+          )}
+          {order.sgstAmount > 0 && (
+            <div className="flex justify-between">
+              <dt className="text-zinc-500">SGST ({order.sgstPercent}%)</dt>
+              <dd className="text-zinc-900">{formatPrice(order.sgstAmount)}</dd>
+            </div>
+          )}
           <div className="flex justify-between">
             <dt className="text-zinc-500">Shipping</dt>
             <dd className="text-zinc-900">{order.shippingCharge > 0 ? formatPrice(order.shippingCharge) : 'Free'}</dd>

@@ -22,6 +22,10 @@ const INVENTORY_MASTERS: MasterLink[] = [
   { to: '/admin/damage-reasons', name: 'Damage Reasons', description: 'Reasons available when marking stock damaged.' },
 ]
 
+const BILLING_MASTERS: MasterLink[] = [
+  { to: '/admin/tax', name: 'Tax', description: 'CGST & SGST rates applied to every order.' },
+]
+
 /** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {
   return (
@@ -95,6 +99,15 @@ export default function AdminMastersHub() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Inventory Masters</h2>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {INVENTORY_MASTERS.map((link) => (
+            <MasterCard key={link.to} link={link} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Billing Masters</h2>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {BILLING_MASTERS.map((link) => (
             <MasterCard key={link.to} link={link} />
           ))}
         </div>

@@ -82,6 +82,14 @@ export interface SmtpTestResult {
   message: string;
 }
 
+/** GET /api/admin/tax-settings — the store's GST rates, applied to every new order's post-discount goods total. See OrderDetail.cgstAmount/sgstAmount for what a specific order was actually charged. */
+export interface TaxSettings {
+  cgstPercent: number;
+  sgstPercent: number;
+}
+
+export type TaxSettingsUpdate = TaxSettings;
+
 export interface FieldError {
   field: string;
   message: string;
@@ -655,6 +663,10 @@ export interface OrderDetail {
   subtotal: number;
   discountTotal: number;
   shippingCharge: number;
+  cgstPercent: number;
+  cgstAmount: number;
+  sgstPercent: number;
+  sgstAmount: number;
   totalAmount: number;
   shippingAddress: OrderShippingAddress;
   contactName: string;
@@ -858,6 +870,10 @@ export interface AdminOrderDetail {
   subtotal: number;
   discountTotal: number;
   shippingCharge: number;
+  cgstPercent: number;
+  cgstAmount: number;
+  sgstPercent: number;
+  sgstAmount: number;
   totalAmount: number;
   customer: AdminOrderCustomer;
   shippingAddress: OrderShippingAddress;
