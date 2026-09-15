@@ -1,5 +1,8 @@
-package com.clothingretail.order;
+package com.clothingretail.order.repository;
 
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

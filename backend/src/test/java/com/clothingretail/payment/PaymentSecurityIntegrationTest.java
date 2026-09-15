@@ -62,7 +62,7 @@ class PaymentSecurityIntegrationTest {
     private PaymentRepository paymentRepository;
 
     @Autowired
-    private com.clothingretail.order.OrderRepository orderRepository;
+    private com.clothingretail.order.repository.OrderRepository orderRepository;
 
     private ProductVariant createTestVariant(String tag, int stockQuantity) {
         Product product = productRepository.findBySlugAndStatus("floral-straight-kurti", ProductStatus.ACTIVE).orElseThrow();

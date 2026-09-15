@@ -9,6 +9,7 @@ import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.repository.ColorRepository;
 import com.clothingretail.masterdata.Size;
 import com.clothingretail.masterdata.repository.SizeRepository;
+import com.clothingretail.order.repository.OrderRepository;
 import com.clothingretail.payment.Payment;
 import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
