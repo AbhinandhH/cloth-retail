@@ -55,6 +55,22 @@ public class Order extends BaseEntity {
     @Column(name = "shipping_charge", nullable = false, precision = 10, scale = 2)
     private BigDecimal shippingCharge = BigDecimal.ZERO;
 
+    // Snapshotted from TaxSettings at order-creation time (see OrderCreationService) - both the
+    // rate actually applied and the amount it produced, so a later admin change to the store-wide
+    // rate never retroactively changes what an already-placed order's bill shows. Computed on the
+    // goods total after discount, before shipping.
+    @Column(name = "cgst_percent", nullable = false, precision = 5, scale = 2)
+    private BigDecimal cgstPercent = BigDecimal.ZERO;
+
+    @Column(name = "cgst_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal cgstAmount = BigDecimal.ZERO;
+
+    @Column(name = "sgst_percent", nullable = false, precision = 5, scale = 2)
+    private BigDecimal sgstPercent = BigDecimal.ZERO;
+
+    @Column(name = "sgst_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal sgstAmount = BigDecimal.ZERO;
+
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 

@@ -16,6 +16,8 @@ import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.tax.TaxSettings;
+import com.clothingretail.tax.TaxSettingsRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -49,6 +51,7 @@ class OrderCreationService {
     private final ProductVariantRepository productVariantRepository;
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryService orderStatusHistoryService;
+    private final TaxSettingsRepository taxSettingsRepository;
     private final int reservationTtlMinutes;
 
     OrderCreationService(
@@ -58,6 +61,7 @@ class OrderCreationService {
             ProductVariantRepository productVariantRepository,
             OrderRepository orderRepository,
             OrderStatusHistoryService orderStatusHistoryService,
+            TaxSettingsRepository taxSettingsRepository,
             @Value("${app.order.reservation-ttl-minutes:15}") int reservationTtlMinutes) {
         this.customerProfileRepository = customerProfileRepository;
         this.addressRepository = addressRepository;
@@ -65,6 +69,7 @@ class OrderCreationService {
         this.productVariantRepository = productVariantRepository;
         this.orderRepository = orderRepository;
         this.orderStatusHistoryService = orderStatusHistoryService;
+        this.taxSettingsRepository = taxSettingsRepository;
         this.reservationTtlMinutes = reservationTtlMinutes;
     }
 
@@ -166,9 +171,31 @@ class OrderCreationService {
         total = total.setScale(2, RoundingMode.HALF_UP);
         order.setSubtotal(subtotal);
         order.setDiscountTotal(subtotal.subtract(total).setScale(2, RoundingMode.HALF_UP));
-        order.setTotalAmount(total.add(order.getShippingCharge()));
-        log.info("[1609] Order totals computed: subtotal={}, discountTotal={}, totalAmount={}",
-                subtotal, order.getDiscountTotal(), order.getTotalAmount());
+
+        // GST, snapshotted from the live admin-configured rate - see TaxSettings' own doc comment
+        // on why the rate AND the amount it produced are both stored on the order rather than just
+        // referencing the (possibly since-changed) settings row. Computed on the goods total after
+        // discount, before shipping - "for each product", not on the shipping charge itself.
+        TaxSettings taxSettings = taxSettingsRepository.findById(TaxSettings.SINGLETON_ID)
+                .orElseThrow(() -> {
+                    log.error("[1996] Singleton tax_settings row (id={}) is missing", TaxSettings.SINGLETON_ID);
+                    return new IllegalStateException(
+                            "Singleton tax_settings row (id=1) is missing - this is a startup-time misconfiguration, "
+                                    + "check that V24__tax_settings.sql ran");
+                });
+        BigDecimal cgstAmount = total.multiply(taxSettings.getCgstPercent())
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        BigDecimal sgstAmount = total.multiply(taxSettings.getSgstPercent())
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        order.setCgstPercent(taxSettings.getCgstPercent());
+        order.setCgstAmount(cgstAmount);
+        order.setSgstPercent(taxSettings.getSgstPercent());
+        order.setSgstAmount(sgstAmount);
+
+        order.setTotalAmount(total.add(order.getShippingCharge()).add(cgstAmount).add(sgstAmount));
+        log.info(
+                "[1609] Order totals computed: subtotal={}, discountTotal={}, cgstPercent={}, cgstAmount={}, sgstPercent={}, sgstAmount={}, totalAmount={}",
+                subtotal, order.getDiscountTotal(), order.getCgstPercent(), cgstAmount, order.getSgstPercent(), sgstAmount, order.getTotalAmount());
 
         // save() flushes immediately (IDENTITY generation needs the id right away), so a unique
         // constraint violation on idempotency_key from a concurrently-racing identical request
