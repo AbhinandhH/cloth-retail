@@ -138,8 +138,8 @@ class OrderConcurrencyIntegrationTest {
         addToCartDirect(userA, variant, 1);
         addToCartDirect(userB, variant, 1);
 
-        CreateOrderRequest requestA = new CreateOrderRequest(UUID.randomUUID().toString(), addressA, "9000000010");
-        CreateOrderRequest requestB = new CreateOrderRequest(UUID.randomUUID().toString(), addressB, "9000000011");
+        CreateOrderRequest requestA = new CreateOrderRequest(UUID.randomUUID().toString(), addressA, "9000000010", null);
+        CreateOrderRequest requestB = new CreateOrderRequest(UUID.randomUUID().toString(), addressB, "9000000011", null);
 
         CountDownLatch startLatch = new CountDownLatch(1);
         ExecutorService executor = Executors.newFixedThreadPool(2);

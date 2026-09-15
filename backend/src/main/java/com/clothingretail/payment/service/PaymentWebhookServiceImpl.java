@@ -1,5 +1,6 @@
 package com.clothingretail.payment.service;
 
+import com.clothingretail.cart.repository.CartItemRepository;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.InventoryTransaction;
@@ -33,6 +34,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     private final ProductVariantRepository productVariantRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final OrderStatusHistoryService orderStatusHistoryService;
+    private final CartItemRepository cartItemRepository;
     // See MockPaymentGateway for why this is a plain unmanaged instance rather than an injected
     // bean: Spring's auto-configured JSON binder here is Jackson 3 (tools.jackson.*), not this
     // classic com.fasterxml.jackson ObjectMapper.
@@ -44,13 +46,15 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
-            OrderStatusHistoryService orderStatusHistoryService) {
+            OrderStatusHistoryService orderStatusHistoryService,
+            CartItemRepository cartItemRepository) {
         this.paymentGateway = paymentGateway;
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
         this.orderStatusHistoryService = orderStatusHistoryService;
+        this.cartItemRepository = cartItemRepository;
     }
 
     @Override
@@ -144,6 +148,7 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         OrderStatus newOrderStatus;
         if (newStatus == PaymentStatus.SUCCESS) {
             fulfilReservations(order);
+            removeSourceCartItems(order);
             newOrderStatus = OrderStatus.CONFIRMED;
         } else {
             releaseReservations(order);
@@ -201,6 +206,28 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                     "[1829] Sale transaction recorded variantId={}, orderId={}, quantity={}, previousStock={}, newStock={}",
                     variant.getId(), order.getId(), item.getQuantity(), previousStock, newStock);
         }
+    }
+
+    /**
+     * Removes each line's originating cart_items row now that the order is a confirmed sale - see
+     * {@code OrderItem.sourceCartItemId}'s own doc comment for why this only happens here (on
+     * payment success), not at order-creation time: a PENDING_PAYMENT order isn't a guaranteed
+     * sale yet, so the cart line has to survive a failed/expired payment untouched, and a
+     * Buy-Now-scoped order must never disturb the rest of the cart. A missing row (the customer
+     * already removed it manually, or it was already cleaned up by a re-delivered webhook) is a
+     * silent no-op, not an error.
+     */
+    private void removeSourceCartItems(Order order) {
+        for (OrderItem item : order.getItems()) {
+            Long cartItemId = item.getSourceCartItemId();
+            if (cartItemId == null) {
+                continue;
+            }
+            cartItemRepository.findById(cartItemId).ifPresentOrElse(
+                    cartItemRepository::delete,
+                    () -> log.info("[1834] Source cart item {} already gone for orderId={} - nothing to remove", cartItemId, order.getId()));
+        }
+        log.info("[1833] Removed source cart item(s) for orderId={} after payment success", order.getId());
     }
 
     /** Payment failed: nothing was ever decremented, so only the reservation needs releasing - no InventoryTransaction. */

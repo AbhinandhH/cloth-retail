@@ -41,6 +41,9 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
+  // The cart line id the just-added item landed on — captured from addItem's returned cart so
+  // Buy Now can scope checkout to just this line, leaving the rest of the cart untouched.
+  const [buyNowCartItemId, setBuyNowCartItemId] = useState<string | number | null>(null)
   const [cartNotice, setCartNotice] = useState<string | null>(null)
   const [cartNoticeIsError, setCartNoticeIsError] = useState(false)
 
@@ -133,6 +136,7 @@ export default function ProductDetail() {
     setCartNotice(null)
     setCartNoticeIsError(false)
     setAddedToCart(false)
+    setBuyNowCartItemId(null)
   }, [selectedVariant?.id])
 
   if (loading) {
@@ -188,10 +192,12 @@ export default function ProductDetail() {
     setCartNotice(null)
     setCartNoticeIsError(false)
     try {
-      await addItem(variant.id, quantity)
+      const updatedCart = await addItem(variant.id, quantity)
       setCartNotice('Added to cart.')
       setCartNoticeIsError(false)
       setAddedToCart(true)
+      const matchedItem = updatedCart.items.find((i) => String(i.productVariantId) === String(variant.id))
+      setBuyNowCartItemId(matchedItem?.id ?? null)
     } catch (err) {
       setCartNotice(getErrorMessage(err))
       setCartNoticeIsError(true)
@@ -201,7 +207,11 @@ export default function ProductDetail() {
   }
 
   const handleBuyNow = () => {
-    navigate('/checkout')
+    // Scopes checkout to just the line we added above, leaving the rest of the cart untouched -
+    // see CheckoutPage's own handling of location.state.cartItemIds.
+    navigate('/checkout', {
+      state: buyNowCartItemId != null ? { cartItemIds: [buyNowCartItemId] } : undefined,
+    })
   }
 
   return (
@@ -396,6 +406,7 @@ export default function ProductDetail() {
                   onClick={() => {
                     setQuantity((q) => Math.max(1, q - 1))
                     setAddedToCart(false)
+                    setBuyNowCartItemId(null)
                   }}
                   disabled={quantity <= 1}
                   className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
@@ -409,6 +420,7 @@ export default function ProductDetail() {
                   onClick={() => {
                     setQuantity((q) => Math.min(variant?.stockQuantity ?? 1, q + 1))
                     setAddedToCart(false)
+                    setBuyNowCartItemId(null)
                   }}
                   disabled={quantity >= (variant?.stockQuantity ?? 1)}
                   className="px-3 py-1.5 text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
