@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.clothingretail.masterdata.Category;
-import com.clothingretail.masterdata.CategoryRepository;
-import com.clothingretail.masterdata.ColorRepository;
-import com.clothingretail.masterdata.MaterialRepository;
-import com.clothingretail.masterdata.SizeRepository;
-import com.clothingretail.masterdata.VendorRepository;
+import com.clothingretail.masterdata.repository.CategoryRepository;
+import com.clothingretail.masterdata.repository.ColorRepository;
+import com.clothingretail.masterdata.repository.MaterialRepository;
+import com.clothingretail.masterdata.repository.SizeRepository;
+import com.clothingretail.masterdata.repository.VendorRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;

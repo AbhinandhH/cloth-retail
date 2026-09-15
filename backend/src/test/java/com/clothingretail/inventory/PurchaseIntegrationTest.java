@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.clothingretail.masterdata.Vendor;
-import com.clothingretail.masterdata.VendorRepository;
+import com.clothingretail.masterdata.repository.VendorRepository;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.ProductVariantRepository;
 import com.fasterxml.jackson.databind.JsonNode;
