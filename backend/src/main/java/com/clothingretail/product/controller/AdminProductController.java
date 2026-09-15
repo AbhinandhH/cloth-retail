@@ -1,10 +1,12 @@
-package com.clothingretail.product;
+package com.clothingretail.product.controller;
 
 import com.clothingretail.common.PageResponse;
+import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.dto.ProductAdminRequest;
 import com.clothingretail.product.dto.ProductAdminResponse;
 import com.clothingretail.product.dto.ProductAdminSummaryResponse;
 import com.clothingretail.product.dto.ProductStatusUpdateRequest;
+import com.clothingretail.product.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;

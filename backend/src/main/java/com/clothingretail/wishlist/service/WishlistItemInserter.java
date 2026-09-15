@@ -3,7 +3,7 @@ package com.clothingretail.wishlist.service;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.product.Product;
-import com.clothingretail.product.ProductRepository;
+import com.clothingretail.product.repository.ProductRepository;
 import com.clothingretail.wishlist.WishlistItem;
 import com.clothingretail.wishlist.repository.WishlistItemRepository;
 import lombok.extern.log4j.Log4j2;

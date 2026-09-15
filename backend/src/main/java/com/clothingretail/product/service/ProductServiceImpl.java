@@ -1,4 +1,4 @@
-package com.clothingretail.product;
+package com.clothingretail.product.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
@@ -20,6 +20,12 @@ import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.repository.SubCategoryRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.repository.VendorRepository;
+import com.clothingretail.product.MediaType;
+import com.clothingretail.product.Product;
+import com.clothingretail.product.ProductColorMedia;
+import com.clothingretail.product.ProductImage;
+import com.clothingretail.product.ProductStatus;
+import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.dto.ColorImagesRequest;
 import com.clothingretail.product.dto.ColorImagesResponse;
 import com.clothingretail.product.dto.ProductAdminRequest;
@@ -32,6 +38,9 @@ import com.clothingretail.product.dto.VariantAdminResponse;
 import com.clothingretail.product.dto.VariantImageRequest;
 import com.clothingretail.product.dto.VariantImageResponse;
 import com.clothingretail.product.dto.VariantResponse;
+import com.clothingretail.product.repository.ProductRepository;
+import com.clothingretail.product.repository.ProductSpecifications;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,7 +59,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class ProductService {
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
@@ -66,7 +75,7 @@ public class ProductService {
     private final DamageRecordRepository damageRecordRepository;
     private final StockService stockService;
 
-    public ProductService(
+    public ProductServiceImpl(
             ProductRepository productRepository,
             ProductVariantRepository productVariantRepository,
             CategoryRepository categoryRepository,
@@ -95,6 +104,7 @@ public class ProductService {
         this.stockService = stockService;
     }
 
+    @Override
     public Page<ProductSummaryResponse> list(
             Long categoryId,
             Long subCategoryId,
@@ -120,6 +130,7 @@ public class ProductService {
      * product's id just silently drops out (filter(Objects::nonNull)) rather than erroring the
      * whole page over one stale wishlist entry.
      */
+    @Override
     public List<ProductSummaryResponse> listByIds(List<Long> ids) {
         log.info("[1938] List products by ids count={}", ids.size());
         if (ids.isEmpty()) {
@@ -130,6 +141,7 @@ public class ProductService {
         return ids.stream().map(byId::get).filter(Objects::nonNull).map(this::toSummary).toList();
     }
 
+    @Override
     public ProductDetailResponse getBySlug(String slug) {
         log.info("[1902] Fetch product by slug={}", slug);
         Product product = productRepository.findBySlugAndStatus(slug, ProductStatus.ACTIVE)
@@ -141,6 +153,7 @@ public class ProductService {
         return toDetail(product);
     }
 
+    @Override
     public Page<ProductAdminSummaryResponse> listAdmin(String q, Long categoryId, ProductStatus status, Pageable pageable) {
         log.info("[1905] List admin products q={} categoryId={} status={}", q, categoryId, status);
         var spec = ProductSpecifications.adminFilter(q, categoryId, status);
@@ -149,6 +162,7 @@ public class ProductService {
         return result;
     }
 
+    @Override
     public ProductAdminResponse getAdmin(Long id) {
         log.info("[1907] Fetch admin product id={}", id);
         ProductAdminResponse response = toAdminResponse(findProduct(id));
@@ -156,6 +170,7 @@ public class ProductService {
         return response;
     }
 
+    @Override
     @Transactional
     public ProductAdminResponse create(ProductAdminRequest request, Long actingUserId) {
         log.info("[1909] Create product slug={} actingUserId={}", request.slug(), actingUserId);
@@ -178,6 +193,7 @@ public class ProductService {
         return response;
     }
 
+    @Override
     @Transactional
     public ProductAdminResponse update(Long id, ProductAdminRequest request, Long actingUserId) {
         log.info("[1914] Update product id={} actingUserId={}", id, actingUserId);
@@ -196,6 +212,7 @@ public class ProductService {
         return response;
     }
 
+    @Override
     @Transactional
     public ProductAdminResponse updateStatus(Long id, ProductStatus status) {
         log.info("[1918] Update product status id={} newStatus={}", id, status);
@@ -207,6 +224,7 @@ public class ProductService {
         return response;
     }
 
+    @Override
     @Transactional
     public void delete(Long id) {
         log.info("[1920] Delete product id={}", id);

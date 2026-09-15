@@ -1,7 +1,7 @@
 package com.clothingretail.order;
 
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;

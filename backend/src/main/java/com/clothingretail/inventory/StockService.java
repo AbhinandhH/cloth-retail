@@ -9,7 +9,7 @@ import com.clothingretail.inventory.dto.DamageResponse;
 import com.clothingretail.inventory.dto.StockAdjustRequest;
 import com.clothingretail.inventory.dto.StockAdjustResponse;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

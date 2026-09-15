@@ -7,7 +7,7 @@ import com.clothingretail.masterdata.Brand;
 import com.clothingretail.masterdata.dto.BrandAdminRequest;
 import com.clothingretail.masterdata.dto.BrandAdminResponse;
 import com.clothingretail.masterdata.repository.BrandRepository;
-import com.clothingretail.product.ProductRepository;
+import com.clothingretail.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

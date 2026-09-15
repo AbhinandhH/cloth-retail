@@ -26,7 +26,7 @@ import com.clothingretail.payment.RefundInitiation;
 import com.clothingretail.payment.RefundRepository;
 import com.clothingretail.payment.RefundStatus;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.util.Set;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;

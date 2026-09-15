@@ -11,7 +11,7 @@ import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.OrderStatusHistoryService;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;

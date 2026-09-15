@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.clothingretail.masterdata.repository.CategoryRepository;
 import com.clothingretail.masterdata.repository.SubCategoryRepository;
-import com.clothingretail.product.ProductRepository;
+import com.clothingretail.product.repository.ProductRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

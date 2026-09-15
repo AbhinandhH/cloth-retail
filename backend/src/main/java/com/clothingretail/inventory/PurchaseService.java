@@ -8,7 +8,7 @@ import com.clothingretail.inventory.dto.PurchaseResponse;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.repository.VendorRepository;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
