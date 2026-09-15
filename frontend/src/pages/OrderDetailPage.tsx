@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { fetchOrderById } from '../api/orders'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import { useCart } from '../context/CartContext'
 import { OrderStatusBadge } from './OrderHistoryPage'
 import BackButton from '../components/BackButton'
 import ErrorState from '../components/ErrorState'
@@ -38,6 +39,7 @@ function formatDateTime(value: string) {
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { refresh: refreshCart } = useCart()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -55,6 +57,16 @@ export default function OrderDetailPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  // The authoritative signal that this order's cart line(s) are gone server-side (see
+  // PaymentWebhookServiceImpl#removeSourceCartItems, which only runs once payment succeeds) -
+  // catches the navbar badge up here even if the payment-page callback that landed the customer
+  // on this page fired before the webhook actually processed.
+  useEffect(() => {
+    if (order?.paymentStatus === 'SUCCESS') {
+      refreshCart()
+    }
+  }, [order?.paymentStatus, refreshCart])
 
   if (loading) {
     return (

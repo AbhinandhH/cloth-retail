@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as ordersApi from '../api/orders'
 import * as paymentsApi from '../api/payments'
 import { getErrorMessage } from '../api/client'
+import { useCart } from '../context/CartContext'
 import { formatPrice } from '../lib/formatPrice'
 import { loadRazorpayCheckout, openRazorpayCheckout } from '../lib/razorpay'
 import BackButton from '../components/BackButton'
@@ -13,6 +14,7 @@ import type { OrderDetail, PaymentConfig, PaymentInitiateResponse } from '../typ
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>()
   const navigate = useNavigate()
+  const { refresh: refreshCart } = useCart()
 
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loadingOrder, setLoadingOrder] = useState(true)
@@ -115,7 +117,10 @@ export default function PaymentPage() {
             // The gateway's webhook (not this callback) is what actually confirms the payment -
             // see PaymentWebhookService's own doc comment on why. This just takes the customer to
             // the order page, which reflects whatever status that webhook has landed by the time
-            // it loads (usually near-instant in practice).
+            // it loads (usually near-instant in practice). Kick off a cart refresh here too - the
+            // webhook has often already landed by the time this fires, so the navbar badge can
+            // drop immediately instead of waiting on OrderDetailPage's own (authoritative) refresh.
+            refreshCart()
             navigate(`/orders/${payment.orderId}`)
           },
           modal: {
@@ -152,6 +157,7 @@ export default function PaymentPage() {
     try {
       const result = await paymentsApi.simulatePayment(payment.gatewayReference, outcome)
       if (result.paymentStatus === 'SUCCESS') {
+        refreshCart()
         navigate(`/orders/${result.orderId}`)
       } else {
         setFailureMessage('Payment failed. You can retry the payment or return to your cart.')
