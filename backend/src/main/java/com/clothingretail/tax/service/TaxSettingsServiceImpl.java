@@ -1,27 +1,30 @@
-package com.clothingretail.tax;
+package com.clothingretail.tax.service;
 
+import com.clothingretail.tax.TaxSettings;
 import com.clothingretail.tax.dto.TaxSettingsResponse;
 import com.clothingretail.tax.dto.TaxSettingsUpdateRequest;
+import com.clothingretail.tax.repository.TaxSettingsRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Admin-configurable GST rates - see TaxSettings. SUPER_ADMIN only, same as SMTP/Notifications/Site configuration. */
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class TaxSettingsService {
+public class TaxSettingsServiceImpl implements TaxSettingsService {
 
     private final TaxSettingsRepository taxSettingsRepository;
 
-    public TaxSettingsService(TaxSettingsRepository taxSettingsRepository) {
+    public TaxSettingsServiceImpl(TaxSettingsRepository taxSettingsRepository) {
         this.taxSettingsRepository = taxSettingsRepository;
     }
 
+    @Override
     public TaxSettingsResponse get() {
         return toResponse(loadSingleton());
     }
 
+    @Override
     @Transactional
     public TaxSettingsResponse update(TaxSettingsUpdateRequest request) {
         log.info("[1993] Updating tax settings cgstPercent={} sgstPercent={}", request.cgstPercent(), request.sgstPercent());
