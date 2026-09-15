@@ -6,7 +6,7 @@ import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
 import com.clothingretail.order.dto.AdminOrderCancelRequest;
 import com.clothingretail.order.dto.AdminOrderDetailResponse;

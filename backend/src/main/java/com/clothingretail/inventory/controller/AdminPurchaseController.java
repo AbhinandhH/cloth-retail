@@ -1,7 +1,8 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.controller;
 
 import com.clothingretail.inventory.dto.PurchaseRequest;
 import com.clothingretail.inventory.dto.PurchaseResponse;
+import com.clothingretail.inventory.service.PurchaseService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

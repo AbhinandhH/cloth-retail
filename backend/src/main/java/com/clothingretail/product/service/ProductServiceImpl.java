@@ -2,10 +2,10 @@ package com.clothingretail.product.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
-import com.clothingretail.inventory.DamageRecordRepository;
-import com.clothingretail.inventory.InventoryTransactionRepository;
-import com.clothingretail.inventory.PurchaseItemRepository;
-import com.clothingretail.inventory.StockService;
+import com.clothingretail.inventory.repository.DamageRecordRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.PurchaseItemRepository;
+import com.clothingretail.inventory.service.StockService;
 import com.clothingretail.masterdata.Brand;
 import com.clothingretail.masterdata.repository.BrandRepository;
 import com.clothingretail.masterdata.Category;

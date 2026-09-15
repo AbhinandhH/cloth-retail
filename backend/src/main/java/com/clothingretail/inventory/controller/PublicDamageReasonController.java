@@ -1,6 +1,7 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.controller;
 
 import com.clothingretail.inventory.dto.DamageReasonResponse;
+import com.clothingretail.inventory.service.DamageReasonService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

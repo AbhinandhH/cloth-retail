@@ -1,10 +1,16 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.service;
 
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.inventory.InventoryTransaction;
+import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.Purchase;
+import com.clothingretail.inventory.PurchaseItem;
 import com.clothingretail.inventory.dto.PurchaseItemRequest;
 import com.clothingretail.inventory.dto.PurchaseItemResponse;
 import com.clothingretail.inventory.dto.PurchaseRequest;
 import com.clothingretail.inventory.dto.PurchaseResponse;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.PurchaseRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.repository.VendorRepository;
 import com.clothingretail.product.ProductVariant;
@@ -24,14 +30,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class PurchaseService {
+public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepository;
     private final VendorRepository vendorRepository;
     private final ProductVariantRepository productVariantRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
 
-    public PurchaseService(
+    public PurchaseServiceImpl(
             PurchaseRepository purchaseRepository,
             VendorRepository vendorRepository,
             ProductVariantRepository productVariantRepository,
@@ -42,6 +48,7 @@ public class PurchaseService {
         this.inventoryTransactionRepository = inventoryTransactionRepository;
     }
 
+    @Override
     @Transactional
     public PurchaseResponse createPurchase(PurchaseRequest request) {
         log.info("[1325] Creating purchase vendorId={}, itemCount={}", request.vendorId(), request.items().size());
@@ -111,6 +118,7 @@ public class PurchaseService {
         return toResponse(saved);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PurchaseResponse getPurchase(Long id) {
         log.info("[1331] Fetching purchase id={}", id);
@@ -122,6 +130,7 @@ public class PurchaseService {
         return toResponse(purchase);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<PurchaseResponse> listPurchases() {
         log.info("[1333] Listing all purchases");

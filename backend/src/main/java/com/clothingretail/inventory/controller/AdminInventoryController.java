@@ -1,6 +1,8 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.controller;
 
 import com.clothingretail.common.PageResponse;
+import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.StockStatus;
 import com.clothingretail.inventory.dto.DamageRecordRow;
 import com.clothingretail.inventory.dto.DamageRequest;
 import com.clothingretail.inventory.dto.DamageResponse;
@@ -9,6 +11,8 @@ import com.clothingretail.inventory.dto.InventoryTransactionRow;
 import com.clothingretail.inventory.dto.StockAdjustRequest;
 import com.clothingretail.inventory.dto.StockAdjustResponse;
 import com.clothingretail.inventory.dto.VariantInventoryRow;
+import com.clothingretail.inventory.service.InventoryQueryService;
+import com.clothingretail.inventory.service.StockService;
 import com.clothingretail.product.ProductStatus;
 import jakarta.validation.Valid;
 import java.time.Instant;

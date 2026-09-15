@@ -1,11 +1,14 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.service;
 
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.inventory.DamageReason;
 import com.clothingretail.inventory.dto.DamageReasonAdminRequest;
 import com.clothingretail.inventory.dto.DamageReasonAdminResponse;
 import com.clothingretail.inventory.dto.DamageReasonResponse;
+import com.clothingretail.inventory.repository.DamageRecordRepository;
+import com.clothingretail.inventory.repository.DamageReasonRepository;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
@@ -16,19 +19,20 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class DamageReasonService {
+public class DamageReasonServiceImpl implements DamageReasonService {
 
     private final DamageReasonRepository repository;
     private final DamageRecordRepository damageRecordRepository;
     private final AuditorNameResolver auditorNameResolver;
 
-    public DamageReasonService(
+    public DamageReasonServiceImpl(
             DamageReasonRepository repository, DamageRecordRepository damageRecordRepository, AuditorNameResolver auditorNameResolver) {
         this.repository = repository;
         this.damageRecordRepository = damageRecordRepository;
         this.auditorNameResolver = auditorNameResolver;
     }
 
+    @Override
     public List<DamageReasonAdminResponse> listAdmin(String q, Boolean active) {
         log.info("[1300] Listing damage reasons (admin) q={}, active={}", q, active);
         List<DamageReason> reasons = repository.findAll().stream()
@@ -41,12 +45,14 @@ public class DamageReasonService {
         return reasons.stream().map(r -> toResponse(r, names)).toList();
     }
 
+    @Override
     public DamageReasonAdminResponse getAdmin(Long id) {
         log.info("[1302] Fetching damage reason admin view id={}", id);
         DamageReason reason = find(id);
         return toResponse(reason, auditorNameResolver.resolveNames(reason.getCreatedBy(), reason.getUpdatedBy()));
     }
 
+    @Override
     public List<DamageReasonResponse> listPublic() {
         log.info("[1304] Listing active public damage reasons");
         List<DamageReasonResponse> result = repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
@@ -56,6 +62,7 @@ public class DamageReasonService {
         return result;
     }
 
+    @Override
     @Transactional
     public DamageReasonAdminResponse create(DamageReasonAdminRequest request) {
         log.info("[1306] Creating damage reason name={}, code={}", request.name(), request.code());
@@ -70,6 +77,7 @@ public class DamageReasonService {
         return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
+    @Override
     @Transactional
     public DamageReasonAdminResponse update(Long id, DamageReasonAdminRequest request) {
         log.info("[1309] Updating damage reason id={}, name={}, code={}", id, request.name(), request.code());
@@ -80,6 +88,7 @@ public class DamageReasonService {
         return toResponse(saved, auditorNameResolver.resolveNames(saved.getCreatedBy(), saved.getUpdatedBy()));
     }
 
+    @Override
     @Transactional
     public void delete(Long id) {
         log.info("[1311] Deleting damage reason id={}", id);

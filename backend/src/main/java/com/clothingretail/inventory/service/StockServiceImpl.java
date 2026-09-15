@@ -1,13 +1,20 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.service;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.auth.repository.UserRepository;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.inventory.DamageReason;
+import com.clothingretail.inventory.DamageRecord;
+import com.clothingretail.inventory.InventoryTransaction;
+import com.clothingretail.inventory.InventoryTransactionType;
 import com.clothingretail.inventory.dto.DamageRequest;
 import com.clothingretail.inventory.dto.DamageResponse;
 import com.clothingretail.inventory.dto.StockAdjustRequest;
 import com.clothingretail.inventory.dto.StockAdjustResponse;
+import com.clothingretail.inventory.repository.DamageReasonRepository;
+import com.clothingretail.inventory.repository.DamageRecordRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
 import lombok.extern.log4j.Log4j2;
@@ -23,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class StockService {
+public class StockServiceImpl implements StockService {
 
     private final ProductVariantRepository productVariantRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
@@ -31,7 +38,7 @@ public class StockService {
     private final DamageReasonRepository damageReasonRepository;
     private final UserRepository userRepository;
 
-    public StockService(
+    public StockServiceImpl(
             ProductVariantRepository productVariantRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
             DamageRecordRepository damageRecordRepository,
@@ -44,6 +51,7 @@ public class StockService {
         this.userRepository = userRepository;
     }
 
+    @Override
     @Transactional
     public StockAdjustResponse adjust(Long variantId, StockAdjustRequest request, Long actingUserId) {
         log.info(
@@ -85,6 +93,7 @@ public class StockService {
         return new StockAdjustResponse(variant.getId(), previousQuantity, newQuantity, variant.getAvailableQuantity());
     }
 
+    @Override
     @Transactional
     public DamageResponse recordDamage(Long variantId, DamageRequest request, Long actingUserId) {
         log.info(
@@ -158,6 +167,7 @@ public class StockService {
      * Does NOT touch stockQuantity itself - the caller already set it before saving the
      * variant; this only records the audit trail entry.
      */
+    @Override
     @Transactional
     public void recordInitialStock(ProductVariant variant, int initialQuantity, Long actingUserId) {
         log.info(

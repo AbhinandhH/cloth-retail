@@ -3,7 +3,7 @@ package com.clothingretail.order;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
 import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.repository.ColorRepository;

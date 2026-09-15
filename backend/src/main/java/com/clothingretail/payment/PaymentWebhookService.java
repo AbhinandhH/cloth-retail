@@ -3,7 +3,7 @@ package com.clothingretail.payment;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderItem;

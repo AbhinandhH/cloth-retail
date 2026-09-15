@@ -1,5 +1,6 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.repository;
 
+import com.clothingretail.inventory.InventoryTransaction;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
