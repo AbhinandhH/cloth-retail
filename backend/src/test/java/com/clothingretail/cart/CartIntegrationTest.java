@@ -3,9 +3,9 @@ package com.clothingretail.cart;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.clothingretail.masterdata.Color;
-import com.clothingretail.masterdata.ColorRepository;
+import com.clothingretail.masterdata.repository.ColorRepository;
 import com.clothingretail.masterdata.Size;
-import com.clothingretail.masterdata.SizeRepository;
+import com.clothingretail.masterdata.repository.SizeRepository;
 import com.clothingretail.product.Product;
 import com.clothingretail.product.ProductRepository;
 import com.clothingretail.product.ProductStatus;
