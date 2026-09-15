@@ -12,6 +12,8 @@ interface SheetProps {
   ariaLabel: string
   /** Panel width for left/right sheets (Tailwind width class). Ignored for side="bottom". */
   widthClassName?: string
+  /** Extra class(es) on the sliding panel itself - e.g. a caller's own theme-token scope (see Navbar's "nav-surface"). */
+  panelClassName?: string
 }
 
 const TRANSITION_MS = 400
@@ -36,7 +38,15 @@ const POSITION: Record<Side, string> = {
  * closing transition (stays mounted through the exit transform, then unmounts).
  * Used for the mobile nav drawer; reusable anywhere else a sheet/drawer is needed.
  */
-export default function Sheet({ open, onClose, side, children, ariaLabel, widthClassName = 'w-[86%] max-w-sm' }: SheetProps) {
+export default function Sheet({
+  open,
+  onClose,
+  side,
+  children,
+  ariaLabel,
+  widthClassName = 'w-[86%] max-w-sm',
+  panelClassName = '',
+}: SheetProps) {
   const [mounted, setMounted] = useState(open)
   const [entered, setEntered] = useState(false)
 
@@ -83,7 +93,7 @@ export default function Sheet({ open, onClose, side, children, ariaLabel, widthC
         onClick={onClose}
       />
       <div
-        className={`absolute flex flex-col bg-white shadow-elevated transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${POSITION[side]} ${side === 'bottom' ? '' : widthClassName} ${entered ? ONSCREEN : OFFSCREEN[side]}`}
+        className={`absolute flex flex-col bg-[var(--surface-elevated,#ffffff)] shadow-elevated transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${POSITION[side]} ${side === 'bottom' ? '' : widthClassName} ${entered ? ONSCREEN : OFFSCREEN[side]} ${panelClassName}`}
       >
         {children}
       </div>

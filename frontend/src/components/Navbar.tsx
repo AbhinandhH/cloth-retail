@@ -37,6 +37,11 @@ function CartBadge({ count }: { count: number }) {
 // header that text goes nearly invisible. Deriving the header's own
 // background/text from the same theme keeps them a guaranteed-contrasting
 // pair regardless of which preset is active.
+//
+// Also applied to the mobile nav Sheet's panel (via panelClassName="nav-surface"
+// below) so the drawer's own chrome matches the header exactly - the panel is
+// portaled to document.body (see Sheet.tsx), a DOM sibling of <header>, not a
+// descendant, so these custom properties wouldn't otherwise reach it.
 const NAV_STYLES = `
   .nav-surface {
     --nav-text: color-mix(in srgb, var(--brand-text, #3f3f46) 78%, var(--brand-background, #ffffff));
@@ -135,14 +140,14 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav drawer — slides in from the right, not a top dropdown. */}
-      <Sheet open={drawerOpen} onClose={closeDrawer} side="right" ariaLabel="Site menu">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
-          <span className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Menu</span>
+      <Sheet open={drawerOpen} onClose={closeDrawer} side="right" ariaLabel="Site menu" panelClassName="nav-surface">
+        <div className="flex items-center justify-between border-b border-[var(--nav-border)] px-5 py-4">
+          <span className="text-sm font-semibold uppercase tracking-wide text-[var(--nav-text)]">Menu</span>
           <button
             type="button"
             onClick={closeDrawer}
             aria-label="Close menu"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--nav-text)] transition-colors hover:bg-[var(--nav-hover-bg)]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -154,7 +159,7 @@ export default function Navbar() {
           <Link
             to="/"
             onClick={closeDrawer}
-            className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+            className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
             style={{ animationDelay: '20ms' }}
           >
             Shop
@@ -165,7 +170,7 @@ export default function Navbar() {
               <Link
                 to="/cart"
                 onClick={closeDrawer}
-                className="animate-fade-in-up flex items-center justify-between rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up flex items-center justify-between rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '60ms' }}
               >
                 Cart
@@ -178,7 +183,7 @@ export default function Navbar() {
               <Link
                 to="/wishlist"
                 onClick={closeDrawer}
-                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '100ms' }}
               >
                 Wishlist
@@ -186,7 +191,7 @@ export default function Navbar() {
               <Link
                 to="/orders"
                 onClick={closeDrawer}
-                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '140ms' }}
               >
                 My orders
@@ -194,23 +199,23 @@ export default function Navbar() {
               <Link
                 to="/profile"
                 onClick={closeDrawer}
-                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '180ms' }}
               >
                 Account
               </Link>
 
               <div
-                className="animate-fade-in-up mt-3 border-t border-zinc-100 px-3 pt-4"
+                className="animate-fade-in-up mt-3 border-t border-[var(--nav-border)] px-3 pt-4"
                 style={{ animationDelay: '220ms' }}
               >
-                <p className="text-xs text-zinc-400">Signed in as</p>
-                <p className="mt-0.5 truncate text-sm font-medium text-zinc-700">{user?.fullName ?? user?.email}</p>
+                <p className="text-xs text-[var(--nav-text)]">Signed in as</p>
+                <p className="mt-0.5 truncate text-sm font-medium text-[var(--nav-text-strong)]">{user?.fullName ?? user?.email}</p>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="animate-fade-in-up mt-2 rounded-lg px-3 py-3 text-left text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up mt-2 rounded-lg px-3 py-3 text-left text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '260ms' }}
               >
                 Log out
@@ -221,7 +226,7 @@ export default function Navbar() {
               <Link
                 to="/login"
                 onClick={closeDrawer}
-                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-zinc-800 transition duration-200 hover:translate-x-0.5 hover:bg-zinc-50 active:scale-[0.98]"
+                className="animate-fade-in-up rounded-lg px-3 py-3 text-base font-medium text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '60ms' }}
               >
                 Log in
