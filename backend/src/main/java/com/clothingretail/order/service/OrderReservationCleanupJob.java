@@ -1,5 +1,9 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderStatus;
+import com.clothingretail.order.repository.OrderRepository;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
 import java.time.Instant;

@@ -1,27 +1,16 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
 import com.clothingretail.common.ConflictException;
+import com.clothingretail.order.OrderStatus;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
-/**
- * The single source of truth for the admin-driven order status graph - both the forward
- * lifecycle (CONFIRMED -&gt; PROCESSING -&gt; PACKED -&gt; SHIPPED -&gt; DELIVERED -&gt; RETURNED
- * -&gt; REFUNDED) and which statuses are eligible for cancellation. Nowhere else in the codebase
- * encodes this graph - {@code AdminOrderService} calls only the methods here to validate and
- * apply a requested change, and {@link AdminSettableOrderStatus} makes the payment-only statuses
- * (and CONFIRMED/CANCELLED, neither of which is a valid {@code /status} target) structurally
- * unreachable before this class is ever consulted.
- *
- * Cancellation itself (including its stock-reversal branching) is orchestrated by {@code
- * AdminOrderService} - this class only says whether it's allowed from a given status.
- */
 @Service
 @Log4j2
-public class OrderTransitionService {
+public class OrderTransitionServiceImpl implements OrderTransitionService {
 
     /** Forward, admin-initiated moves reachable via {@code POST /{id}/status}. Terminal/system statuses simply have no entry (empty set). */
     private static final Map<OrderStatus, Set<OrderStatus>> FORWARD_TRANSITIONS = Map.of(
@@ -45,6 +34,7 @@ public class OrderTransitionService {
             OrderStatus.PACKED);
 
     /** What the GET /{id} response's {@code availableNextStatuses} field reports - forward moves plus CANCELLED, whichever apply from {@code current}. */
+    @Override
     public Set<OrderStatus> availableNextStatuses(OrderStatus current) {
         log.info("[1623] Computing available next statuses for current={}", current);
         Set<OrderStatus> next = new LinkedHashSet<>(FORWARD_TRANSITIONS.getOrDefault(current, Set.of()));
@@ -54,6 +44,7 @@ public class OrderTransitionService {
         return next;
     }
 
+    @Override
     public boolean isCancellable(OrderStatus current) {
         boolean cancellable = CANCELLABLE_FROM.contains(current);
         log.info("[1624] isCancellable check: current={}, cancellable={}", current, cancellable);
@@ -61,6 +52,7 @@ public class OrderTransitionService {
     }
 
     /** Throws a {@link ConflictException} naming the current status, the rejected target, and the actually-valid forward moves from here - or does nothing if {@code requested} is reachable. */
+    @Override
     public void validateForwardTransition(OrderStatus current, OrderStatus requested) {
         Set<OrderStatus> allowed = FORWARD_TRANSITIONS.getOrDefault(current, Set.of());
         if (!allowed.contains(requested)) {
@@ -73,6 +65,7 @@ public class OrderTransitionService {
     }
 
     /** Throws a {@link ConflictException} if {@code current} is not an eligible status to cancel from. */
+    @Override
     public void validateCancellable(OrderStatus current) {
         if (!isCancellable(current)) {
             String suffix = (current == OrderStatus.SHIPPED || current == OrderStatus.DELIVERED)

@@ -1,18 +1,21 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.common.PageResponse;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
 import com.clothingretail.order.dto.CreateOrderRequest;
 import com.clothingretail.order.dto.OrderDetailResponse;
 import com.clothingretail.order.dto.OrderItemResponse;
 import com.clothingretail.order.dto.OrderShippingAddressResponse;
 import com.clothingretail.order.dto.OrderSummaryResponse;
+import com.clothingretail.order.repository.OrderRepository;
 import com.clothingretail.payment.Payment;
-import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
+import com.clothingretail.payment.repository.PaymentRepository;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,14 +35,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final PaymentRepository paymentRepository;
     private final OrderCreationService orderCreationService;
 
-    public OrderService(
+    public OrderServiceImpl(
             OrderRepository orderRepository,
             CustomerProfileRepository customerProfileRepository,
             PaymentRepository paymentRepository,
@@ -50,6 +53,7 @@ public class OrderService {
         this.orderCreationService = orderCreationService;
     }
 
+    @Override
     public OrderDetailResponse createOrder(Long userId, CreateOrderRequest request) {
         log.info("[1612] createOrder requested: userId={}, idempotencyKey={}", userId, request.idempotencyKey());
         Optional<Order> existing = orderRepository.findByIdempotencyKey(request.idempotencyKey());
@@ -77,6 +81,7 @@ public class OrderService {
         }
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PageResponse<OrderSummaryResponse> listOrders(Long userId, int page, int size) {
         log.info("[1617] Listing orders for userId={}, page={}, size={}", userId, page, size);
@@ -87,6 +92,7 @@ public class OrderService {
         return PageResponse.of(orders, orders.getContent().stream().map(this::toSummaryResponse).toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrder(Long userId, Long orderId) {
         log.info("[1619] Fetching order {} for userId={}", orderId, userId);

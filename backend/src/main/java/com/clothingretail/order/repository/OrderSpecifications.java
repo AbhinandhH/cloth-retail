@@ -1,7 +1,9 @@
-package com.clothingretail.order;
+package com.clothingretail.order.repository;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.customer.CustomerProfile;
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderStatus;
 import com.clothingretail.payment.Payment;
 import com.clothingretail.payment.PaymentStatus;
 import jakarta.persistence.criteria.CriteriaBuilder;

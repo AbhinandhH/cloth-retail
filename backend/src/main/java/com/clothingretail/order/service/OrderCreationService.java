@@ -1,4 +1,4 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
 import com.clothingretail.cart.Cart;
 import com.clothingretail.cart.CartItem;
@@ -10,7 +10,11 @@ import com.clothingretail.customer.Address;
 import com.clothingretail.customer.repository.AddressRepository;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.dto.CreateOrderRequest;
+import com.clothingretail.order.repository.OrderRepository;
 import com.clothingretail.product.MediaType;
 import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;

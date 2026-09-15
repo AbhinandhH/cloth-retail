@@ -1,8 +1,13 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderNote;
+import com.clothingretail.order.OrderStatus;
+import com.clothingretail.order.OrderStatusHistory;
 import com.clothingretail.order.dto.AdminOrderCustomerResponse;
 import com.clothingretail.order.dto.AdminOrderDashboardResponse;
 import com.clothingretail.order.dto.AdminOrderDetailResponse;
@@ -14,9 +19,14 @@ import com.clothingretail.order.dto.AdminPaymentResponse;
 import com.clothingretail.order.dto.AdminRefundResponse;
 import com.clothingretail.order.dto.AdminShipmentResponse;
 import com.clothingretail.order.dto.OrderShippingAddressResponse;
+import com.clothingretail.order.repository.OrderNoteRepository;
+import com.clothingretail.order.repository.OrderRepository;
+import com.clothingretail.order.repository.OrderSpecifications;
+import com.clothingretail.order.repository.OrderStatusHistoryRepository;
+import com.clothingretail.order.repository.ShipmentRepository;
 import com.clothingretail.payment.Payment;
-import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
+import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.repository.RefundRepository;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,7 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class AdminOrderQueryService {
+public class AdminOrderQueryServiceImpl implements AdminOrderQueryService {
 
     private static final int DASHBOARD_RECENT_LIMIT = 10;
 
@@ -58,7 +68,7 @@ public class AdminOrderQueryService {
     private final OrderTransitionService orderTransitionService;
     private final AuditorNameResolver auditorNameResolver;
 
-    public AdminOrderQueryService(
+    public AdminOrderQueryServiceImpl(
             OrderRepository orderRepository,
             PaymentRepository paymentRepository,
             RefundRepository refundRepository,
@@ -77,6 +87,7 @@ public class AdminOrderQueryService {
         this.auditorNameResolver = auditorNameResolver;
     }
 
+    @Override
     public Page<AdminOrderRow> list(
             String q,
             OrderStatus orderStatus,
@@ -97,6 +108,7 @@ public class AdminOrderQueryService {
         return new PageImpl<>(toRows(orders.getContent()), pageable, orders.getTotalElements());
     }
 
+    @Override
     public AdminOrderDashboardResponse dashboard() {
         log.info("[1651] Building admin order dashboard");
         long totalOrders = orderRepository.count();
@@ -126,6 +138,7 @@ public class AdminOrderQueryService {
                 toRows(recent));
     }
 
+    @Override
     public AdminOrderDetailResponse detail(Long orderId) {
         log.info("[1653] Fetching admin order detail: orderId={}", orderId);
         Order order = orderRepository.findById(orderId).orElseThrow(() -> {
@@ -136,7 +149,8 @@ public class AdminOrderQueryService {
     }
 
     /** Builds the full detail shape for a single, already-loaded order - a handful of O(1) queries scoped to this one order, never a per-row loop. */
-    AdminOrderDetailResponse toDetailResponse(Order order) {
+    @Override
+    public AdminOrderDetailResponse toDetailResponse(Order order) {
         log.info("[1655] Building detail response for order {}: status={}", order.getId(), order.getStatus());
         List<AdminOrderItemResponse> items = order.getItems().stream().map(this::toItemResponse).toList();
 
@@ -226,9 +240,7 @@ public class AdminOrderQueryService {
     }
 
     /** Maps a page of orders to list/dashboard rows in O(1) extra queries total (batched item-count + latest-payment lookups), never per-row. */
-    /** Package-visibility would do, but public so the admin Customers module (a different
-     * package) can reuse this exact batched mapping for a customer's own order-history list
-     * rather than re-implementing the same item-count/payment-status batching itself. */
+    @Override
     public List<AdminOrderRow> toRows(List<Order> orders) {
         if (orders.isEmpty()) {
             return List.of();

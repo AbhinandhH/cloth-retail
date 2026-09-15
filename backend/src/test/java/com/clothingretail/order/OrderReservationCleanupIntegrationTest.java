@@ -6,6 +6,8 @@ import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.repository.ColorRepository;
 import com.clothingretail.masterdata.Size;
 import com.clothingretail.masterdata.repository.SizeRepository;
+import com.clothingretail.order.repository.OrderRepository;
+import com.clothingretail.order.service.OrderReservationCleanupJob;
 import com.clothingretail.product.Product;
 import com.clothingretail.product.repository.ProductRepository;
 import com.clothingretail.product.ProductStatus;

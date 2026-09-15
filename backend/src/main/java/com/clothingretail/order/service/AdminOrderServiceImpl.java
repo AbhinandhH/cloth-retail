@@ -1,4 +1,4 @@
-package com.clothingretail.order;
+package com.clothingretail.order.service;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.auth.repository.UserRepository;
@@ -6,8 +6,13 @@ import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
+import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderNote;
+import com.clothingretail.order.OrderStatus;
+import com.clothingretail.order.Shipment;
 import com.clothingretail.order.dto.AdminOrderCancelRequest;
 import com.clothingretail.order.dto.AdminOrderDetailResponse;
 import com.clothingretail.order.dto.AdminOrderNoteRequest;
@@ -17,14 +22,17 @@ import com.clothingretail.order.dto.AdminRefundRequest;
 import com.clothingretail.order.dto.AdminRefundResponse;
 import com.clothingretail.order.dto.AdminShipmentRequest;
 import com.clothingretail.order.dto.AdminShipmentResponse;
+import com.clothingretail.order.repository.OrderNoteRepository;
+import com.clothingretail.order.repository.OrderRepository;
+import com.clothingretail.order.repository.ShipmentRepository;
 import com.clothingretail.payment.Payment;
-import com.clothingretail.payment.service.PaymentGateway;
-import com.clothingretail.payment.repository.PaymentRepository;
 import com.clothingretail.payment.PaymentStatus;
 import com.clothingretail.payment.Refund;
-import com.clothingretail.payment.service.RefundInitiation;
-import com.clothingretail.payment.repository.RefundRepository;
 import com.clothingretail.payment.RefundStatus;
+import com.clothingretail.payment.repository.PaymentRepository;
+import com.clothingretail.payment.repository.RefundRepository;
+import com.clothingretail.payment.service.PaymentGateway;
+import com.clothingretail.payment.service.RefundInitiation;
 import com.clothingretail.product.ProductVariant;
 import com.clothingretail.product.repository.ProductVariantRepository;
 import java.util.Set;
@@ -42,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class AdminOrderService {
+public class AdminOrderServiceImpl implements AdminOrderService {
 
     /** Stock was already decremented (via decrementStockOnSale) for an order in any of these statuses - cancelling one must restore it, not just release a reservation. */
     private static final Set<OrderStatus> STOCK_DECREMENTED_STATUSES =
@@ -62,7 +70,7 @@ public class AdminOrderService {
     private final UserRepository userRepository;
     private final AuditorNameResolver auditorNameResolver;
 
-    public AdminOrderService(
+    public AdminOrderServiceImpl(
             OrderRepository orderRepository,
             OrderTransitionService orderTransitionService,
             OrderStatusHistoryService orderStatusHistoryService,
@@ -91,6 +99,7 @@ public class AdminOrderService {
         this.auditorNameResolver = auditorNameResolver;
     }
 
+    @Override
     @Transactional
     public AdminOrderDetailResponse updateStatus(Long orderId, AdminOrderStatusUpdateRequest request, Long adminUserId) {
         log.info("[1629] updateStatus requested: orderId={}, requestedStatus={}, adminUserId={}", orderId, request.toStatus(), adminUserId);
@@ -108,6 +117,7 @@ public class AdminOrderService {
         return adminOrderQueryService.toDetailResponse(order);
     }
 
+    @Override
     @Transactional
     public AdminOrderDetailResponse cancel(Long orderId, AdminOrderCancelRequest request, Long adminUserId) {
         log.info("[1631] cancel requested: orderId={}, adminUserId={}, reason={}", orderId, adminUserId, request.reason());
@@ -164,6 +174,7 @@ public class AdminOrderService {
         inventoryTransactionRepository.save(transaction);
     }
 
+    @Override
     @Transactional
     public AdminOrderNoteResponse addNote(Long orderId, AdminOrderNoteRequest request, Long adminUserId) {
         log.info("[1637] addNote requested: orderId={}, adminUserId={}", orderId, adminUserId);
@@ -179,6 +190,7 @@ public class AdminOrderService {
         return new AdminOrderNoteResponse(saved.getId(), saved.getNote(), auditorNameResolver.resolve(adminUserId), saved.getCreatedAt());
     }
 
+    @Override
     @Transactional
     public AdminShipmentResponse upsertShipment(Long orderId, AdminShipmentRequest request) {
         log.info("[1639] upsertShipment requested: orderId={}, provider={}, trackingNumber={}", orderId, request.provider(), request.trackingNumber());
@@ -202,6 +214,7 @@ public class AdminOrderService {
                 saved.getProvider(), saved.getTrackingNumber(), saved.getShipmentDate(), saved.getDeliveryDate(), saved.getNotes());
     }
 
+    @Override
     @Transactional
     public AdminRefundResponse refund(Long orderId, AdminRefundRequest request, Long adminUserId) {
         log.info("[1642] refund requested: orderId={}, adminUserId={}, amount={}", orderId, adminUserId, request.amount());
