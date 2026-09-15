@@ -16,6 +16,16 @@ interface FilterSheetProps {
 
 const emptyValues: FilterValues = { categoryId: '', sizeId: '', colorId: '', minPrice: '', maxPrice: '' }
 
+// Same theme-derived-token pattern as Navbar's NAV_STYLES: index.css's global
+// --surface-elevated/--text-secondary/--border-subtle/--brand-text tokens cover
+// everything below except a hover tint for the close button, which needs its
+// own scoped custom property.
+const FILTER_SHEET_STYLES = `
+  .filter-sheet-surface {
+    --filter-sheet-hover-bg: color-mix(in srgb, var(--brand-text, #18181b) 5%, var(--brand-background, #ffffff));
+  }
+`
+
 /**
  * Mobile-only bottom sheet for filters (lg:hidden — desktop keeps the sticky
  * sidebar). Edits are buffered locally and only take effect on "Show
@@ -49,15 +59,16 @@ export default function FilterSheet({ open, onClose, categories, sizes, colors, 
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+      <style>{FILTER_SHEET_STYLES}</style>
       <div className="absolute inset-0 bg-zinc-950/40" onClick={onClose} />
-      <div className="animate-[sheet-slide-up_0.25s_ease-out] absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-white shadow-elevated">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
-          <h2 className="font-display text-lg text-zinc-900">Filters</h2>
+      <div className="filter-sheet-surface animate-[sheet-slide-up_0.25s_ease-out] absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-[var(--surface-elevated,#ffffff)] shadow-elevated">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle,#e4e4e7)] px-4 py-3">
+          <h2 className="font-display text-lg text-[var(--brand-text,#18181b)]">Filters</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close filters"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary,#71717a)] hover:bg-[var(--filter-sheet-hover-bg)]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -69,12 +80,12 @@ export default function FilterSheet({ open, onClose, categories, sizes, colors, 
           <FilterFields categories={categories} sizes={sizes} colors={colors} values={draft} onChange={updateDraft} />
         </div>
 
-        <div className="flex items-center gap-3 border-t border-zinc-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3 border-t border-[var(--border-subtle,#e4e4e7)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => setDraft(emptyValues)}
             disabled={activeDraftCount === 0}
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-40"
+            className="text-sm font-medium text-[var(--text-secondary,#52525b)] hover:text-[var(--brand-text,#18181b)] disabled:opacity-40"
           >
             Clear all
           </button>
