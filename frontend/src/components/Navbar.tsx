@@ -109,7 +109,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/register"
-                className="btn-primary-radius bg-[var(--brand-primary,#18181b)] px-4 py-1.5 text-sm font-medium text-white ring-2 ring-offset-1 ring-[var(--brand-secondary,#18181b)] transition-opacity hover:opacity-90"
+                className="text-sm font-semibold text-[var(--nav-text-strong)] transition-colors hover:underline"
               >
                 Sign up
               </Link>
@@ -234,7 +234,7 @@ export default function Navbar() {
               <Link
                 to="/register"
                 onClick={closeDrawer}
-                className="animate-fade-in-up mt-1 btn-primary-radius bg-[var(--brand-primary,#18181b)] px-3 py-3 text-center text-base font-semibold text-white transition duration-200 hover:opacity-90 active:scale-[0.98]"
+                className="animate-fade-in-up mt-1 rounded-lg px-3 py-3 text-base font-semibold text-[var(--nav-text-strong)] transition duration-200 hover:translate-x-0.5 hover:bg-[var(--nav-hover-bg)] active:scale-[0.98]"
                 style={{ animationDelay: '100ms' }}
               >
                 Sign up
