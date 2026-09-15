@@ -1,6 +1,7 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.repository;
 
 import com.clothingretail.auth.User;
+import com.clothingretail.customer.CustomerProfile;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;

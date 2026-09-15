@@ -12,7 +12,7 @@ import com.clothingretail.auth.dto.VerifyOtpRequest;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
-import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.notification.NotificationSettings;
 import com.clothingretail.notification.NotificationSettingsRepository;
 import io.jsonwebtoken.Claims;
