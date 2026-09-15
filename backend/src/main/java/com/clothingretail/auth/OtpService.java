@@ -2,7 +2,7 @@ package com.clothingretail.auth;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.notification.NotificationSettings;
-import com.clothingretail.notification.NotificationSettingsRepository;
+import com.clothingretail.notification.repository.NotificationSettingsRepository;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;

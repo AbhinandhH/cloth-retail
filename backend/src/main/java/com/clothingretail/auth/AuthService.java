@@ -14,7 +14,7 @@ import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.notification.NotificationSettings;
-import com.clothingretail.notification.NotificationSettingsRepository;
+import com.clothingretail.notification.repository.NotificationSettingsRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import java.time.Instant;

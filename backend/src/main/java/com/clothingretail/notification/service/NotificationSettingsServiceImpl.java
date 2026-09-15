@@ -1,7 +1,9 @@
-package com.clothingretail.notification;
+package com.clothingretail.notification.service;
 
+import com.clothingretail.notification.NotificationSettings;
 import com.clothingretail.notification.dto.NotificationSettingsResponse;
 import com.clothingretail.notification.dto.NotificationSettingsUpdateRequest;
+import com.clothingretail.notification.repository.NotificationSettingsRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,19 +11,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class NotificationSettingsService {
+public class NotificationSettingsServiceImpl implements NotificationSettingsService {
 
     private final NotificationSettingsRepository notificationSettingsRepository;
 
-    public NotificationSettingsService(NotificationSettingsRepository notificationSettingsRepository) {
+    public NotificationSettingsServiceImpl(NotificationSettingsRepository notificationSettingsRepository) {
         this.notificationSettingsRepository = notificationSettingsRepository;
     }
 
+    @Override
     public NotificationSettingsResponse get() {
         NotificationSettings settings = loadSingleton();
         return toResponse(settings);
     }
 
+    @Override
     @Transactional
     public NotificationSettingsResponse update(NotificationSettingsUpdateRequest request) {
         log.info("[1970] Updating notification settings emailVerificationEnabled={} mobileVerificationEnabled={}",
