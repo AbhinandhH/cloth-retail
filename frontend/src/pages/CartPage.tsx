@@ -129,7 +129,7 @@ export default function CartPage() {
         <button
           type="button"
           onClick={() => setClearOpen(true)}
-          className="min-h-[40px] rounded-full px-3 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+          className="min-h-[40px] rounded-full px-3 text-sm font-medium text-rose-800 transition-colors hover:bg-rose-50"
         >
           Clear cart
         </button>
@@ -159,9 +159,9 @@ export default function CartPage() {
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {item.colorName} · {item.sizeName}
                   </p>
-                  {!item.active && <p className="mt-1 text-xs font-medium text-rose-600">No longer available</p>}
+                  {!item.active && <p className="mt-1 text-xs font-medium text-rose-800">No longer available</p>}
                   {item.active && item.availableQuantity <= 0 && (
-                    <p className="mt-1 text-xs font-medium text-rose-600">Out of stock</p>
+                    <p className="mt-1 text-xs font-medium text-rose-800">Out of stock</p>
                   )}
                   {item.active && item.availableQuantity > 0 && nearLimit && (
                     <p className="mt-1 text-xs font-medium text-amber-600">Only {item.availableQuantity} left</p>
@@ -200,12 +200,12 @@ export default function CartPage() {
                     )}
                   </div>
                 </div>
-                {qtyErrors[key] && <p className="mt-1 text-xs text-rose-600">{qtyErrors[key]}</p>}
+                {qtyErrors[key] && <p className="mt-1 text-xs text-rose-800">{qtyErrors[key]}</p>}
 
                 <button
                   type="button"
                   onClick={() => setRemovingItem(item)}
-                  className="mt-1 min-h-[40px] self-start text-xs font-medium text-zinc-500 hover:text-rose-600"
+                  className="mt-1 min-h-[40px] self-start text-xs font-medium text-zinc-500 hover:text-rose-800"
                 >
                   Remove
                 </button>

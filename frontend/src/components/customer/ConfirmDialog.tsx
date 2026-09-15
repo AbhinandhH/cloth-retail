@@ -48,12 +48,15 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/50 px-4 animate-fade-in">
       <style>{DIALOG_STYLES}</style>
-      <div className="confirm-dialog-surface w-full max-w-sm rounded-2xl bg-[var(--surface-elevated,#ffffff)] p-6 shadow-elevated animate-scale-in">
-        <h2 className="text-base font-semibold text-[var(--brand-text,#18181b)]">{title}</h2>
+      <div className="confirm-dialog-surface w-full max-w-sm rounded-2xl border border-[var(--border-subtle,#e4e4e7)] bg-[var(--surface-elevated,#ffffff)] p-6 shadow-elevated animate-scale-in">
+        <h2 className="font-display text-lg font-semibold text-[var(--brand-text,#18181b)]">{title}</h2>
         <p className="mt-2 text-sm text-[var(--text-secondary,#52525b)]">{message}</p>
 
         {/* Danger/error stay a fixed rose - a semantic "this is destructive/wrong" color that
-            should read the same regardless of which brand theme is active, not a themed one. */}
+            should read the same regardless of which brand theme is active, not a themed one.
+            rose-800 (not rose-600) so it reads as a deep, deliberate warning tone that sits
+            comfortably next to this app's jewel-toned brand palettes (maroon, wine, near-black)
+            instead of a bright pink-red fighting against them. */}
         {error && (
           <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {error}
@@ -74,7 +77,7 @@ export default function ConfirmDialog({
             onClick={onConfirm}
             disabled={confirming}
             className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60 ${
-              danger ? 'bg-rose-600' : 'bg-[var(--brand-primary,#18181b)]'
+              danger ? 'bg-rose-800' : 'bg-[var(--brand-primary,#18181b)]'
             }`}
           >
             {confirming ? 'Working…' : confirmLabel}
