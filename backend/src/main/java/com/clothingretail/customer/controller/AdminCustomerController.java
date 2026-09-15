@@ -1,9 +1,11 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.controller;
 
 import com.clothingretail.common.PageResponse;
 import com.clothingretail.customer.dto.AdminCustomerDetailResponse;
 import com.clothingretail.customer.dto.AdminCustomerRow;
 import com.clothingretail.customer.dto.AdminCustomerStatusUpdateRequest;
+import com.clothingretail.customer.service.AdminCustomerQueryService;
+import com.clothingretail.customer.service.AdminCustomerService;
 import com.clothingretail.order.dto.AdminOrderRow;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;

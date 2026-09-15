@@ -1,7 +1,8 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.controller;
 
 import com.clothingretail.customer.dto.AddressRequest;
 import com.clothingretail.customer.dto.AddressResponse;
+import com.clothingretail.customer.service.AddressService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

@@ -1,8 +1,12 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.service;
 
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.customer.Address;
+import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.dto.AddressRequest;
 import com.clothingretail.customer.dto.AddressResponse;
+import com.clothingretail.customer.repository.AddressRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.extern.log4j.Log4j2;
@@ -12,11 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * CRUD for a customer's own saved addresses, always scoped to the caller's {@link CustomerProfile}
- * (resolved from the authenticated user id - see {@code CustomerAddressController}). Every
- * operation on a specific address id re-verifies ownership; a mismatch is reported as a plain 404
- * (never leaking whether the address exists for someone else).
- *
  * create()/update() retry on a transient lock failure: concurrent calls for DIFFERENT customers
  * can spuriously deadlock in MySQL (InnoDB gap-locking on clearDefault()'s non-unique
  * customer_profile_id index under REPEATABLE READ - the rows involved don't actually conflict,
@@ -26,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class AddressService {
+public class AddressServiceImpl implements AddressService {
 
     private static final int MAX_LOCK_ATTEMPTS = 6;
     private static final long RETRY_BACKOFF_BASE_MILLIS = 30;
@@ -39,10 +38,12 @@ public class AddressService {
     // call would skip that interceptor entirely (Spring's proxy-based AOP never intercepts
     // self-invocation), so a retry would silently continue inside the SAME already-aborted
     // transaction instead of starting a fresh one. @Lazy breaks the circular-construction
-    // dependency this self-reference would otherwise create.
+    // dependency this self-reference would otherwise create. Typed as the AddressService
+    // interface (not this concrete class) so Spring hands back the JDK dynamic proxy - the
+    // standard, cleanest way to do this self-injection trick.
     private final AddressService self;
 
-    public AddressService(
+    public AddressServiceImpl(
             AddressRepository addressRepository,
             CustomerProfileRepository customerProfileRepository,
             @Lazy AddressService self) {
@@ -51,6 +52,7 @@ public class AddressService {
         this.self = self;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<AddressResponse> list(Long userId) {
         log.info("[1200] List addresses userId={}", userId);
@@ -60,12 +62,14 @@ public class AddressService {
         return addresses;
     }
 
+    @Override
     public AddressResponse create(Long userId, AddressRequest request) {
         return withLockRetry(() -> self.create0(userId, request));
     }
 
+    @Override
     @Transactional
-    AddressResponse create0(Long userId, AddressRequest request) {
+    public AddressResponse create0(Long userId, AddressRequest request) {
         log.info("[1202] Create address userId={} label={}", userId, request.label());
         CustomerProfile profile = resolveProfile(userId);
         if (Boolean.TRUE.equals(request.isDefault())) {
@@ -80,12 +84,14 @@ public class AddressService {
         return response;
     }
 
+    @Override
     public AddressResponse update(Long userId, Long addressId, AddressRequest request) {
         return withLockRetry(() -> self.update0(userId, addressId, request));
     }
 
+    @Override
     @Transactional
-    AddressResponse update0(Long userId, Long addressId, AddressRequest request) {
+    public AddressResponse update0(Long userId, Long addressId, AddressRequest request) {
         log.info("[1205] Update address userId={} addressId={}", userId, addressId);
         CustomerProfile profile = resolveProfile(userId);
         Address address = findOwned(profile.getId(), addressId);
@@ -134,6 +140,7 @@ public class AddressService {
         }
     }
 
+    @Override
     @Transactional
     public void delete(Long userId, Long addressId) {
         log.info("[1208] Delete address userId={} addressId={}", userId, addressId);

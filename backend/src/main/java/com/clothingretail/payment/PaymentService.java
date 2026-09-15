@@ -3,7 +3,7 @@ package com.clothingretail.payment;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
-import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderRepository;
 import com.clothingretail.order.OrderStatus;

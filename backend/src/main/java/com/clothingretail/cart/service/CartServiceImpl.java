@@ -11,7 +11,7 @@ import com.clothingretail.cart.repository.CartRepository;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
-import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;

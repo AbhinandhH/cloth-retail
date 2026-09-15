@@ -1,9 +1,12 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.service;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.dto.AdminCustomerDetailResponse;
 import com.clothingretail.customer.dto.AdminCustomerRow;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerSpecifications;
 import com.clothingretail.order.AdminOrderQueryService;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderRepository;
@@ -33,13 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class AdminCustomerQueryService {
+public class AdminCustomerQueryServiceImpl implements AdminCustomerQueryService {
 
     private final CustomerProfileRepository customerProfileRepository;
     private final OrderRepository orderRepository;
     private final AdminOrderQueryService adminOrderQueryService;
 
-    public AdminCustomerQueryService(
+    public AdminCustomerQueryServiceImpl(
             CustomerProfileRepository customerProfileRepository,
             OrderRepository orderRepository,
             AdminOrderQueryService adminOrderQueryService) {
@@ -48,6 +51,7 @@ public class AdminCustomerQueryService {
         this.adminOrderQueryService = adminOrderQueryService;
     }
 
+    @Override
     public Page<AdminCustomerRow> list(String q, Boolean enabled, String sort, String dir, int page, int size) {
         log.info("[1503] Listing admin customers q={} enabled={} page={} size={}", q, enabled, page, size);
         Pageable pageable = PageRequest.of(page, size, sort(sort, dir));
@@ -63,6 +67,7 @@ public class AdminCustomerQueryService {
         return new PageImpl<>(rows, pageable, profiles.getTotalElements());
     }
 
+    @Override
     public AdminCustomerDetailResponse detail(Long id) {
         log.info("[1505] Fetching admin customer detail id={}", id);
         CustomerProfile profile = find(id);
@@ -70,6 +75,7 @@ public class AdminCustomerQueryService {
         return toDetail(profile, stats.get(id));
     }
 
+    @Override
     public Page<AdminOrderRow> orderHistory(Long id, int page, int size) {
         log.info("[1506] Fetching order history for customer id={} page={} size={}", id, page, size);
         find(id);
@@ -78,7 +84,8 @@ public class AdminCustomerQueryService {
         return new PageImpl<>(adminOrderQueryService.toRows(orders.getContent()), pageable, orders.getTotalElements());
     }
 
-    CustomerProfile find(Long id) {
+    @Override
+    public CustomerProfile find(Long id) {
         return customerProfileRepository.findById(id).orElseThrow(() -> {
             log.error("[1507] Customer not found id={}", id);
             return new NotFoundException("Customer not found: " + id);

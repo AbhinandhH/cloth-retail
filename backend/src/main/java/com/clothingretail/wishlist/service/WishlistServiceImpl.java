@@ -2,7 +2,7 @@ package com.clothingretail.wishlist.service;
 
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
-import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.product.ProductService;
 import com.clothingretail.product.dto.ProductSummaryResponse;
 import com.clothingretail.wishlist.dto.WishlistResponse;

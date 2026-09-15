@@ -4,7 +4,7 @@ import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.common.PageResponse;
 import com.clothingretail.customer.CustomerProfile;
-import com.clothingretail.customer.CustomerProfileRepository;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.order.dto.CreateOrderRequest;
 import com.clothingretail.order.dto.OrderDetailResponse;
 import com.clothingretail.order.dto.OrderItemResponse;

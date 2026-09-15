@@ -1,28 +1,24 @@
-package com.clothingretail.customer;
+package com.clothingretail.customer.service;
 
 import com.clothingretail.auth.User;
 import com.clothingretail.auth.UserRepository;
+import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.dto.AdminCustomerDetailResponse;
+import com.clothingretail.customer.repository.CustomerProfileRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Write-side of the admin Customers module: just the account-status toggle. There's no separate
- * "suspended" state in this schema (see User.enabled's own doc comment) - disabling here reuses
- * the exact same flag AuthService.login already checks, so this genuinely blocks the customer
- * from signing in, not just a cosmetic label.
- */
 @Service
 @Transactional
 @Log4j2
-public class AdminCustomerService {
+public class AdminCustomerServiceImpl implements AdminCustomerService {
 
     private final CustomerProfileRepository customerProfileRepository;
     private final UserRepository userRepository;
     private final AdminCustomerQueryService adminCustomerQueryService;
 
-    public AdminCustomerService(
+    public AdminCustomerServiceImpl(
             CustomerProfileRepository customerProfileRepository,
             UserRepository userRepository,
             AdminCustomerQueryService adminCustomerQueryService) {
@@ -31,6 +27,7 @@ public class AdminCustomerService {
         this.adminCustomerQueryService = adminCustomerQueryService;
     }
 
+    @Override
     public AdminCustomerDetailResponse setEnabled(Long customerProfileId, boolean enabled) {
         log.info("[1508] Setting customer account status customerProfileId={} enabled={}", customerProfileId, enabled);
         CustomerProfile profile = adminCustomerQueryService.find(customerProfileId);
