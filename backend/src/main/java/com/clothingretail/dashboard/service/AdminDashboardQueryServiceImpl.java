@@ -1,4 +1,4 @@
-package com.clothingretail.dashboard;
+package com.clothingretail.dashboard.service;
 
 import com.clothingretail.dashboard.dto.AdminDashboardResponse;
 import com.clothingretail.dashboard.dto.SalesOverviewPoint;
@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class AdminDashboardQueryService {
+public class AdminDashboardQueryServiceImpl implements AdminDashboardQueryService {
 
     private static final int SALES_OVERVIEW_DAYS = 14;
     private static final int TOP_SELLING_LIMIT = 5;
@@ -51,7 +51,7 @@ public class AdminDashboardQueryService {
     private final AdminOrderQueryService adminOrderQueryService;
     private final InventoryQueryService inventoryQueryService;
 
-    public AdminDashboardQueryService(
+    public AdminDashboardQueryServiceImpl(
             OrderRepository orderRepository,
             AdminOrderQueryService adminOrderQueryService,
             InventoryQueryService inventoryQueryService) {
@@ -60,6 +60,7 @@ public class AdminDashboardQueryService {
         this.inventoryQueryService = inventoryQueryService;
     }
 
+    @Override
     public AdminDashboardResponse dashboard() {
         log.info("[1500] Building admin landing dashboard");
 
