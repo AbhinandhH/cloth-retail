@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.repository.VendorRepository;
 import com.clothingretail.product.ProductVariant;

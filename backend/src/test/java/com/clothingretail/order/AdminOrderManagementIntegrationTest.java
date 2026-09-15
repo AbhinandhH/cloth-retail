@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import com.clothingretail.inventory.InventoryTransaction;
-import com.clothingretail.inventory.InventoryTransactionRepository;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.inventory.InventoryTransactionType;
 import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.repository.ColorRepository;

@@ -3,7 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
-import com.clothingretail.inventory.PurchaseRepository;
+import com.clothingretail.inventory.repository.PurchaseRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.dto.VendorAdminRequest;
 import com.clothingretail.masterdata.dto.VendorAdminResponse;

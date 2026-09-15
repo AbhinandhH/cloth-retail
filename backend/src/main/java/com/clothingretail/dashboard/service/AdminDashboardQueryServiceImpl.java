@@ -3,7 +3,7 @@ package com.clothingretail.dashboard.service;
 import com.clothingretail.dashboard.dto.AdminDashboardResponse;
 import com.clothingretail.dashboard.dto.SalesOverviewPoint;
 import com.clothingretail.dashboard.dto.TopSellingProductRow;
-import com.clothingretail.inventory.InventoryQueryService;
+import com.clothingretail.inventory.service.InventoryQueryService;
 import com.clothingretail.inventory.dto.DashboardResponse;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderRepository;

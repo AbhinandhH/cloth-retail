@@ -1,7 +1,8 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.controller;
 
 import com.clothingretail.inventory.dto.DamageReasonAdminRequest;
 import com.clothingretail.inventory.dto.DamageReasonAdminResponse;
+import com.clothingretail.inventory.service.DamageReasonService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

@@ -1,5 +1,9 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.repository;
 
+import com.clothingretail.inventory.DamageRecord;
+import com.clothingretail.inventory.InventoryTransaction;
+import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.StockStatus;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
 import jakarta.persistence.criteria.CriteriaBuilder;

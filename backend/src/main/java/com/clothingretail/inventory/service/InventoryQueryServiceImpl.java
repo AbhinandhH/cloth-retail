@@ -1,14 +1,21 @@
-package com.clothingretail.inventory;
+package com.clothingretail.inventory.service;
 
+import com.clothingretail.inventory.DamageRecord;
+import com.clothingretail.inventory.InventoryTransaction;
+import com.clothingretail.inventory.InventoryTransactionType;
+import com.clothingretail.inventory.StockStatus;
 import com.clothingretail.inventory.dto.DamageRecordRow;
 import com.clothingretail.inventory.dto.DashboardResponse;
 import com.clothingretail.inventory.dto.InventoryTransactionRow;
 import com.clothingretail.inventory.dto.RecentProductRow;
 import com.clothingretail.inventory.dto.VariantInventoryRow;
+import com.clothingretail.inventory.repository.DamageRecordRepository;
+import com.clothingretail.inventory.repository.InventorySpecifications;
+import com.clothingretail.inventory.repository.InventoryTransactionRepository;
 import com.clothingretail.product.Product;
-import com.clothingretail.product.repository.ProductRepository;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
+import com.clothingretail.product.repository.ProductRepository;
 import com.clothingretail.product.repository.ProductVariantRepository;
 import java.time.Instant;
 import java.util.List;
@@ -28,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Log4j2
-public class InventoryQueryService {
+public class InventoryQueryServiceImpl implements InventoryQueryService {
 
     private static final int DASHBOARD_RECENT_LIMIT_10 = 10;
     private static final int DASHBOARD_RECENT_LIMIT_5 = 5;
@@ -38,7 +45,7 @@ public class InventoryQueryService {
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final DamageRecordRepository damageRecordRepository;
 
-    public InventoryQueryService(
+    public InventoryQueryServiceImpl(
             ProductVariantRepository productVariantRepository,
             ProductRepository productRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
@@ -49,6 +56,7 @@ public class InventoryQueryService {
         this.damageRecordRepository = damageRecordRepository;
     }
 
+    @Override
     public Page<VariantInventoryRow> listVariants(
             String q,
             Long categoryId,
@@ -70,6 +78,7 @@ public class InventoryQueryService {
         return result;
     }
 
+    @Override
     public Page<InventoryTransactionRow> listTransactions(
             Long variantId, InventoryTransactionType type, Instant dateFrom, Instant dateTo, int page, int size) {
         log.info(
@@ -82,11 +91,13 @@ public class InventoryQueryService {
         return result;
     }
 
+    @Override
     public Page<InventoryTransactionRow> listVariantTransactions(Long variantId, int page, int size) {
         log.info("[1318] Listing transactions for variantId={}, page={}, size={}", variantId, page, size);
         return listTransactions(variantId, null, null, null, page, size);
     }
 
+    @Override
     public Page<DamageRecordRow> listDamages(Long variantId, int page, int size) {
         log.info("[1319] Listing damage records variantId={}, page={}, size={}", variantId, page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -96,6 +107,7 @@ public class InventoryQueryService {
         return result;
     }
 
+    @Override
     public DashboardResponse dashboard() {
         log.info("[1321] Building inventory dashboard");
         long totalProducts = productRepository.count();
