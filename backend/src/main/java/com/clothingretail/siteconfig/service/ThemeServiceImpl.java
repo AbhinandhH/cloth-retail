@@ -2,6 +2,7 @@ package com.clothingretail.siteconfig.service;
 
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.siteconfig.SiteConfiguration;
 import com.clothingretail.siteconfig.Theme;
 import com.clothingretail.siteconfig.dto.PublicConfigurationResponse;
@@ -12,6 +13,7 @@ import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import com.clothingretail.siteconfig.repository.ThemeRepository;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +56,11 @@ public class ThemeServiceImpl implements ThemeService {
 
     @Override
     @Transactional
+    // Evicts the public site-config cache too: `id` may be the currently active theme, whose
+    // colors this changes - update() itself has no cheap way to know that without an extra
+    // lookup, so it just always evicts (delete() doesn't need this - it rejects deleting the
+    // active theme outright, so it can never invalidate the public cache).
+    @CacheEvict(cacheNames = CacheConfig.SITE_CONFIG_PUBLIC, allEntries = true)
     public ThemeAdminResponse update(Long id, ThemeAdminRequest request) {
         log.info("[1671] Updating theme: id={}, name={}", id, request.name());
         Theme theme = find(id);
@@ -79,6 +86,7 @@ public class ThemeServiceImpl implements ThemeService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SITE_CONFIG_PUBLIC, allEntries = true)
     public PublicConfigurationResponse activate(Long id) {
         log.info("[1676] Activating theme: id={}", id);
         Theme theme = find(id);

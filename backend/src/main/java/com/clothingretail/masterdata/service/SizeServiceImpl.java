@@ -3,6 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.masterdata.Size;
 import com.clothingretail.masterdata.dto.SizeAdminRequest;
 import com.clothingretail.masterdata.dto.SizeAdminResponse;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,6 +56,7 @@ public class SizeServiceImpl implements SizeService {
     }
 
     @Override
+    @Cacheable(CacheConfig.SIZES_PUBLIC)
     public List<SizeResponse> listPublic() {
         log.info("[1450] Listing public sizes");
         return repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
@@ -62,6 +66,7 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SIZES_PUBLIC, allEntries = true)
     public SizeAdminResponse create(SizeAdminRequest request) {
         log.info("[1451] Creating size name={} displayOrder={} active={}", request.name(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
@@ -76,6 +81,7 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SIZES_PUBLIC, allEntries = true)
     public SizeAdminResponse update(Long id, SizeAdminRequest request) {
         log.info("[1453] Updating size id={} name={} displayOrder={} active={}", id, request.name(), request.displayOrder(), request.active());
         Size size = find(id);
@@ -86,6 +92,7 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SIZES_PUBLIC, allEntries = true)
     public void delete(Long id) {
         log.info("[1454] Deleting size id={}", id);
         Size size = find(id);

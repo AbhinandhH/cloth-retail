@@ -1,5 +1,6 @@
 package com.clothingretail.siteconfig.service;
 
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.siteconfig.SiteConfiguration;
 import com.clothingretail.siteconfig.Theme;
 import com.clothingretail.siteconfig.dto.PublicConfigurationResponse;
@@ -9,6 +10,8 @@ import com.clothingretail.siteconfig.dto.ThemeAdminResponse;
 import com.clothingretail.siteconfig.dto.ThemeResponse;
 import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,7 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
     }
 
     @Override
+    @Cacheable(CacheConfig.SITE_CONFIG_PUBLIC)
     public PublicConfigurationResponse getPublic() {
         log.info("[1663] Fetching public site configuration");
         return toPublicResponse(loadSingleton());
@@ -37,6 +41,7 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SITE_CONFIG_PUBLIC, allEntries = true)
     public SiteConfigurationAdminResponse update(SiteConfigurationUpdateRequest request) {
         log.info("[1664] Updating site configuration: businessName={}, contactEmail={}, contactPhone={}",
                 request.businessName(), request.contactEmail(), request.contactPhone());

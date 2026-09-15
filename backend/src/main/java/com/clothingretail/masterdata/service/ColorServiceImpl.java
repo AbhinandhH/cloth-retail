@@ -3,6 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.masterdata.Color;
 import com.clothingretail.masterdata.dto.ColorAdminRequest;
 import com.clothingretail.masterdata.dto.ColorAdminResponse;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,6 +56,7 @@ public class ColorServiceImpl implements ColorService {
     }
 
     @Override
+    @Cacheable(CacheConfig.COLORS_PUBLIC)
     public List<ColorResponse> listPublic() {
         log.info("[1420] Listing public colors");
         return repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
@@ -62,6 +66,7 @@ public class ColorServiceImpl implements ColorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.COLORS_PUBLIC, allEntries = true)
     public ColorAdminResponse create(ColorAdminRequest request) {
         log.info("[1421] Creating color name={} hexCode={} displayOrder={} active={}", request.name(), request.hexCode(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name())) {
@@ -76,6 +81,7 @@ public class ColorServiceImpl implements ColorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.COLORS_PUBLIC, allEntries = true)
     public ColorAdminResponse update(Long id, ColorAdminRequest request) {
         log.info("[1423] Updating color id={} name={} hexCode={} displayOrder={} active={}", id, request.name(), request.hexCode(), request.displayOrder(), request.active());
         Color color = find(id);
@@ -86,6 +92,7 @@ public class ColorServiceImpl implements ColorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.COLORS_PUBLIC, allEntries = true)
     public void delete(Long id) {
         log.info("[1424] Deleting color id={}", id);
         Color color = find(id);

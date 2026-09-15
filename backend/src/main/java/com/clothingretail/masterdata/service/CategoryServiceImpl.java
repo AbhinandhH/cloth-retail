@@ -3,6 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.masterdata.Category;
 import com.clothingretail.masterdata.dto.CategoryAdminRequest;
 import com.clothingretail.masterdata.dto.CategoryAdminResponse;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -59,6 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Cacheable(CacheConfig.CATEGORIES_PUBLIC)
     public List<CategoryResponse> listPublic() {
         log.info("[1410] Listing public categories");
         return repository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
@@ -68,6 +72,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CATEGORIES_PUBLIC, allEntries = true)
     public CategoryAdminResponse create(CategoryAdminRequest request) {
         log.info("[1411] Creating category name={} slug={} displayOrder={} active={}", request.name(), request.slug(), request.displayOrder(), request.active());
         if (repository.existsByNameIgnoreCase(request.name()) || repository.existsBySlugIgnoreCase(request.slug())) {
@@ -82,6 +87,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CATEGORIES_PUBLIC, allEntries = true)
     public CategoryAdminResponse update(Long id, CategoryAdminRequest request) {
         log.info("[1413] Updating category id={} name={} slug={} displayOrder={} active={}", id, request.name(), request.slug(), request.displayOrder(), request.active());
         Category category = find(id);
@@ -92,6 +98,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.CATEGORIES_PUBLIC, allEntries = true)
     public void delete(Long id) {
         log.info("[1414] Deleting category id={}", id);
         Category category = find(id);

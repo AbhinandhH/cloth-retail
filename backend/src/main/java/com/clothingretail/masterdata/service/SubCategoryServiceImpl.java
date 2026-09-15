@@ -3,6 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.masterdata.Category;
 import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.dto.SubCategoryAdminRequest;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -60,6 +63,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     }
 
     @Override
+    @Cacheable(CacheConfig.SUB_CATEGORIES_PUBLIC)
     public List<SubCategoryResponse> listPublic(Long categoryId) {
         log.info("[1459] Listing public sub-categories categoryId={}", categoryId);
         List<SubCategory> subCategories = categoryId != null
@@ -72,6 +76,10 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     @Transactional
+    // allEntries: listPublic is keyed per categoryId (including null-for-"all"), and a write
+    // can affect either key regardless of which categoryId it was scoped to, so a targeted
+    // single-key evict can't safely replace clearing the whole cache.
+    @CacheEvict(cacheNames = CacheConfig.SUB_CATEGORIES_PUBLIC, allEntries = true)
     public SubCategoryAdminResponse create(SubCategoryAdminRequest request) {
         log.info("[1460] Creating sub-category name={} slug={} categoryId={} displayOrder={} active={}", request.name(), request.slug(), request.categoryId(), request.displayOrder(), request.active());
         if (repository.existsBySlugIgnoreCase(request.slug())) {
@@ -86,6 +94,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SUB_CATEGORIES_PUBLIC, allEntries = true)
     public SubCategoryAdminResponse update(Long id, SubCategoryAdminRequest request) {
         log.info("[1462] Updating sub-category id={} name={} slug={} categoryId={} displayOrder={} active={}", id, request.name(), request.slug(), request.categoryId(), request.displayOrder(), request.active());
         SubCategory subCategory = find(id);
@@ -96,6 +105,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.SUB_CATEGORIES_PUBLIC, allEntries = true)
     public void delete(Long id) {
         log.info("[1463] Deleting sub-category id={}", id);
         SubCategory subCategory = find(id);

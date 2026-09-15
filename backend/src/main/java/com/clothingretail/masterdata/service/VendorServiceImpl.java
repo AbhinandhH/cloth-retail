@@ -3,6 +3,7 @@ package com.clothingretail.masterdata.service;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
+import com.clothingretail.config.CacheConfig;
 import com.clothingretail.inventory.repository.PurchaseRepository;
 import com.clothingretail.masterdata.Vendor;
 import com.clothingretail.masterdata.dto.VendorAdminRequest;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -52,6 +55,7 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
+    @Cacheable(CacheConfig.VENDORS_PUBLIC)
     public List<VendorResponse> listPublic() {
         log.info("[1469] Listing public vendors");
         return repository.findByActiveTrueOrderByNameAsc().stream()
@@ -61,6 +65,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.VENDORS_PUBLIC, allEntries = true)
     public VendorAdminResponse create(VendorAdminRequest request) {
         log.info("[1470] Creating vendor name={} contactName={} contactEmail={} contactPhone={} active={}",
                 request.name(), request.contactName(), request.contactEmail(), request.contactPhone(), request.active());
@@ -84,6 +89,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.VENDORS_PUBLIC, allEntries = true)
     public VendorAdminResponse update(Long id, VendorAdminRequest request) {
         log.info("[1472] Updating vendor id={} name={} contactEmail={} contactPhone={} active={}",
                 id, request.name(), request.contactEmail(), request.contactPhone(), request.active());
@@ -107,6 +113,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.VENDORS_PUBLIC, allEntries = true)
     public void delete(Long id) {
         log.info("[1473] Deleting vendor id={}", id);
         Vendor vendor = find(id);
