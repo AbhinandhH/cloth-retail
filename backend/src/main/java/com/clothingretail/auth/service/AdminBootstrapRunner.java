@@ -1,5 +1,10 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.Role;
+import com.clothingretail.auth.RoleName;
+import com.clothingretail.auth.User;
+import com.clothingretail.auth.repository.RoleRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

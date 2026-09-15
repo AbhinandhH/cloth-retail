@@ -1,8 +1,9 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.clothingretail.auth.RoleName;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import java.util.Set;
@@ -15,7 +16,7 @@ class JwtServiceTest {
 
     @Test
     void issuesAndParsesAccessToken() {
-        JwtService jwtService = new JwtService(SECRET, 15, 30);
+        JwtService jwtService = new JwtServiceImpl(SECRET, 15, 30);
 
         String token = jwtService.generateAccessToken(42L, "user@example.com", Set.of(RoleName.CUSTOMER));
         Claims claims = jwtService.parseClaims(token);
@@ -30,7 +31,7 @@ class JwtServiceTest {
 
     @Test
     void issuesAndParsesRefreshToken() {
-        JwtService jwtService = new JwtService(SECRET, 15, 30);
+        JwtService jwtService = new JwtServiceImpl(SECRET, 15, 30);
 
         String token = jwtService.generateRefreshToken(7L);
         Claims claims = jwtService.parseClaims(token);
@@ -43,7 +44,7 @@ class JwtServiceTest {
     @Test
     void expiredAccessTokenIsRejected() {
         // TTL of 0 minutes means the token's expiry is effectively "now", so it reads as expired almost immediately.
-        JwtService jwtService = new JwtService(SECRET, 0, 30);
+        JwtService jwtService = new JwtServiceImpl(SECRET, 0, 30);
         String token = jwtService.generateAccessToken(1L, "a@b.com", Set.of(RoleName.CUSTOMER));
 
         // Give the clock a moment to move past the token's expiry.
@@ -60,8 +61,8 @@ class JwtServiceTest {
 
     @Test
     void tokenSignedWithDifferentSecretIsInvalid() {
-        JwtService jwtService = new JwtService(SECRET, 15, 30);
-        JwtService otherJwtService = new JwtService(
+        JwtService jwtService = new JwtServiceImpl(SECRET, 15, 30);
+        JwtService otherJwtService = new JwtServiceImpl(
                 "b3RoZXItdGVzdC1zZWNyZXQtdGhhdC1pcy1hbHNvLWxvbmctZW5vdWdoLWZvci1obWFj", 15, 30);
 
         String token = otherJwtService.generateAccessToken(1L, "a@b.com", Set.of(RoleName.CUSTOMER));
@@ -71,7 +72,7 @@ class JwtServiceTest {
 
     @Test
     void hashTokenIsDeterministicAndDiffersBetweenTokens() {
-        JwtService jwtService = new JwtService(SECRET, 15, 30);
+        JwtService jwtService = new JwtServiceImpl(SECRET, 15, 30);
         String tokenA = jwtService.generateRefreshToken(1L);
         String tokenB = jwtService.generateRefreshToken(2L);
 

@@ -1,6 +1,6 @@
 package com.clothingretail.common;
 
-import com.clothingretail.auth.UserRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;

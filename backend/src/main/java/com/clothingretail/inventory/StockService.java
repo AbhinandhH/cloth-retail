@@ -1,7 +1,7 @@
 package com.clothingretail.inventory;
 
 import com.clothingretail.auth.User;
-import com.clothingretail.auth.UserRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.inventory.dto.DamageRequest;

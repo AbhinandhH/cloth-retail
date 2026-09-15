@@ -2,7 +2,7 @@ package com.clothingretail.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.clothingretail.auth.AuthService;
+import com.clothingretail.auth.service.AuthService;
 import com.clothingretail.auth.dto.RegisterRequest;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.cart.Cart;

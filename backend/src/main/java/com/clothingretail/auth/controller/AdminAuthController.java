@@ -1,7 +1,11 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.controller;
 
+import com.clothingretail.auth.AuthResult;
 import com.clothingretail.auth.dto.AuthResponse;
 import com.clothingretail.auth.dto.LoginRequest;
+import com.clothingretail.auth.service.AuthService;
+import com.clothingretail.auth.service.JwtService;
+import com.clothingretail.auth.service.RefreshCookieFactory;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;

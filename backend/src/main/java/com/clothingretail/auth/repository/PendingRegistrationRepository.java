@@ -1,5 +1,6 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.repository;
 
+import com.clothingretail.auth.PendingRegistration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

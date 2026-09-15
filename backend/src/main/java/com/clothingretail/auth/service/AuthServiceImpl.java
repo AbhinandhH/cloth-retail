@@ -1,5 +1,12 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
+import com.clothingretail.auth.AuthResult;
+import com.clothingretail.auth.OtpChannel;
+import com.clothingretail.auth.PendingRegistration;
+import com.clothingretail.auth.RefreshToken;
+import com.clothingretail.auth.Role;
+import com.clothingretail.auth.RoleName;
+import com.clothingretail.auth.User;
 import com.clothingretail.auth.dto.AuthResponse;
 import com.clothingretail.auth.dto.CreateAdminRequest;
 import com.clothingretail.auth.dto.LoginRequest;
@@ -9,6 +16,10 @@ import com.clothingretail.auth.dto.TokenResponse;
 import com.clothingretail.auth.dto.UserSummary;
 import com.clothingretail.auth.dto.VerificationStatusResponse;
 import com.clothingretail.auth.dto.VerifyOtpRequest;
+import com.clothingretail.auth.repository.PendingRegistrationRepository;
+import com.clothingretail.auth.repository.RefreshTokenRepository;
+import com.clothingretail.auth.repository.RoleRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
@@ -29,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
-public class AuthService {
+public class AuthServiceImpl implements AuthService {
 
     /** How long an unfinished signup survives before PendingRegistrationCleanupJob reclaims it. */
     private static final long PENDING_REGISTRATION_TTL_SECONDS = 24L * 60 * 60;
@@ -44,7 +55,7 @@ public class AuthService {
     private final OtpService otpService;
     private final NotificationSettingsRepository notificationSettingsRepository;
 
-    public AuthService(
+    public AuthServiceImpl(
             UserRepository userRepository,
             RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
@@ -90,6 +101,7 @@ public class AuthService {
      * RegisterRequest).
      */
     @Transactional
+    @Override
     public AuthResult<VerificationStatusResponse> register(RegisterRequest request) {
         log.info("[1000] Registration attempt for email={}", request.email());
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
@@ -158,6 +170,7 @@ public class AuthService {
     // the whole transaction back by Spring's default behavior - silently undoing the attempt
     // count on every single failed try and defeating the lockout entirely.
     @Transactional(noRollbackFor = BadCredentialsException.class)
+    @Override
     public AuthResult<VerificationStatusResponse> verifyOtp(VerifyOtpRequest request) {
         log.info("[1959] OTP verify attempt registrationId={} channel={}", request.registrationId(), request.channel());
         PendingRegistration registration = pendingRegistrationRepository.findById(request.registrationId())
@@ -185,6 +198,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public void resendOtp(ResendOtpRequest request) {
         log.info("[1963] OTP resend attempt registrationId={} channel={}", request.registrationId(), request.channel());
         PendingRegistration registration = pendingRegistrationRepository.findById(request.registrationId())
@@ -277,6 +291,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public AuthResult<AuthResponse> login(LoginRequest request) {
         log.info("[1006] Login attempt for email={}", request.email());
         User user = authenticate(request);
@@ -286,6 +301,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public AuthResult<AuthResponse> adminLogin(LoginRequest request) {
         log.info("[1008] Admin login attempt for email={}", request.email());
         User user = authenticate(request);
@@ -299,6 +315,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public AuthResult<TokenResponse> refresh(String rawRefreshToken) {
         log.info("[1011] Refresh token attempt");
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
@@ -342,6 +359,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public void logout(String rawRefreshToken) {
         log.info("[1019] Logout attempt");
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
@@ -357,6 +375,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Override
     public UserSummary createAdmin(CreateAdminRequest request) {
         log.info("[1022] Create-admin attempt email={} requestedRole={}", request.email(), request.role());
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
@@ -427,6 +446,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public UserSummary getCurrentUser(Long userId) {
         log.info("[1032] Fetch current user userId={}", userId);
         User user = userRepository.findById(userId)

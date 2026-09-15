@@ -1,4 +1,4 @@
-package com.clothingretail.auth;
+package com.clothingretail.auth.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

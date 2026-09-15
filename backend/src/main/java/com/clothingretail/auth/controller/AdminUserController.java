@@ -1,8 +1,8 @@
-package com.clothingretail.admin;
+package com.clothingretail.auth.controller;
 
-import com.clothingretail.auth.AuthService;
 import com.clothingretail.auth.dto.CreateAdminRequest;
 import com.clothingretail.auth.dto.UserSummary;
+import com.clothingretail.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

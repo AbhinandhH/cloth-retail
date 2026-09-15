@@ -1,7 +1,7 @@
 package com.clothingretail.order;
 
 import com.clothingretail.auth.User;
-import com.clothingretail.auth.UserRepository;
+import com.clothingretail.auth.repository.UserRepository;
 import com.clothingretail.common.AuditorNameResolver;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.common.NotFoundException;
