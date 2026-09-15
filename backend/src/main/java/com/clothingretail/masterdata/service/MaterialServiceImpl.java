@@ -7,7 +7,7 @@ import com.clothingretail.masterdata.Material;
 import com.clothingretail.masterdata.dto.MaterialAdminRequest;
 import com.clothingretail.masterdata.dto.MaterialAdminResponse;
 import com.clothingretail.masterdata.repository.MaterialRepository;
-import com.clothingretail.product.ProductRepository;
+import com.clothingretail.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

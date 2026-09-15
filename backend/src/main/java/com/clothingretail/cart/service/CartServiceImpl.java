@@ -15,7 +15,7 @@ import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;

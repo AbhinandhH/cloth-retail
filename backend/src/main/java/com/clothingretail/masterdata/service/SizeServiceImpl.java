@@ -8,7 +8,7 @@ import com.clothingretail.masterdata.dto.SizeAdminRequest;
 import com.clothingretail.masterdata.dto.SizeAdminResponse;
 import com.clothingretail.masterdata.dto.SizeResponse;
 import com.clothingretail.masterdata.repository.SizeRepository;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

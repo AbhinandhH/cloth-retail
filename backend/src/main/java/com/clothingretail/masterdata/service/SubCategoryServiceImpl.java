@@ -10,7 +10,7 @@ import com.clothingretail.masterdata.dto.SubCategoryAdminResponse;
 import com.clothingretail.masterdata.dto.SubCategoryResponse;
 import com.clothingretail.masterdata.repository.CategoryRepository;
 import com.clothingretail.masterdata.repository.SubCategoryRepository;
-import com.clothingretail.product.ProductRepository;
+import com.clothingretail.product.repository.ProductRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

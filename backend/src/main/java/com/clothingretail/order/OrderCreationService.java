@@ -15,7 +15,7 @@ import com.clothingretail.product.MediaType;
 import com.clothingretail.product.ProductImage;
 import com.clothingretail.product.ProductStatus;
 import com.clothingretail.product.ProductVariant;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import com.clothingretail.tax.TaxSettings;
 import com.clothingretail.tax.repository.TaxSettingsRepository;
 import java.math.BigDecimal;

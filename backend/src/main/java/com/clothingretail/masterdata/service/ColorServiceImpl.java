@@ -8,7 +8,7 @@ import com.clothingretail.masterdata.dto.ColorAdminRequest;
 import com.clothingretail.masterdata.dto.ColorAdminResponse;
 import com.clothingretail.masterdata.dto.ColorResponse;
 import com.clothingretail.masterdata.repository.ColorRepository;
-import com.clothingretail.product.ProductVariantRepository;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

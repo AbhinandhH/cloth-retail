@@ -1,8 +1,9 @@
-package com.clothingretail.product;
+package com.clothingretail.product.controller;
 
 import com.clothingretail.common.PageResponse;
 import com.clothingretail.product.dto.ProductDetailResponse;
 import com.clothingretail.product.dto.ProductSummaryResponse;
+import com.clothingretail.product.service.ProductService;
 import java.math.BigDecimal;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;

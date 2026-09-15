@@ -1,5 +1,7 @@
-package com.clothingretail.product;
+package com.clothingretail.product.repository;
 
+import com.clothingretail.product.Product;
+import com.clothingretail.product.ProductStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
