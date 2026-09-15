@@ -1,9 +1,13 @@
-package com.clothingretail.cart;
+package com.clothingretail.cart.service;
 
+import com.clothingretail.cart.Cart;
+import com.clothingretail.cart.CartItem;
 import com.clothingretail.cart.dto.AddCartItemRequest;
 import com.clothingretail.cart.dto.CartItemResponse;
 import com.clothingretail.cart.dto.CartResponse;
 import com.clothingretail.cart.dto.UpdateCartItemRequest;
+import com.clothingretail.cart.repository.CartItemRepository;
+import com.clothingretail.cart.repository.CartRepository;
 import com.clothingretail.common.BadRequestException;
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
@@ -20,22 +24,16 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Cart is pure working state (never touches {@code reservedQuantity}/{@code stockQuantity} -
- * that only happens at order creation, see {@code OrderService}). Every read recomputes each
- * item's price/discount/lineTotal and availability live from the current {@link ProductVariant}
- * row rather than storing them, so the cart always reflects up-to-the-second pricing and stock.
- */
 @Service
 @Log4j2
-public class CartService {
+public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final ProductVariantRepository productVariantRepository;
 
-    public CartService(
+    public CartServiceImpl(
             CartRepository cartRepository,
             CartItemRepository cartItemRepository,
             CustomerProfileRepository customerProfileRepository,
@@ -47,6 +45,7 @@ public class CartService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public CartResponse getCart(Long userId) {
         log.info("[1100] Fetch cart userId={}", userId);
         CustomerProfile profile = resolveProfile(userId);
@@ -58,6 +57,7 @@ public class CartService {
     }
 
     @Transactional
+    @Override
     public CartResponse addItem(Long userId, AddCartItemRequest request) {
         log.info("[1102] Add cart item userId={} variantId={} quantity={}", userId, request.productVariantId(), request.quantity());
         CustomerProfile profile = resolveProfile(userId);
@@ -92,6 +92,7 @@ public class CartService {
     }
 
     @Transactional
+    @Override
     public CartResponse updateItem(Long userId, Long itemId, UpdateCartItemRequest request) {
         log.info("[1108] Update cart item userId={} itemId={} quantity={}", userId, itemId, request.quantity());
         CustomerProfile profile = resolveProfile(userId);
@@ -116,6 +117,7 @@ public class CartService {
     }
 
     @Transactional
+    @Override
     public CartResponse removeItem(Long userId, Long itemId) {
         log.info("[1112] Remove cart item userId={} itemId={}", userId, itemId);
         CustomerProfile profile = resolveProfile(userId);
@@ -132,6 +134,7 @@ public class CartService {
     }
 
     @Transactional
+    @Override
     public CartResponse clear(Long userId) {
         log.info("[1115] Clear cart userId={}", userId);
         CustomerProfile profile = resolveProfile(userId);

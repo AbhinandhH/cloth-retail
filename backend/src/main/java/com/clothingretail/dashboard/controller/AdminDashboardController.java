@@ -1,6 +1,7 @@
-package com.clothingretail.dashboard;
+package com.clothingretail.dashboard.controller;
 
 import com.clothingretail.dashboard.dto.AdminDashboardResponse;
+import com.clothingretail.dashboard.service.AdminDashboardQueryService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

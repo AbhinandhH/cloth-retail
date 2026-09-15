@@ -1,8 +1,9 @@
-package com.clothingretail.cart;
+package com.clothingretail.cart.controller;
 
 import com.clothingretail.cart.dto.AddCartItemRequest;
 import com.clothingretail.cart.dto.CartResponse;
 import com.clothingretail.cart.dto.UpdateCartItemRequest;
+import com.clothingretail.cart.service.CartService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

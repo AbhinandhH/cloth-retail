@@ -7,7 +7,7 @@ import com.clothingretail.auth.dto.RegisterRequest;
 import com.clothingretail.common.ConflictException;
 import com.clothingretail.cart.Cart;
 import com.clothingretail.cart.CartItem;
-import com.clothingretail.cart.CartRepository;
+import com.clothingretail.cart.repository.CartRepository;
 import com.clothingretail.customer.Address;
 import com.clothingretail.customer.AddressRepository;
 import com.clothingretail.customer.CustomerProfile;

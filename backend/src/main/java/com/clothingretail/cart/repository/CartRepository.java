@@ -1,5 +1,6 @@
-package com.clothingretail.cart;
+package com.clothingretail.cart.repository;
 
+import com.clothingretail.cart.Cart;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

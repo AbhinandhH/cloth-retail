@@ -1,4 +1,4 @@
-package com.clothingretail.wishlist;
+package com.clothingretail.wishlist.service;
 
 import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
@@ -6,6 +6,7 @@ import com.clothingretail.customer.CustomerProfileRepository;
 import com.clothingretail.product.ProductService;
 import com.clothingretail.product.dto.ProductSummaryResponse;
 import com.clothingretail.wishlist.dto.WishlistResponse;
+import com.clothingretail.wishlist.repository.WishlistItemRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,14 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-public class WishlistService {
+public class WishlistServiceImpl implements WishlistService {
 
     private final WishlistItemRepository wishlistItemRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final WishlistItemInserter wishlistItemInserter;
     private final ProductService productService;
 
-    public WishlistService(
+    public WishlistServiceImpl(
             WishlistItemRepository wishlistItemRepository,
             CustomerProfileRepository customerProfileRepository,
             WishlistItemInserter wishlistItemInserter,
@@ -41,6 +42,7 @@ public class WishlistService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public WishlistResponse list(Long userId) {
         log.info("[1700] List wishlist userId={}", userId);
         CustomerProfile profile = resolveProfile(userId);
@@ -52,6 +54,7 @@ public class WishlistService {
     /** The wishlist PAGE's data (full product cards), distinct from {@link #list} (just ids, for
      * the heart-icon toggles on every product grid) - most-recently-wishlisted first. */
     @Transactional(readOnly = true)
+    @Override
     public List<ProductSummaryResponse> listProducts(Long userId) {
         log.info("[1713] List wishlist products userId={}", userId);
         CustomerProfile profile = resolveProfile(userId);
@@ -75,6 +78,7 @@ public class WishlistService {
      * ({@link WishlistItemInserter}) so this method can catch the exception only after that
      * transaction has fully rolled back and closed.
      */
+    @Override
     public WishlistResponse add(Long userId, Long productId) {
         log.info("[1702] Add to wishlist userId={} productId={}", userId, productId);
         CustomerProfile profile = resolveProfile(userId);
@@ -94,6 +98,7 @@ public class WishlistService {
 
     /** Idempotent the other direction too: removing something already absent is a no-op, not a 404 - the end state ("not wishlisted") is what the client asked for either way. */
     @Transactional
+    @Override
     public WishlistResponse remove(Long userId, Long productId) {
         log.info("[1706] Remove from wishlist userId={} productId={}", userId, productId);
         CustomerProfile profile = resolveProfile(userId);
