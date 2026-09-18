@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,6 +31,34 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     Optional<Order> findByIdAndCustomerProfileId(Long id, Long customerProfileId);
 
     Page<Order> findByCustomerProfileId(Long customerProfileId, Pageable pageable);
+
+    /**
+     * Customer-facing order list: excludes a PENDING_PAYMENT order whose stock hasn't actually
+     * been reserved yet (deferred-mode draft the customer hasn't clicked "Pay" on) - see
+     * Order.stockReserved and SiteConfiguration.reserveStockOnlyAtPayment. A no-op filter for
+     * every order created under the default (non-deferred) behaviour, since those are always
+     * reserved immediately. {@link #findByIdAndCustomerProfileId} is deliberately NOT filtered
+     * the same way - the customer must still be able to open their own not-yet-reserved draft by
+     * id (the Payment page needs this before the customer has clicked Pay).
+     */
+    @Query("SELECT o FROM Order o WHERE o.customerProfile.id = :customerProfileId "
+            + "AND NOT (o.status = :pendingStatus AND o.stockReserved = false)")
+    Page<Order> findVisibleByCustomerProfileId(
+            @Param("customerProfileId") Long customerProfileId,
+            @Param("pendingStatus") OrderStatus pendingStatus,
+            Pageable pageable);
+
+    /**
+     * Atomic status transition - a single conditional UPDATE, not a JPA load-then-save, mirroring
+     * {@code ProductVariantRepository.reserveStock}'s own documented pattern. Used by
+     * {@code PaymentServiceImpl.initiate} so two concurrent initiate calls for the same order
+     * (two tabs, a slipped double-click) can't both pass a stale in-memory status check before
+     * either commits - only one caller's transition succeeds; the other gets 0 rows affected and
+     * must treat that as a hard failure, not a silent no-op.
+     */
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :to WHERE o.id = :id AND o.status = :from")
+    int transitionStatus(@Param("id") Long id, @Param("from") OrderStatus from, @Param("to") OrderStatus to);
 
     List<Order> findByStatusAndReservationExpiresAtBefore(OrderStatus status, Instant instant);
 

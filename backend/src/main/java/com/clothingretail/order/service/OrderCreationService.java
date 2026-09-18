@@ -31,6 +31,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
@@ -133,12 +134,17 @@ class OrderCreationService {
         // via @Value) so an admin's change on the Site Configuration screen takes effect
         // immediately for new orders, no redeploy needed - see SiteConfiguration's own doc comment
         // on this field.
-        int reservationTtlMinutes = siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
+        Optional<SiteConfiguration> siteConfiguration = siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID);
+        int reservationTtlMinutes = siteConfiguration
                 .map(SiteConfiguration::getOrderReservationTtlMinutes)
                 .orElse(15);
+        boolean deferReservation = siteConfiguration
+                .map(SiteConfiguration::getReserveStockOnlyAtPayment)
+                .orElse(false);
         order.setReservationExpiresAt(Instant.now().plus(reservationTtlMinutes, ChronoUnit.MINUTES));
-        log.info("[1605] Order shell prepared: orderNumber={}, customerProfileId={}, reservationExpiresAt={}",
-                order.getOrderNumber(), profile.getId(), order.getReservationExpiresAt());
+        order.setStockReserved(!deferReservation);
+        log.info("[1605] Order shell prepared: orderNumber={}, customerProfileId={}, reservationExpiresAt={}, deferReservation={}",
+                order.getOrderNumber(), profile.getId(), order.getReservationExpiresAt(), deferReservation);
 
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal total = BigDecimal.ZERO;
@@ -157,16 +163,21 @@ class OrderCreationService {
             }
 
             int quantity = cartItem.getQuantity();
-            int affected = productVariantRepository.reserveStock(variant.getId(), quantity);
-            if (affected == 0) {
-                log.error("[1607] Stock reservation failed for variant {} (sku={}): requested={}, available={}",
-                        variant.getId(), variant.getSku(), quantity, variant.getAvailableQuantity());
-                throw new ConflictException(
-                        "'" + variant.getProduct().getName() + "' (" + variant.getSku() + ") is no longer available "
-                                + "in the requested quantity (" + quantity + ") - only " + variant.getAvailableQuantity()
-                                + " left");
+            if (deferReservation) {
+                log.info("[2000] Deferring stock reservation for variant {} (sku={}): quantity={} - will reserve at Pay-click instead",
+                        variant.getId(), variant.getSku(), quantity);
+            } else {
+                int affected = productVariantRepository.reserveStock(variant.getId(), quantity);
+                if (affected == 0) {
+                    log.error("[1607] Stock reservation failed for variant {} (sku={}): requested={}, available={}",
+                            variant.getId(), variant.getSku(), quantity, variant.getAvailableQuantity());
+                    throw new ConflictException(
+                            "'" + variant.getProduct().getName() + "' (" + variant.getSku() + ") is no longer available "
+                                    + "in the requested quantity (" + quantity + ") - only " + variant.getAvailableQuantity()
+                                    + " left");
+                }
+                log.info("[1608] Reserved stock for variant {} (sku={}): quantity={}", variant.getId(), variant.getSku(), quantity);
             }
-            log.info("[1608] Reserved stock for variant {} (sku={}): quantity={}", variant.getId(), variant.getSku(), quantity);
 
             BigDecimal unitPrice = variant.getSellingPrice();
             BigDecimal discountPercent = variant.getDiscountPercent();

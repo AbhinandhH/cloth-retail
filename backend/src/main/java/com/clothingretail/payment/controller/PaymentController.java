@@ -8,6 +8,8 @@ import com.clothingretail.payment.dto.SimulatePaymentResponse;
 import com.clothingretail.payment.service.MockPaymentGateway;
 import com.clothingretail.payment.service.PaymentService;
 import com.clothingretail.payment.service.PaymentWebhookService;
+import com.clothingretail.siteconfig.SiteConfiguration;
+import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final PaymentWebhookService paymentWebhookService;
+    private final SiteConfigurationRepository siteConfigurationRepository;
     private final String paymentProvider;
     // Blank (never null-crashes .isBlank()) when provider is "mock" or unset - see application.yml,
     // RAZORPAY_KEY_ID is only required/validated when app.payment.provider=razorpay.
@@ -34,10 +37,12 @@ public class PaymentController {
     public PaymentController(
             PaymentService paymentService,
             PaymentWebhookService paymentWebhookService,
+            SiteConfigurationRepository siteConfigurationRepository,
             @Value("${app.payment.provider}") String paymentProvider,
             @Value("${razorpay.key-id:}") String razorpayKeyId) {
         this.paymentService = paymentService;
         this.paymentWebhookService = paymentWebhookService;
+        this.siteConfigurationRepository = siteConfigurationRepository;
         this.paymentProvider = paymentProvider;
         this.razorpayKeyId = razorpayKeyId;
     }
@@ -46,7 +51,10 @@ public class PaymentController {
     @GetMapping("/config")
     public PaymentConfigResponse config() {
         boolean isRazorpay = "razorpay".equals(paymentProvider);
-        return new PaymentConfigResponse(paymentProvider, isRazorpay ? razorpayKeyId : null);
+        boolean deferReservation = siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
+                .map(SiteConfiguration::getReserveStockOnlyAtPayment)
+                .orElse(false);
+        return new PaymentConfigResponse(paymentProvider, isRazorpay ? razorpayKeyId : null, deferReservation);
     }
 
     @PostMapping("/initiate")

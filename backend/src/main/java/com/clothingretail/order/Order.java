@@ -106,6 +106,19 @@ public class Order extends BaseEntity {
     @Column(name = "reservation_expires_at")
     private Instant reservationExpiresAt;
 
+    /**
+     * Whether stock has actually been reserved for this order's items yet. True immediately for
+     * every order created under the default (SiteConfiguration.reserveStockOnlyAtPayment=false)
+     * behaviour. False for an order drafted while that flag was on, until
+     * {@code PaymentServiceImpl#initiate} reserves it at the moment the customer clicks "Pay" -
+     * a durable per-order fact, not derived from the live config value, so an admin flipping the
+     * toggle mid-flight can never desync an order already in progress. Also gates whether the
+     * cleanup job / admin cancel have anything to release, and whether the order is visible in
+     * the customer's order list (see OrderRepository.findVisibleByCustomerProfileId).
+     */
+    @Column(name = "stock_reserved", nullable = false)
+    private boolean stockReserved = true;
+
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")

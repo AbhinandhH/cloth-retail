@@ -92,12 +92,19 @@ export default function PaymentPage() {
       })
       // Config failing to load shouldn't block the page - fall back to treating it as the mock
       // provider (the safer default: no real money can move without real credentials anyway).
-      .catch(() => setPaymentConfig({ provider: 'mock', keyId: null }))
+      .catch(() => setPaymentConfig({ provider: 'mock', keyId: null, reserveStockOnlyAtPayment: false }))
       .finally(() => setLoadingConfig(false))
   }, [])
 
-  const payWithRazorpay = () => {
-    if (!payment || !paymentConfig?.keyId || checkoutLoading) return
+  // When true, stock is reserved (and this order becomes visible in "My Orders") only once the
+  // customer clicks "Pay" below - see SiteConfiguration.reserveStockOnlyAtPayment. Auto-initiating
+  // on mount (the default mode's behavior, further down) would defeat that entirely, since it
+  // reserves stock the instant this page loads, before any click.
+  const deferredMode = paymentConfig?.reserveStockOnlyAtPayment === true
+
+  const payWithRazorpay = (paymentOverride?: PaymentInitiateResponse) => {
+    const activePayment = paymentOverride ?? payment
+    if (!activePayment || !paymentConfig?.keyId || checkoutLoading) return
     setCheckoutError(null)
     setDismissed(false)
     setCheckoutLoading(true)
@@ -105,10 +112,10 @@ export default function PaymentPage() {
       .then(() => {
         openRazorpayCheckout({
           key: paymentConfig.keyId!,
-          amount: Math.round(payment.amount * 100),
+          amount: Math.round(activePayment.amount * 100),
           currency: 'INR',
           name: 'Loom Atelier Studio',
-          order_id: payment.gatewayReference,
+          order_id: activePayment.gatewayReference,
           prefill: {
             name: order?.contactName,
             contact: order?.contactPhone,
@@ -121,7 +128,7 @@ export default function PaymentPage() {
             // webhook has often already landed by the time this fires, so the navbar badge can
             // drop immediately instead of waiting on OrderDetailPage's own (authoritative) refresh.
             refreshCart()
-            navigate(`/orders/${payment.orderId}`)
+            navigate(`/orders/${activePayment.orderId}`)
           },
           modal: {
             ondismiss: () => {
@@ -138,17 +145,55 @@ export default function PaymentPage() {
       })
   }
 
-  // Auto-initiate once per order on mount. Tracking orderId (not just relying
-  // on the effect's own dependency identity) means React StrictMode's
-  // mount -> cleanup -> mount dev cycle is a no-op the second time through,
-  // while the Retry/Retry payment buttons below still call initiate()
+  // Auto-initiate once per order on mount - but ONLY in the default (non-deferred) mode. In
+  // deferred mode, initiating here (merely landing on this page) would reserve stock before the
+  // customer has clicked anything, defeating the whole point of the config flag - see
+  // handlePayClick below, which is what initiates in that mode instead, on explicit click.
+  // Critically, this must wait for `paymentConfig` to actually finish loading before deciding:
+  // `deferredMode` reads `paymentConfig?.reserveStockOnlyAtPayment`, which is `undefined` (falsy)
+  // on the very first render since that config fetch is a separate, async effect - without the
+  // `loadingConfig` guard, this effect would fire and auto-initiate on that first render, before
+  // the fetched config had a chance to flip `deferredMode` to true, defeating deferred mode every
+  // time regardless of the admin setting. Tracking orderId (not just relying on the effect's own
+  // dependency identity) means React StrictMode's mount -> cleanup -> mount dev cycle is a no-op
+  // the second time through, while the Retry/Retry payment buttons below still call initiate()
   // directly and are unaffected by this guard.
   useEffect(() => {
     if (!orderId) return
+    if (loadingConfig) return
+    if (deferredMode) return
     if (autoInitiatedOrderRef.current === orderId) return
     autoInitiatedOrderRef.current = orderId
     initiate()
-  }, [orderId, initiate])
+  }, [orderId, initiate, deferredMode, loadingConfig])
+
+  // Deferred mode's "Pay {order total}" button: initiates payment (which is what actually
+  // reserves stock in this mode, at PaymentServiceImpl.initiate) and, for the real Razorpay
+  // provider, immediately chains into opening the checkout modal using the freshly-returned
+  // payment data - not stale `payment` state, which wouldn't be updated yet in the same tick.
+  // For the mock provider, succeeding just reveals the existing post-initiate panel below
+  // (its render condition already covers that - no further chaining needed).
+  const handlePayClick = () => {
+    if (!orderId) return
+    if (initiateInFlightRef.current) return
+    initiateInFlightRef.current = true
+    setInitiating(true)
+    setInitiateError(null)
+    setFailureMessage(null)
+    paymentsApi
+      .initiatePayment(orderId)
+      .then((data) => {
+        setPayment(data)
+        if (paymentConfig?.provider === 'razorpay') {
+          payWithRazorpay(data)
+        }
+      })
+      .catch((err) => setInitiateError(getErrorMessage(err)))
+      .finally(() => {
+        initiateInFlightRef.current = false
+        setInitiating(false)
+      })
+  }
 
   const handleSimulate = async (outcome: 'SUCCESS' | 'FAILURE') => {
     if (!payment || simulating) return
@@ -237,6 +282,23 @@ export default function PaymentPage() {
             </div>
           )}
 
+          {deferredMode && !payment && !initiating && !initiateError && (
+            <>
+              <p className="text-sm font-medium text-zinc-900">Amount due: {formatPrice(order.totalAmount)}</p>
+              <p className="mt-1 text-xs text-zinc-500">
+                Nothing is reserved until you pay. You'll be taken to Razorpay's secure checkout to
+                complete payment by card, UPI, or netbanking.
+              </p>
+              <button
+                type="button"
+                onClick={handlePayClick}
+                className="mt-4 min-h-[44px] w-full rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              >
+                {`Pay ${formatPrice(order.totalAmount)}`}
+              </button>
+            </>
+          )}
+
           {payment && !initiateError && (
             <>
               <p className="text-sm font-medium text-zinc-900">Amount due: {formatPrice(payment.amount)}</p>
@@ -251,7 +313,7 @@ export default function PaymentPage() {
 
               <button
                 type="button"
-                onClick={payWithRazorpay}
+                onClick={() => payWithRazorpay()}
                 disabled={checkoutLoading}
                 className="mt-4 min-h-[44px] w-full rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
@@ -298,6 +360,20 @@ export default function PaymentPage() {
                 Retry
               </button>
             </div>
+          )}
+
+          {deferredMode && !payment && !initiating && !initiateError && (
+            <>
+              <p className="mt-4 text-sm font-medium text-amber-900">Amount due: {formatPrice(order.totalAmount)}</p>
+              <p className="mt-1 text-xs text-amber-700">Nothing is reserved until you pay.</p>
+              <button
+                type="button"
+                onClick={handlePayClick}
+                className="mt-4 min-h-[40px] w-full rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              >
+                {`Pay ${formatPrice(order.totalAmount)}`}
+              </button>
+            </>
           )}
 
           {payment && !initiateError && (

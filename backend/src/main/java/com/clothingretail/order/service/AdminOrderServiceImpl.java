@@ -139,10 +139,14 @@ public class AdminOrderServiceImpl implements AdminOrderService {
             }
             if (stockWasDecremented) {
                 restoreStockWithAudit(order, item, variant, actingAdmin);
-            } else {
+            } else if (order.isStockReserved()) {
                 // Never decremented (PENDING_PAYMENT/PAYMENT_PROCESSING) - only the reservation needs releasing, no InventoryTransaction, same reasoning as payment-failure release.
                 productVariantRepository.releaseReservation(variant.getId(), item.getQuantity());
                 log.info("[1634] Released reservation for order {} variant {} (sku={}): quantity={}", orderId, variant.getId(), variant.getSku(), item.getQuantity());
+            } else {
+                // Deferred-mode draft (SiteConfiguration.reserveStockOnlyAtPayment=true) that was
+                // never paid - nothing was ever reserved for it, so there's nothing to release.
+                log.info("[2005] Skipped reservation release for order {} variant {} (sku={}): never reserved (deferred mode, not yet paid)", orderId, variant.getId(), variant.getSku());
             }
         }
 

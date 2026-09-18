@@ -61,6 +61,7 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
         config.setLoginPromoText(request.loginPromoText());
         config.setRegistrationImageUrl(request.registrationImageUrl());
         config.setOrderReservationTtlMinutes(request.orderReservationTtlMinutes());
+        config.setReserveStockOnlyAtPayment(request.reserveStockOnlyAtPayment());
         config = repository.save(config);
         log.info("[1665] Site configuration updated: id={}, businessName={}", config.getId(), config.getBusinessName());
         return toAdminResponse(config);
@@ -113,7 +114,8 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
                 config.getLoginPromoImageUrl(),
                 config.getLoginPromoText(),
                 config.getRegistrationImageUrl(),
-                config.getOrderReservationTtlMinutes());
+                config.getOrderReservationTtlMinutes(),
+                config.getReserveStockOnlyAtPayment());
     }
 
     private ThemeResponse toThemeResponse(Theme theme) {

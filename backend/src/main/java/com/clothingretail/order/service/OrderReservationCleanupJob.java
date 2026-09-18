@@ -47,13 +47,18 @@ public class OrderReservationCleanupJob {
             return;
         }
         for (Order order : expired) {
-            for (OrderItem item : order.getItems()) {
-                ProductVariant variant = item.getProductVariant();
-                if (variant == null) {
-                    // Variant was deleted after the order was placed - nothing left to release against.
-                    continue;
+            // A deferred-mode draft (SiteConfiguration.reserveStockOnlyAtPayment=true) that was
+            // never paid never reserved anything either - see Order.stockReserved. Still cancel
+            // it below (the TTL fires regardless of mode), just nothing to release here.
+            if (order.isStockReserved()) {
+                for (OrderItem item : order.getItems()) {
+                    ProductVariant variant = item.getProductVariant();
+                    if (variant == null) {
+                        // Variant was deleted after the order was placed - nothing left to release against.
+                        continue;
+                    }
+                    productVariantRepository.releaseReservation(variant.getId(), item.getQuantity());
                 }
-                productVariantRepository.releaseReservation(variant.getId(), item.getQuantity());
             }
             order.setStatus(OrderStatus.CANCELLED);
             orderStatusHistoryService.record(

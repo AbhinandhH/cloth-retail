@@ -83,4 +83,15 @@ public class SiteConfiguration extends BaseEntity {
      */
     @Column(name = "order_reservation_ttl_minutes", nullable = false)
     private Integer orderReservationTtlMinutes = 15;
+
+    /**
+     * When true, {@code OrderCreationService} skips reserving stock at "Place order" time and
+     * {@code PaymentServiceImpl#initiate} reserves it instead, only when the customer clicks
+     * "Pay" - and the order stays hidden from the customer's order list until that reservation
+     * happens (see {@code Order#stockReserved}). Read fresh from this row on every new order, so
+     * an admin change here takes effect immediately, no redeploy needed. Default false keeps the
+     * original behaviour (reserve and list immediately on Place Order) unchanged.
+     */
+    @Column(name = "reserve_stock_only_at_payment", nullable = false)
+    private Boolean reserveStockOnlyAtPayment = false;
 }

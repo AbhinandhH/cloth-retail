@@ -31,6 +31,9 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
     // than null, so a first-ever save (or a config fetch that somehow omits it) doesn't fail
     // validation on a field the admin never touched.
     orderReservationTtlMinutes: config?.orderReservationTtlMinutes ?? 15,
+    // Backend requires a non-null value on save - default to its own "off" fallback, same
+    // reasoning as orderReservationTtlMinutes above.
+    reserveStockOnlyAtPayment: config?.reserveStockOnlyAtPayment ?? false,
   }
 }
 
@@ -295,6 +298,23 @@ export default function AdminConfigurationForm() {
               }
             />
           </div>
+
+          <label className="mt-4 flex items-start gap-2 text-sm text-zinc-700">
+            <input
+              type="checkbox"
+              checked={form.reserveStockOnlyAtPayment ?? false}
+              onChange={(e) => updateField('reserveStockOnlyAtPayment', e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-zinc-300"
+            />
+            <span>
+              Lock stock and show the order only after the customer clicks Pay
+              <span className="mt-0.5 block text-xs text-zinc-500">
+                Off (default): stock is reserved and the order appears in "My Orders" as soon as
+                the customer places it. On: nothing is reserved and the order stays hidden until
+                the customer actually clicks "Pay" on the payment screen.
+              </span>
+            </span>
+          </label>
         </section>
 
         {/* Login/registration visuals */}

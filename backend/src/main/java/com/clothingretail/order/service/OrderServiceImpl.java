@@ -7,6 +7,7 @@ import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.order.Order;
 import com.clothingretail.order.OrderItem;
+import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.dto.CreateOrderRequest;
 import com.clothingretail.order.dto.OrderDetailResponse;
 import com.clothingretail.order.dto.OrderItemResponse;
@@ -86,8 +87,8 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderSummaryResponse> listOrders(Long userId, int page, int size) {
         log.info("[1617] Listing orders for userId={}, page={}, size={}", userId, page, size);
         CustomerProfile profile = resolveProfile(userId);
-        Page<Order> orders = orderRepository.findByCustomerProfileId(
-                profile.getId(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        Page<Order> orders = orderRepository.findVisibleByCustomerProfileId(
+                profile.getId(), OrderStatus.PENDING_PAYMENT, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         log.info("[1618] Listed {} orders (of {} total) for userId={}", orders.getNumberOfElements(), orders.getTotalElements(), userId);
         return PageResponse.of(orders, orders.getContent().stream().map(this::toSummaryResponse).toList());
     }

@@ -216,6 +216,12 @@ export interface SiteConfiguration {
    * always has).
    */
   orderReservationTtlMinutes?: number | null;
+  /**
+   * When true, stock is reserved and the order becomes visible in "My Orders" only once the
+   * customer clicks "Pay" on the payment screen, instead of immediately on Place Order. Same
+   * admin-only-optionality reasoning as orderReservationTtlMinutes above.
+   */
+  reserveStockOnlyAtPayment?: boolean | null;
 }
 
 /**
@@ -1062,6 +1068,8 @@ export interface Wishlist {
 export interface PaymentConfig {
   provider: "mock" | "razorpay" | string;
   keyId: string | null;
+  /** When true, PaymentPage must NOT auto-initiate on mount — wait for the customer's explicit "Pay" click instead. See SiteConfiguration.reserveStockOnlyAtPayment. */
+  reserveStockOnlyAtPayment: boolean;
 }
 
 export interface PaymentInitiateResponse {

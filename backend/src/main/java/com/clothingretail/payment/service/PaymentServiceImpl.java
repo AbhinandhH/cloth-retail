@@ -5,6 +5,7 @@ import com.clothingretail.common.NotFoundException;
 import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.order.Order;
+import com.clothingretail.order.OrderItem;
 import com.clothingretail.order.repository.OrderRepository;
 import com.clothingretail.order.OrderStatus;
 import com.clothingretail.order.service.OrderStatusHistoryService;
@@ -14,6 +15,8 @@ import com.clothingretail.payment.dto.PaymentInitiateResponse;
 import com.clothingretail.payment.dto.SimulatePaymentRequest;
 import com.clothingretail.payment.dto.SimulatePaymentResponse;
 import com.clothingretail.payment.repository.PaymentRepository;
+import com.clothingretail.product.ProductVariant;
+import com.clothingretail.product.repository.ProductVariantRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +32,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final MockPaymentGateway mockPaymentGateway;
     private final PaymentWebhookService paymentWebhookService;
     private final OrderStatusHistoryService orderStatusHistoryService;
+    private final ProductVariantRepository productVariantRepository;
 
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
@@ -37,7 +41,8 @@ public class PaymentServiceImpl implements PaymentService {
             PaymentGateway paymentGateway,
             MockPaymentGateway mockPaymentGateway,
             PaymentWebhookService paymentWebhookService,
-            OrderStatusHistoryService orderStatusHistoryService) {
+            OrderStatusHistoryService orderStatusHistoryService,
+            ProductVariantRepository productVariantRepository) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.customerProfileRepository = customerProfileRepository;
@@ -45,6 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.mockPaymentGateway = mockPaymentGateway;
         this.paymentWebhookService = paymentWebhookService;
         this.orderStatusHistoryService = orderStatusHistoryService;
+        this.productVariantRepository = productVariantRepository;
     }
 
     @Override
@@ -62,6 +68,40 @@ public class PaymentServiceImpl implements PaymentService {
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             log.error("[1803] Payment initiation rejected - order {} not awaiting payment, status={}", orderId, order.getStatus());
             throw new ConflictException("Order is not awaiting payment (status: " + order.getStatus() + ")");
+        }
+
+        // Atomic conditional UPDATE, not a plain save() later - closes a real race where two
+        // concurrent initiate() calls for the same order (two tabs, a slipped double-click) could
+        // otherwise both pass the in-memory status check above before either commits. Combined
+        // with the reservation loop below, that race could silently double-reserve one order's
+        // stock. Only one caller's transition can succeed; the loser fails here, before touching
+        // stock, the gateway, or a Payment row.
+        int transitioned = orderRepository.transitionStatus(order.getId(), OrderStatus.PENDING_PAYMENT, OrderStatus.PAYMENT_PROCESSING);
+        if (transitioned == 0) {
+            log.error("[2001] Payment initiation lost a race - order {} was no longer PENDING_PAYMENT by the time of the atomic transition", orderId);
+            throw new ConflictException("Order is not awaiting payment");
+        }
+
+        if (!order.isStockReserved()) {
+            for (OrderItem item : order.getItems()) {
+                ProductVariant variant = item.getProductVariant();
+                if (variant == null) {
+                    log.error("[2002] Deferred reservation failed - order {} item {} has no variant (deleted since the order was drafted)", orderId, item.getId());
+                    throw new ConflictException("'" + item.getProductName() + "' (" + item.getSku() + ") is no longer available");
+                }
+                int affected = productVariantRepository.reserveStock(variant.getId(), item.getQuantity());
+                if (affected == 0) {
+                    log.error("[2003] Deferred reservation failed for order {} variant {} (sku={}): requested={}, available={}",
+                            orderId, variant.getId(), variant.getSku(), item.getQuantity(), variant.getAvailableQuantity());
+                    throw new ConflictException(
+                            "'" + item.getProductName() + "' (" + item.getSku() + ") is no longer available "
+                                    + "in the requested quantity (" + item.getQuantity() + ") - only "
+                                    + variant.getAvailableQuantity() + " left");
+                }
+                log.info("[2004] Deferred reservation succeeded at Pay-click for order {} variant {} (sku={}): quantity={}",
+                        orderId, variant.getId(), variant.getSku(), item.getQuantity());
+            }
+            order.setStockReserved(true);
         }
 
         PaymentInitiation initiation = paymentGateway.initiate(order);
