@@ -20,6 +20,7 @@ public interface InventoryQueryService {
     Page<VariantInventoryRow> listVariants(
             String q,
             Long categoryId,
+            Long productId,
             Long colorId,
             Long sizeId,
             StockStatus stockStatus,

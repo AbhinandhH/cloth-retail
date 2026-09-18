@@ -45,6 +45,7 @@ public class AdminInventoryController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long productId,
             @RequestParam(required = false) Long colorId,
             @RequestParam(required = false) Long sizeId,
             @RequestParam(required = false) StockStatus stockStatus,
@@ -52,7 +53,7 @@ public class AdminInventoryController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String dir) {
         return PageResponse.of(inventoryQueryService.listVariants(
-                q, categoryId, colorId, sizeId, stockStatus, productStatus, sort, dir, page, size));
+                q, categoryId, productId, colorId, sizeId, stockStatus, productStatus, sort, dir, page, size));
     }
 
     @GetMapping("/dashboard")

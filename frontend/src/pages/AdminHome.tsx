@@ -115,6 +115,15 @@ function ConfigurationIcon() {
   );
 }
 
+function ReportsIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M5 20V6.5A1.5 1.5 0 016.5 5h8.6L19 8.9V20a0 0 0 010 0H5a0 0 0 010 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 16v-3M12.5 16v-5M16 16v-2" />
+    </svg>
+  );
+}
+
 function NotificationsIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,6 +152,7 @@ const MODULES: AdminModule[] = [
   { to: "/admin/orders", label: "Orders", description: "Fulfilment queue", icon: <OrdersIcon /> },
   { to: "/admin/returns", label: "Returns", description: "Exchanges & damage claims", icon: <ReturnsIcon /> },
   { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon /> },
+  { to: "/admin/reports", label: "Reports", description: "Sales, stock & GST reports", icon: <ReportsIcon /> },
   { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon /> },
   { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon /> },
   { to: "/admin/notifications", label: "Notifications", description: "Email/SMS OTP on-off switches", icon: <NotificationsIcon /> },

@@ -1087,3 +1087,56 @@ export interface PaymentSimulateResponse {
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
 }
+
+// --- Admin Reports -------------------------------------------------------
+// /api/admin/reports — sales/customer/stock/GST reports, each with a matching /export PDF endpoint.
+
+export interface SalesSummaryRow {
+  date: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface SalesSummaryResponse {
+  rows: SalesSummaryRow[];
+  totalRevenue: number;
+  totalOrders: number;
+  avgOrderValue: number;
+}
+
+export interface ProductSalesRow {
+  sku: string;
+  productName: string;
+  imageUrl: string | null;
+  quantitySold: number;
+  revenue: number;
+}
+
+export interface CategorySalesRow {
+  categoryName: string;
+  quantitySold: number;
+  revenue: number;
+}
+
+export interface CustomerSalesRow {
+  customerProfileId: number | string;
+  fullName: string;
+  email: string;
+  orderCount: number;
+  totalSpent: number;
+}
+
+export interface GstReportRow {
+  orderNumber: string;
+  createdAt: string;
+  cgstAmount: number;
+  sgstAmount: number;
+  totalAmount: number;
+}
+
+export interface GstReportResponse {
+  page: PageResponse<GstReportRow>;
+  totalCgst: number;
+  totalSgst: number;
+  totalRevenue: number;
+}

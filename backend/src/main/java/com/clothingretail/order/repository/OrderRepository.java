@@ -111,6 +111,123 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     List<CustomerOrderStatsProjection> sumStatsByCustomerProfileIds(
             @Param("customerProfileIds") List<Long> customerProfileIds, @Param("statuses") List<OrderStatus> statuses);
 
+    /**
+     * Reports module: the sales-summary report buckets these by day in Java, same reasoning
+     * (and same {@link SaleOrderStatuses#SALE_STATUSES} filter) as {@link
+     * #findByCreatedAtGreaterThanEqualAndStatusIn} - this variant adds the upper bound
+     * AdminDashboardQueryServiceImpl doesn't need (it only ever looks back from "now").
+     */
+    List<Order> findByCreatedAtBetweenAndStatusIn(Instant from, Instant to, List<OrderStatus> statuses);
+
+    /**
+     * Reports module - product-wise sales report. Same shape/reasoning as {@link
+     * #findTopSellingProducts} (denormalized OrderItem snapshot, grouped by sku) but date-ranged
+     * and paginated over the full result instead of capped at a top-N. {@code productId}, when
+     * given, scopes to one product's own variants (still grouped by sku, so its different
+     * colors/sizes each still get their own row) - null means every product.
+     */
+    @Query(value = "SELECT oi.sku AS sku, MAX(oi.productName) AS productName, MAX(oi.imageUrl) AS imageUrl, "
+            + "SUM(oi.quantity) AS quantitySold, SUM(oi.lineTotal) AS revenue "
+            + "FROM OrderItem oi WHERE oi.order.status IN :statuses AND oi.order.createdAt BETWEEN :from AND :to "
+            + "AND (:productId IS NULL OR oi.productVariant.product.id = :productId) "
+            + "GROUP BY oi.sku ORDER BY SUM(oi.lineTotal) DESC",
+            countQuery = "SELECT COUNT(DISTINCT oi.sku) FROM OrderItem oi "
+                    + "WHERE oi.order.status IN :statuses AND oi.order.createdAt BETWEEN :from AND :to "
+                    + "AND (:productId IS NULL OR oi.productVariant.product.id = :productId)")
+    Page<TopSellingProjection> findProductSalesReport(
+            @Param("statuses") List<OrderStatus> statuses,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("productId") Long productId,
+            Pageable pageable);
+
+    /**
+     * Reports module - category-wise sales report. Joins through the *live*
+     * {@code OrderItem.productVariant->product->category} (an inner join, so an order line whose
+     * variant/product was since deleted is silently excluded from this one report - it has no
+     * category to attribute the sale to; {@link #findProductSalesReport} above doesn't have this
+     * gap since it reads category-independent denormalized snapshot columns instead).
+     */
+    @Query(value = "SELECT p.category.name AS categoryName, SUM(oi.quantity) AS quantitySold, SUM(oi.lineTotal) AS revenue "
+            + "FROM OrderItem oi JOIN oi.productVariant pv JOIN pv.product p "
+            + "WHERE oi.order.status IN :statuses AND oi.order.createdAt BETWEEN :from AND :to "
+            + "AND (:categoryId IS NULL OR p.category.id = :categoryId) "
+            + "GROUP BY p.category.name ORDER BY SUM(oi.lineTotal) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.category.name) FROM OrderItem oi JOIN oi.productVariant pv JOIN pv.product p "
+                    + "WHERE oi.order.status IN :statuses AND oi.order.createdAt BETWEEN :from AND :to "
+                    + "AND (:categoryId IS NULL OR p.category.id = :categoryId)")
+    Page<CategorySalesProjection> findCategorySalesReport(
+            @Param("statuses") List<OrderStatus> statuses,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("categoryId") Long categoryId,
+            Pageable pageable);
+
+    /**
+     * Reports module - customer-wise sales report: a direct paginated/date-ranged version of
+     * {@link #sumStatsByCustomerProfileIds} (which is batch-by-known-ids, for the Customers
+     * module list view) joined out to the customer's name/email for display. {@code customerId},
+     * when given, scopes to one customer (still grouped, so it comes back as that customer's
+     * single summary row for the range) - null means every customer.
+     */
+    @Query(value = "SELECT o.customerProfile.id AS customerProfileId, o.customerProfile.user.fullName AS fullName, "
+            + "o.customerProfile.user.email AS email, COUNT(o) AS orderCount, SUM(o.totalAmount) AS totalSpent "
+            + "FROM Order o WHERE o.status IN :statuses AND o.createdAt BETWEEN :from AND :to "
+            + "AND (:customerId IS NULL OR o.customerProfile.id = :customerId) "
+            + "GROUP BY o.customerProfile.id, o.customerProfile.user.fullName, o.customerProfile.user.email "
+            + "ORDER BY SUM(o.totalAmount) DESC",
+            countQuery = "SELECT COUNT(DISTINCT o.customerProfile.id) FROM Order o "
+                    + "WHERE o.status IN :statuses AND o.createdAt BETWEEN :from AND :to "
+                    + "AND (:customerId IS NULL OR o.customerProfile.id = :customerId)")
+    Page<CustomerSalesProjection> findCustomerSalesReport(
+            @Param("statuses") List<OrderStatus> statuses,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("customerId") Long customerId,
+            Pageable pageable);
+
+    /**
+     * Reports module - GST/tax report: {@code Order.cgstAmount}/{@code sgstAmount} are already
+     * snapshotted per-order at creation time (see Order's own doc comment), so this is a plain
+     * filtered read, no live-rate lookup against TaxSettings needed.
+     */
+    Page<Order> findByStatusInAndCreatedAtBetween(List<OrderStatus> statuses, Instant from, Instant to, Pageable pageable);
+
+    /** Grand totals for the GST report's full matching range, independent of the current page. */
+    @Query("SELECT COALESCE(SUM(o.cgstAmount), 0) AS totalCgst, COALESCE(SUM(o.sgstAmount), 0) AS totalSgst, "
+            + "COALESCE(SUM(o.totalAmount), 0) AS totalRevenue "
+            + "FROM Order o WHERE o.status IN :statuses AND o.createdAt BETWEEN :from AND :to")
+    GstTotalsProjection sumGstTotals(
+            @Param("statuses") List<OrderStatus> statuses, @Param("from") Instant from, @Param("to") Instant to);
+
+    interface CategorySalesProjection {
+        String getCategoryName();
+
+        Long getQuantitySold();
+
+        BigDecimal getRevenue();
+    }
+
+    interface CustomerSalesProjection {
+        Long getCustomerProfileId();
+
+        String getFullName();
+
+        String getEmail();
+
+        Long getOrderCount();
+
+        BigDecimal getTotalSpent();
+    }
+
+    interface GstTotalsProjection {
+        BigDecimal getTotalCgst();
+
+        BigDecimal getTotalSgst();
+
+        BigDecimal getTotalRevenue();
+    }
+
     interface CustomerOrderStatsProjection {
         Long getCustomerProfileId();
 

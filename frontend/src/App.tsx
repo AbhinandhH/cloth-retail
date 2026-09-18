@@ -27,6 +27,7 @@ import AdminMaterials from './pages/AdminMaterials'
 import AdminVendors from './pages/AdminVendors'
 import AdminDamageReasons from './pages/AdminDamageReasons'
 import AdminOrderDashboard from './pages/AdminOrderDashboard'
+import AdminReports from './pages/AdminReports'
 import AdminOrderDetail from './pages/AdminOrderDetail'
 import AdminReturnList from './pages/AdminReturnList'
 import AdminReturnDetail from './pages/AdminReturnDetail'
@@ -224,6 +225,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminOrderDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminReports />
           </RequireAuth>
         }
       />

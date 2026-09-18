@@ -24,12 +24,21 @@ public final class InventorySpecifications {
     private InventorySpecifications() {}
 
     public static Specification<ProductVariant> filterVariants(
-            String q, Long categoryId, Long colorId, Long sizeId, StockStatus stockStatus, ProductStatus productStatus) {
+            String q,
+            Long categoryId,
+            Long productId,
+            Long colorId,
+            Long sizeId,
+            StockStatus stockStatus,
+            ProductStatus productStatus) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (categoryId != null) {
                 predicates.add(cb.equal(root.get("product").get("category").get("id"), categoryId));
+            }
+            if (productId != null) {
+                predicates.add(cb.equal(root.get("product").get("id"), productId));
             }
             if (colorId != null) {
                 predicates.add(cb.equal(root.get("color").get("id"), colorId));

@@ -60,6 +60,7 @@ public class InventoryQueryServiceImpl implements InventoryQueryService {
     public Page<VariantInventoryRow> listVariants(
             String q,
             Long categoryId,
+            Long productId,
             Long colorId,
             Long sizeId,
             StockStatus stockStatus,
@@ -69,10 +70,10 @@ public class InventoryQueryServiceImpl implements InventoryQueryService {
             int page,
             int size) {
         log.info(
-                "[1314] Listing variants q={}, categoryId={}, colorId={}, sizeId={}, stockStatus={}, productStatus={}, sort={}, dir={}, page={}, size={}",
-                q, categoryId, colorId, sizeId, stockStatus, productStatus, sort, dir, page, size);
+                "[1314] Listing variants q={}, categoryId={}, productId={}, colorId={}, sizeId={}, stockStatus={}, productStatus={}, sort={}, dir={}, page={}, size={}",
+                q, categoryId, productId, colorId, sizeId, stockStatus, productStatus, sort, dir, page, size);
         Pageable pageable = PageRequest.of(page, size, variantSort(sort, dir));
-        var spec = InventorySpecifications.filterVariants(q, categoryId, colorId, sizeId, stockStatus, productStatus);
+        var spec = InventorySpecifications.filterVariants(q, categoryId, productId, colorId, sizeId, stockStatus, productStatus);
         Page<VariantInventoryRow> result = productVariantRepository.findAll(spec, pageable).map(this::toRow);
         log.info("[1315] Variant listing returned {} of {} total element(s)", result.getNumberOfElements(), result.getTotalElements());
         return result;
@@ -118,8 +119,8 @@ public class InventoryQueryServiceImpl implements InventoryQueryService {
                 "[1322] Dashboard totals: products={}, variants={}, availableStock={}, damagedStock={}",
                 totalProducts, totalVariants, totalAvailableStock, totalDamagedStock);
 
-        var lowStockSpec = InventorySpecifications.filterVariants(null, null, null, null, StockStatus.LOW_STOCK, null);
-        var outOfStockSpec = InventorySpecifications.filterVariants(null, null, null, null, StockStatus.OUT_OF_STOCK, null);
+        var lowStockSpec = InventorySpecifications.filterVariants(null, null, null, null, null, StockStatus.LOW_STOCK, null);
+        var outOfStockSpec = InventorySpecifications.filterVariants(null, null, null, null, null, StockStatus.OUT_OF_STOCK, null);
         long lowStockCount = productVariantRepository.count(lowStockSpec);
         long outOfStockCount = productVariantRepository.count(outOfStockSpec);
         log.info("[1323] Dashboard stock alerts: lowStockCount={}, outOfStockCount={}", lowStockCount, outOfStockCount);
