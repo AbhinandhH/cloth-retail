@@ -36,10 +36,32 @@ class InventoryQueryIntegrationTest {
     @Autowired
     private ProductVariantRepository productVariantRepository;
 
+    /** SUPER_ADMIN (the software owner) now has every ADMIN privilege too (see SecurityConfig's RoleHierarchy bean), but tests still exercise a plain store ADMIN account here - more representative of real usage than the platform-owner bootstrap account. */
     private String adminAccessToken() throws Exception {
-        String loginBody = """
+        String superAdminLoginBody = """
                 {"email":"admin@clothingretail.local","password":"ChangeMe123!"}
                 """;
+        MvcResult superAdminResult = mockMvc.perform(post("/api/admin/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(superAdminLoginBody))
+                .andExpect(status().isOk())
+                .andReturn();
+        String superAdminToken =
+                objectMapper.readTree(superAdminResult.getResponse().getContentAsString()).get("accessToken").asText();
+
+        String email = "test-admin-" + System.nanoTime() + "@example.com";
+        String createBody = """
+                {"fullName":"Test Admin","email":"%s","password":"Password123!","role":"ADMIN"}
+                """.formatted(email);
+        mockMvc.perform(post("/api/admin/admins")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody))
+                .andExpect(status().isOk());
+
+        String loginBody = """
+                {"email":"%s","password":"Password123!"}
+                """.formatted(email);
         MvcResult result = mockMvc.perform(post("/api/admin/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody))

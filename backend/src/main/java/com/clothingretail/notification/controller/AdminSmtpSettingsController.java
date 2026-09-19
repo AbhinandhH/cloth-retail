@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Admin-configurable SMTP credentials - see SmtpSettings. SUPER_ADMIN only, same as the rest of the Notifications module. */
 @RestController
 @RequestMapping("/api/admin/smtp-settings")
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminSmtpSettingsController {
 
     private final SmtpSettingsService smtpSettingsService;

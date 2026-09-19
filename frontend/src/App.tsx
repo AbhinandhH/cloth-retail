@@ -10,6 +10,8 @@ import AdminHome from './pages/AdminHome'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminConfiguration from './pages/AdminConfiguration'
 import AdminNotificationSettings from './pages/AdminNotificationSettings'
+import AdminStaff from './pages/AdminStaff'
+import AdminProfile from './pages/AdminProfile'
 import AdminTaxSettings from './pages/AdminTaxSettings'
 import AdminProductList from './pages/AdminProductList'
 import AdminProductForm from './pages/AdminProductForm'
@@ -81,6 +83,22 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminNotificationSettings />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/staff"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminStaff />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/profile"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminProfile />
           </RequireAuth>
         }
       />

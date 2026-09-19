@@ -7,12 +7,14 @@ import com.clothingretail.auth.RefreshToken;
 import com.clothingretail.auth.Role;
 import com.clothingretail.auth.RoleName;
 import com.clothingretail.auth.User;
+import com.clothingretail.auth.dto.AdminStaffRow;
 import com.clothingretail.auth.dto.AuthResponse;
 import com.clothingretail.auth.dto.CreateAdminRequest;
 import com.clothingretail.auth.dto.LoginRequest;
 import com.clothingretail.auth.dto.RegisterRequest;
 import com.clothingretail.auth.dto.ResendOtpRequest;
 import com.clothingretail.auth.dto.TokenResponse;
+import com.clothingretail.auth.dto.UpdateProfileRequest;
 import com.clothingretail.auth.dto.UserSummary;
 import com.clothingretail.auth.dto.VerificationStatusResponse;
 import com.clothingretail.auth.dto.VerifyOtpRequest;
@@ -54,6 +56,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final OtpService otpService;
     private final NotificationSettingsRepository notificationSettingsRepository;
+    private final ModulePermissionService modulePermissionService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
@@ -64,7 +67,8 @@ public class AuthServiceImpl implements AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             OtpService otpService,
-            NotificationSettingsRepository notificationSettingsRepository) {
+            NotificationSettingsRepository notificationSettingsRepository,
+            ModulePermissionService modulePermissionService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -74,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtService = jwtService;
         this.otpService = otpService;
         this.notificationSettingsRepository = notificationSettingsRepository;
+        this.modulePermissionService = modulePermissionService;
     }
 
     /**
@@ -305,7 +310,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResult<AuthResponse> adminLogin(LoginRequest request) {
         log.info("[1008] Admin login attempt for email={}", request.email());
         User user = authenticate(request);
-        if (!user.hasAnyRole(RoleName.ADMIN, RoleName.SUPER_ADMIN)) {
+        if (!user.hasAnyRole(RoleName.ADMIN, RoleName.SUPER_ADMIN, RoleName.EMPLOYEE)) {
             log.error("[1009] Admin login denied, insufficient role userId={} email={}", user.getId(), user.getEmail());
             throw new AccessDeniedException("This account does not have admin access");
         }
@@ -382,6 +387,10 @@ public class AuthServiceImpl implements AuthService {
             log.error("[1023] Create-admin failed, email already exists: email={}", request.email());
             throw new ConflictException("An account with this email already exists");
         }
+        // SUPER_ADMIN is never grantable through this endpoint - it's the software owner, exclusively
+        // provisioned via AdminBootstrapRunner. A caller here is either the SUPER_ADMIN creating the
+        // store's first ADMIN, or an existing ADMIN creating further ADMIN/EMPLOYEE accounts - see
+        // AdminUserController's @PreAuthorize.
         RoleName parsedRole;
         try {
             parsedRole = RoleName.valueOf(request.role());
@@ -389,7 +398,7 @@ public class AuthServiceImpl implements AuthService {
             log.info("[1024] Create-admin role '{}' invalid, defaulting to ADMIN", request.role());
             parsedRole = RoleName.ADMIN;
         }
-        final RoleName requestedRole = (parsedRole == RoleName.ADMIN || parsedRole == RoleName.SUPER_ADMIN)
+        final RoleName requestedRole = (parsedRole == RoleName.ADMIN || parsedRole == RoleName.EMPLOYEE)
                 ? parsedRole
                 : RoleName.ADMIN;
         Role role = roleRepository.findByName(requestedRole)
@@ -406,8 +415,53 @@ public class AuthServiceImpl implements AuthService {
         user.getRoles().add(role);
         user = userRepository.save(user);
 
+        // A new ADMIN starts with full access to every operational module (editable afterward by
+        // any other ADMIN) - a new EMPLOYEE starts with none, until an ADMIN explicitly grants some.
+        if (requestedRole == RoleName.ADMIN) {
+            modulePermissionService.grantAllModules(user.getId());
+        }
+
         log.info("[1026] Admin account created userId={} role={}", user.getId(), requestedRole);
         return toSummary(user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<AdminStaffRow> listStaff() {
+        log.info("[1935] Listing staff accounts");
+        return userRepository.findByRoles_NameIn(List.of(RoleName.ADMIN, RoleName.EMPLOYEE)).stream()
+                .map(u -> new AdminStaffRow(
+                        u.getId(),
+                        u.getFullName(),
+                        u.getEmail(),
+                        u.hasAnyRole(RoleName.ADMIN) ? RoleName.ADMIN.name() : RoleName.EMPLOYEE.name(),
+                        u.isEnabled()))
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public void setStaffStatus(Long userId, boolean enabled) {
+        log.info("[1936] Set staff status userId={}, enabled={}", userId, enabled);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("[1937] Set staff status failed, no user for userId={}", userId);
+                    return new NotFoundException("User not found: " + userId);
+                });
+        if (!user.hasAnyRole(RoleName.ADMIN, RoleName.EMPLOYEE)) {
+            log.error("[1938] Set staff status rejected, not a staff account userId={}", userId);
+            throw new ConflictException("This account is not an ADMIN or EMPLOYEE account");
+        }
+        // The store can never be left with zero enabled ADMIN accounts - disabling the last one
+        // would permanently lock everyone (including whoever's trying to disable it) out of every
+        // ADMIN-only screen, with no way back in short of a database fix.
+        if (!enabled && user.hasAnyRole(RoleName.ADMIN) && userRepository.countByRoles_NameAndEnabledTrue(RoleName.ADMIN) <= 1) {
+            log.error("[1939] Set staff status rejected, would leave zero enabled ADMIN accounts userId={}", userId);
+            throw new ConflictException("Cannot disable the last remaining ADMIN account");
+        }
+        user.setEnabled(enabled);
+        userRepository.save(user);
+        log.info("[1940] Staff status updated userId={}, enabled={}", userId, enabled);
     }
 
     private User authenticate(LoginRequest request) {
@@ -455,6 +509,34 @@ public class AuthServiceImpl implements AuthService {
                     return new BadCredentialsException("Invalid token");
                 });
         log.info("[1034] Current user resolved userId={}", userId);
+        return toSummary(user);
+    }
+
+    @Transactional
+    @Override
+    public UserSummary updateProfile(Long userId, UpdateProfileRequest request) {
+        log.info("[1941] Update profile attempt userId={}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("[1942] Update profile failed, no user for userId={}", userId);
+                    return new NotFoundException("User not found: " + userId);
+                });
+        if (!user.getEmail().equalsIgnoreCase(request.email()) && userRepository.existsByEmailIgnoreCase(request.email())) {
+            log.error("[1943] Update profile failed, email already in use: email={}", request.email());
+            throw new ConflictException("An account with this email already exists");
+        }
+        if (request.newPassword() != null && !request.newPassword().isBlank()) {
+            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+                log.error("[1944] Update profile failed, current password mismatch userId={}", userId);
+                throw new BadCredentialsException("Current password is incorrect");
+            }
+            user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+            log.info("[1945] Password changed userId={}", userId);
+        }
+        user.setFullName(request.fullName());
+        user.setEmail(request.email());
+        user = userRepository.save(user);
+        log.info("[1946] Profile updated userId={}", userId);
         return toSummary(user);
     }
 

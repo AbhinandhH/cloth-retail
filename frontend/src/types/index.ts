@@ -1,6 +1,6 @@
 // Types matching the backend API contract exactly.
 
-export type Role = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
+export type Role = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN" | "EMPLOYEE";
 
 export interface User {
   id: number | string;
@@ -1139,4 +1139,33 @@ export interface GstReportResponse {
   totalCgst: number;
   totalSgst: number;
   totalRevenue: number;
+}
+
+// --- Staff & module permissions -------------------------------------------------
+// /api/admin/admins, /api/admin/profile — the 8 operational modules an ADMIN can grant an
+// EMPLOYEE (or another ADMIN) view/edit access to. See AdminModule.java's own doc comment for
+// why Tax/Configuration/Notifications/Staff stay ADMIN-only and never appear here.
+
+export type AdminModule =
+  | "DASHBOARD"
+  | "PRODUCTS"
+  | "INVENTORY"
+  | "ORDERS"
+  | "RETURNS"
+  | "CUSTOMERS"
+  | "MASTERS"
+  | "REPORTS";
+
+export interface ModulePermissionRow {
+  module: AdminModule;
+  canView: boolean;
+  canEdit: boolean;
+}
+
+export interface AdminStaffRow {
+  id: number | string;
+  fullName: string;
+  email: string;
+  role: "ADMIN" | "EMPLOYEE";
+  enabled: boolean;
 }

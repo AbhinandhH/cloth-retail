@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Admin-configurable GST rates - see com.clothingretail.tax.TaxSettings. SUPER_ADMIN only, same as the rest of the store-setup modules (SMTP, Notifications, Site configuration). */
 @RestController
 @RequestMapping("/api/admin/tax-settings")
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminTaxSettingsController {
 
     private final TaxSettingsService taxSettingsService;

@@ -42,7 +42,38 @@ public final class CheckoutTestSupport {
         return new CustomerSession(email, json.get("auth").get("accessToken").asText());
     }
 
+    /**
+     * The bootstrap account (admin@clothingretail.local) is SUPER_ADMIN - the software owner, which
+     * now inherits every ADMIN privilege too (see SecurityConfig's RoleHierarchy bean). Most tests
+     * still exercise a plain store ADMIN token here instead, more representative of real usage,
+     * by creating a fresh ADMIN account through the SUPER_ADMIN-authorized createAdmin endpoint and
+     * logging into it, same "unique account per call" pattern as registerCustomer above. Tests that
+     * specifically need the software-owner account itself use {@link #superAdminAccessToken} instead.
+     */
     public static String adminAccessToken(MockMvc mockMvc, ObjectMapper objectMapper) throws Exception {
+        String superAdminToken = superAdminAccessToken(mockMvc, objectMapper);
+        String email = "test-admin-" + System.nanoTime() + "@example.com";
+        String createBody = """
+                {"fullName":"Test Admin","email":"%s","password":"Password123!","role":"ADMIN"}
+                """.formatted(email);
+        mockMvc.perform(post("/api/admin/admins")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody))
+                .andReturn();
+
+        String loginBody = """
+                {"email":"%s","password":"Password123!"}
+                """.formatted(email);
+        MvcResult result = mockMvc.perform(post("/api/admin/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody))
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("accessToken").asText();
+    }
+
+    /** The bootstrap SUPER_ADMIN (software-owner) account itself - only useful for tests exercising software-owner-only behavior. Most tests want {@link #adminAccessToken} instead. */
+    public static String superAdminAccessToken(MockMvc mockMvc, ObjectMapper objectMapper) throws Exception {
         String body = """
                 {"email":"admin@clothingretail.local","password":"ChangeMe123!"}
                 """;

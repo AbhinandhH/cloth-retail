@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 /** Admin return/exchange/damage-claim review, evidence upload, and refund-initiation endpoints. Same ADMIN-or-SUPER_ADMIN operational tier as AdminOrderController. */
 @RestController
 @RequestMapping("/api/admin/returns")
-@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or (hasRole('EMPLOYEE') and @modulePermission.hasAccess('RETURNS'))")
 public class AdminReturnController {
 
     private final ReturnAdminService returnAdminService;

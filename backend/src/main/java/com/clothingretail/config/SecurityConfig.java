@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,6 +42,20 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * SUPER_ADMIN (the software owner) has every privilege ADMIN (the store owner) has, on top of
+     * its own software-owner-only powers (creating the first ADMIN, subscription billing) - rather
+     * than repeating "hasRole('ADMIN') or hasRole('SUPER_ADMIN')" across every one of the ~25
+     * @PreAuthorize-protected controllers, this single role hierarchy makes every hasRole('ADMIN')
+     * check automatically pass for a SUPER_ADMIN too. Picked up automatically by @EnableMethodSecurity's
+     * expression handler - no other wiring needed. EMPLOYEE deliberately does NOT inherit from ADMIN
+     * (the whole point of that role is narrower, per-module access - see ModulePermission).
+     */
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("ROLE_SUPER_ADMIN > ROLE_ADMIN");
     }
 
     @Bean

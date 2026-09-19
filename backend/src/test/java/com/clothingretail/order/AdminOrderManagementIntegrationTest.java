@@ -210,7 +210,10 @@ class AdminOrderManagementIntegrationTest {
         assertThat(lastHistoryRow).isNotNull();
         assertThat(lastHistoryRow.get("previousStatus").asText()).isEqualTo("CONFIRMED");
         assertThat(lastHistoryRow.get("newStatus").asText()).isEqualTo("PROCESSING");
-        assertThat(lastHistoryRow.get("changedByName").asText()).isEqualTo("Super Admin");
+        // "Test Admin" - CheckoutTestSupport.adminAccessToken() now creates a fresh ADMIN account
+        // rather than logging in as the bootstrap SUPER_ADMIN (which has no store-operational
+        // access at all - see RoleName's own doc comment).
+        assertThat(lastHistoryRow.get("changedByName").asText()).isEqualTo("Test Admin");
         assertThat(lastHistoryRow.get("reason").asText()).isEqualTo("packing started");
 
         Order order = orderRepository.findById(orderId).orElseThrow();
@@ -528,7 +531,8 @@ class AdminOrderManagementIntegrationTest {
         assertThat(noteResult.getResponse().getStatus()).isEqualTo(200);
         JsonNode noteJson = objectMapper.readTree(noteResult.getResponse().getContentAsString());
         assertThat(noteJson.get("note").asText()).isEqualTo("Called customer to confirm size");
-        assertThat(noteJson.get("adminName").asText()).isEqualTo("Super Admin");
+        // "Test Admin" - see the changedByName comment above for why this isn't "Super Admin" anymore.
+        assertThat(noteJson.get("adminName").asText()).isEqualTo("Test Admin");
 
         MvcResult shipmentResult = mockMvc.perform(put("/api/admin/orders/" + orderId + "/shipment")
                         .header("Authorization", "Bearer " + admin)

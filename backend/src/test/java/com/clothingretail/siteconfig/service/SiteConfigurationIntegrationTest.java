@@ -112,7 +112,10 @@ class SiteConfigurationIntegrationTest {
                 .filter(t -> t.getName().equals("Black & Gold"))
                 .findFirst()
                 .orElseThrow();
-        String token = superAdminAccessToken();
+        // Theme activation is store-governance, ADMIN's - SUPER_ADMIN (the software owner) also
+        // has it, inheriting every ADMIN privilege (see SecurityConfig's RoleHierarchy bean), but
+        // this test exercises a plain ADMIN token as the more representative case.
+        String token = plainAdminAccessToken();
 
         try {
             mockMvc.perform(post("/api/admin/themes/{id}/activate", blackAndGold.getId())
@@ -138,24 +141,40 @@ class SiteConfigurationIntegrationTest {
     }
 
     @Test
-    void nonSuperAdminCannotAccessThemeOrConfigurationAdminEndpoints() throws Exception {
+    void customerCannotAccessThemeOrConfigurationAdminEndpoints() throws Exception {
+        // Theme/Configuration are store-governance, ADMIN-tier (which SUPER_ADMIN also satisfies
+        // via the role hierarchy - see adminAndSuperAdminCanAccessThemeAndConfiguration). A plain
+        // CUSTOMER has neither.
         String customerToken = customerAccessToken();
-        String plainAdminToken = plainAdminAccessToken();
 
         mockMvc.perform(get("/api/admin/themes").header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/configuration").header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminAndSuperAdminCanAccessThemeAndConfiguration() throws Exception {
+        // SUPER_ADMIN (the software owner) inherits every ADMIN privilege, including store
+        // governance like Theme/Configuration - see SecurityConfig's RoleHierarchy bean
+        // (ROLE_SUPER_ADMIN > ROLE_ADMIN).
+        String plainAdminToken = plainAdminAccessToken();
+        String superAdminToken = superAdminAccessToken();
 
         mockMvc.perform(get("/api/admin/themes").header("Authorization", "Bearer " + plainAdminToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
         mockMvc.perform(get("/api/admin/configuration").header("Authorization", "Bearer " + plainAdminToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/admin/themes").header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/admin/configuration").header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk());
     }
 
     @Test
     void mediaUploadRejectsDisallowedContentTypeAndServesAllowedOne() throws Exception {
-        String token = superAdminAccessToken();
+        String token = plainAdminAccessToken();
 
         MockMultipartFile disallowed =
                 new MockMultipartFile("file", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
@@ -181,7 +200,7 @@ class SiteConfigurationIntegrationTest {
 
     @Test
     void mediaUploadAcceptsVideoAndEnforcesSeparatePerTypeSizeCaps() throws Exception {
-        String token = superAdminAccessToken();
+        String token = plainAdminAccessToken();
 
         // A valid video content type uploads successfully, same endpoint as images.
         MockMultipartFile video =

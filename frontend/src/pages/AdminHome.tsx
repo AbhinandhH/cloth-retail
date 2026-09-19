@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import type { AdminModule as ModulePermissionModule } from "../types";
 import { useSiteConfig } from "../context/SiteConfigContext";
 import AmbientBackground from "../components/AmbientBackground";
 import BrandHero from "../components/BrandHero";
@@ -137,28 +138,43 @@ function NotificationsIcon() {
   );
 }
 
-interface AdminModule {
+function StaffIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <circle cx="12" cy="7.5" r="3" strokeWidth={1.75} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M5.5 19.5a6.5 6.5 0 0113 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M18 4.5a3 3 0 010 6M20.5 19.5a6.5 6.5 0 00-3.5-5.8" />
+    </svg>
+  );
+}
+
+interface AdminModuleTile {
   to: string;
   label: string;
   description: string;
   icon: ReactNode;
+  /** The operational module this tile is gated by (view permission) - omitted for governance tiles, which are gated by `governance` instead. */
+  module?: ModulePermissionModule;
+  /** Store-governance tile (Tax, Site Config, Notifications, Staff) - gated on isStoreAdmin (ADMIN or SUPER_ADMIN), never permission-gated, never EMPLOYEE. */
+  governance?: boolean;
 }
 
-const MODULES: AdminModule[] = [
-  { to: "/admin/dashboard", label: "Dashboard", description: "Sales & stock overview", icon: <DashboardIcon /> },
-  { to: "/admin/products", label: "Products", description: "Catalog & variants", icon: <ProductsIcon /> },
-  { to: "/admin/inventory", label: "Inventory", description: "Stock movements", icon: <InventoryIcon /> },
-  { to: "/admin/inventory/stock", label: "Stock", description: "On-hand levels", icon: <StockIcon /> },
-  { to: "/admin/orders", label: "Orders", description: "Fulfilment queue", icon: <OrdersIcon /> },
-  { to: "/admin/returns", label: "Returns", description: "Exchanges & damage claims", icon: <ReturnsIcon /> },
-  { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon /> },
-  { to: "/admin/reports", label: "Reports", description: "Sales, stock & GST reports", icon: <ReportsIcon /> },
-  { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon /> },
-  { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon /> },
-  { to: "/admin/notifications", label: "Notifications", description: "Email/SMS OTP on-off switches", icon: <NotificationsIcon /> },
+const MODULES: AdminModuleTile[] = [
+  { to: "/admin/dashboard", label: "Dashboard", description: "Sales & stock overview", icon: <DashboardIcon />, module: "DASHBOARD" },
+  { to: "/admin/products", label: "Products", description: "Catalog & variants", icon: <ProductsIcon />, module: "PRODUCTS" },
+  { to: "/admin/inventory", label: "Inventory", description: "Stock movements", icon: <InventoryIcon />, module: "INVENTORY" },
+  { to: "/admin/inventory/stock", label: "Stock", description: "On-hand levels", icon: <StockIcon />, module: "INVENTORY" },
+  { to: "/admin/orders", label: "Orders", description: "Fulfilment queue", icon: <OrdersIcon />, module: "ORDERS" },
+  { to: "/admin/returns", label: "Returns", description: "Exchanges & damage claims", icon: <ReturnsIcon />, module: "RETURNS" },
+  { to: "/admin/customers", label: "Customers", description: "Accounts & order history", icon: <CustomersIcon />, module: "CUSTOMERS" },
+  { to: "/admin/reports", label: "Reports", description: "Sales, stock & GST reports", icon: <ReportsIcon />, module: "REPORTS" },
+  { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon />, module: "MASTERS" },
+  { to: "/admin/staff", label: "Staff", description: "Admin & employee accounts", icon: <StaffIcon />, governance: true },
+  { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon />, governance: true },
+  { to: "/admin/notifications", label: "Notifications", description: "Email/SMS OTP on-off switches", icon: <NotificationsIcon />, governance: true },
 ];
 
-function ModuleCard({ mod }: { mod: AdminModule }) {
+function ModuleCard({ mod }: { mod: AdminModuleTile }) {
   return (
     <Link
       to={mod.to}
@@ -180,7 +196,20 @@ function ModuleCard({ mod }: { mod: AdminModule }) {
 }
 
 export default function AdminHome() {
-  const { user, logout } = useAuth();
+  const { user, logout, isStoreAdmin, hasModuleView } = useAuth();
+
+  // isStoreAdmin covers both ADMIN and SUPER_ADMIN (the software owner inherits every ADMIN
+  // privilege - see SecurityConfig's RoleHierarchy bean) - either sees every tile: governance ones
+  // unconditionally, operational ones because it's seeded with full access at creation (see
+  // ModulePermissionService.grantAllModules). An EMPLOYEE sees only the operational modules it's
+  // been individually granted view access to, and no governance tiles at all.
+  const visibleModules = useMemo(() => {
+    return MODULES.filter((mod) => {
+      if (mod.governance) return isStoreAdmin;
+      if (isStoreAdmin) return true;
+      return mod.module ? hasModuleView(mod.module) : false;
+    });
+  }, [isStoreAdmin, hasModuleView]);
   const { config } = useSiteConfig();
   const navigate = useNavigate();
 
@@ -235,9 +264,12 @@ export default function AdminHome() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-[var(--admin-nav-text)] sm:inline">
+            <Link
+              to="/admin/profile"
+              className="hidden text-sm text-[var(--admin-nav-text)] hover:underline sm:inline"
+            >
               {user?.fullName ?? user?.email}
-            </span>
+            </Link>
             <button
               onClick={handleLogout}
               className="rounded-full border border-[var(--admin-nav-border)] px-4 py-1.5 text-sm font-medium text-[var(--admin-nav-text)] transition-colors hover:bg-[var(--admin-nav-hover-bg)]"
@@ -264,7 +296,7 @@ export default function AdminHome() {
             Manage your store
           </h2>
           <div className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3">
-            {MODULES.map((mod) => (
+            {visibleModules.map((mod) => (
               <ModuleCard key={mod.to} mod={mod} />
             ))}
           </div>
