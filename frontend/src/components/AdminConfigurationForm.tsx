@@ -57,6 +57,12 @@ const MOTIF_INFO: Record<string, { label: string; description: string; badgeClas
       'A refined editorial-inspired fashion theme combining warm neutrals, sophisticated typography, subtle contrast, and elegant interactions to create a premium boutique shopping experience.',
     badgeClass: 'bg-amber-50 text-amber-700',
   },
+  PULSE: {
+    label: 'Pulse',
+    description:
+      'A sharp, high-energy dark theme: a bold geometric display face, an animated electric backdrop in place of quiet ornamentation, and glow-on-interaction buttons and product cards.',
+    badgeClass: 'bg-violet-100 text-violet-700',
+  },
 }
 
 /** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */

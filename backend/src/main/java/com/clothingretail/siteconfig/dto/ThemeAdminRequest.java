@@ -12,4 +12,4 @@ public record ThemeAdminRequest(
         @NotBlank(message = "must not be blank") @Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "must be a hex color, e.g. #111827") String textColor,
         Integer displayOrder,
         Boolean richAmbient,
-        @Pattern(regexp = "^(SIGNATURE|STUDIO|ELAN)$", message = "must be SIGNATURE, STUDIO, or ELAN") String motif) {}
+        @Pattern(regexp = "^(SIGNATURE|STUDIO|ELAN|PULSE)$", message = "must be SIGNATURE, STUDIO, ELAN, or PULSE") String motif) {}

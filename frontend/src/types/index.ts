@@ -177,7 +177,7 @@ export interface Theme {
   displayOrder?: number;
   /** False reproduces the pre-redesign look: no page-wide ambient wash, just BrandHero's own local hero glow. */
   richAmbient: boolean;
-  /** "SIGNATURE" (ornate/serif/shimmer, the default) or "STUDIO" (calm/geometric/flat) — see index.css's [data-motif] rules. */
+  /** "SIGNATURE" (ornate/serif/shimmer, the default), "STUDIO"/"ELAN" (calm/geometric or editorial), or "PULSE" (sharp, animated, dark) — see index.css's [data-motif] rules. */
   motif: string;
 }
 

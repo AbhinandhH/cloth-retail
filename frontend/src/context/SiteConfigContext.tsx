@@ -28,13 +28,13 @@ function applyThemeVariables(theme: ThemeColors | null | undefined) {
   // gold tint entirely (see AmbientBackground.tsx / Home.tsx, which also
   // skip rendering the full wash component for this theme).
   document.documentElement.dataset.ambient = theme.richAmbient === false ? 'minimal' : 'rich'
-  // Drives index.css's [data-motif="studio"/"elan"] rules (display typeface, shimmer/glow
+  // Drives index.css's [data-motif="studio"/"elan"/"pulse"] rules (display typeface, shimmer/glow
   // ornamentation, hero CTA shape) — a second, independent axis from richAmbient above: a
   // theme picks its background wash AND its visual language separately. Whitelisted rather
   // than a bare .toLowerCase() passthrough so an unrecognized future motif value falls back
   // to "signature" (matching every CSS rule's own default, unstyled state) instead of quietly
   // minting a new data-motif value with no matching CSS.
-  const KNOWN_MOTIFS = new Set(['studio', 'elan'])
+  const KNOWN_MOTIFS = new Set(['studio', 'elan', 'pulse'])
   const motif = theme.motif?.toLowerCase()
   document.documentElement.dataset.motif = motif && KNOWN_MOTIFS.has(motif) ? motif : 'signature'
 }
