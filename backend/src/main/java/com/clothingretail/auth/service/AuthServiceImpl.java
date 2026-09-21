@@ -28,9 +28,12 @@ import com.clothingretail.customer.CustomerProfile;
 import com.clothingretail.customer.repository.CustomerProfileRepository;
 import com.clothingretail.notification.NotificationSettings;
 import com.clothingretail.notification.repository.NotificationSettingsRepository;
+import com.clothingretail.siteconfig.SiteConfiguration;
+import com.clothingretail.siteconfig.repository.SiteConfigurationRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
@@ -56,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final OtpService otpService;
     private final NotificationSettingsRepository notificationSettingsRepository;
+    private final SiteConfigurationRepository siteConfigurationRepository;
     private final ModulePermissionService modulePermissionService;
 
     public AuthServiceImpl(
@@ -68,6 +72,7 @@ public class AuthServiceImpl implements AuthService {
             JwtService jwtService,
             OtpService otpService,
             NotificationSettingsRepository notificationSettingsRepository,
+            SiteConfigurationRepository siteConfigurationRepository,
             ModulePermissionService modulePermissionService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -78,6 +83,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtService = jwtService;
         this.otpService = otpService;
         this.notificationSettingsRepository = notificationSettingsRepository;
+        this.siteConfigurationRepository = siteConfigurationRepository;
         this.modulePermissionService = modulePermissionService;
     }
 
@@ -93,6 +99,21 @@ public class AuthServiceImpl implements AuthService {
                     return new IllegalStateException(
                             "Singleton notification_settings row (id=1) is missing - this is a startup-time misconfiguration, "
                                     + "check that V16__notification_settings.sql ran");
+                });
+    }
+
+    /**
+     * Read fresh on every refresh() call (not cached) so an admin changing the idle-timeout
+     * minutes in Site Configuration takes effect on the very next refresh attempt - no restart
+     * or waiting for an in-flight session's token to naturally expire.
+     */
+    private SiteConfiguration loadSiteConfiguration() {
+        return siteConfigurationRepository.findById(SiteConfiguration.SINGLETON_ID)
+                .orElseThrow(() -> {
+                    log.error("[1947] Singleton site_configuration row (id={}) is missing", SiteConfiguration.SINGLETON_ID);
+                    return new IllegalStateException(
+                            "Singleton site_configuration row (id=1) is missing - this is a startup-time misconfiguration, "
+                                    + "check that V4__init_site_configuration.sql ran");
                 });
     }
 
@@ -350,6 +371,15 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Refresh token is expired or revoked");
         }
 
+        int idleTimeoutMinutes = loadSiteConfiguration().getIdleTimeoutMinutes();
+        if (stored.getLastUsedAt().plus(idleTimeoutMinutes, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            stored.setRevoked(true);
+            refreshTokenRepository.save(stored);
+            log.error("[1948] Refresh failed, session idle-timed-out tokenId={} userId={} idleTimeoutMinutes={} lastUsedAt={}",
+                    stored.getId(), stored.getUser().getId(), idleTimeoutMinutes, stored.getLastUsedAt());
+            throw new BadCredentialsException("Session expired due to inactivity");
+        }
+
         stored.setRevoked(true);
         refreshTokenRepository.save(stored);
         log.info("[1017] Old refresh token revoked tokenId={} userId={}", stored.getId(), stored.getUser().getId());
@@ -495,6 +525,7 @@ public class AuthServiceImpl implements AuthService {
         entity.setTokenHash(jwtService.hashToken(rawRefreshToken));
         entity.setExpiresAt(Instant.now().plusSeconds(jwtService.getRefreshTokenTtlSeconds()));
         entity.setRevoked(false);
+        entity.setLastUsedAt(Instant.now());
         refreshTokenRepository.save(entity);
         log.info("[1031] Refresh token persisted userId={} expiresAt={}", user.getId(), entity.getExpiresAt());
     }

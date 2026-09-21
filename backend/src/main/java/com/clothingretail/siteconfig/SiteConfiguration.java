@@ -94,4 +94,15 @@ public class SiteConfiguration extends BaseEntity {
      */
     @Column(name = "reserve_stock_only_at_payment", nullable = false)
     private Boolean reserveStockOnlyAtPayment = false;
+
+    /**
+     * Minutes of inactivity before a session (customer, admin, or employee) is automatically
+     * logged out. Enforced server-side in {@code AuthServiceImpl#refresh} against
+     * {@code RefreshToken#lastUsedAt}, and read fresh on every refresh call - an admin change
+     * here takes effect immediately, no redeploy needed. Also exposed on the public
+     * {@code GET /api/configuration} response (not sensitive) so the frontend's idle timer knows
+     * the configured value even for a logged-out visitor.
+     */
+    @Column(name = "idle_timeout_minutes", nullable = false)
+    private Integer idleTimeoutMinutes = 30;
 }

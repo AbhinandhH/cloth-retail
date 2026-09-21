@@ -40,6 +40,16 @@ public class RefreshToken extends BaseEntity {
     @Column(nullable = false)
     private boolean revoked = false;
 
+    /**
+     * When this token was last used to mint a new access/refresh pair (set to creation time when
+     * first issued, updated on every rotation - see AuthServiceImpl#persistRefreshToken). Drives
+     * the admin-configurable idle-timeout check in AuthServiceImpl#refresh: a refresh presented
+     * after SiteConfiguration#idleTimeoutMinutes have elapsed since this timestamp is rejected
+     * instead of rotated, even though the token itself hasn't hit its own expiresAt yet.
+     */
+    @Column(name = "last_used_at", nullable = false)
+    private Instant lastUsedAt;
+
     public boolean isActive() {
         return !revoked && expiresAt.isAfter(Instant.now());
     }

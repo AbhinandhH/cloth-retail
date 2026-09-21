@@ -19,4 +19,5 @@ public record SiteConfigurationAdminResponse(
         String loginPromoText,
         String registrationImageUrl,
         Integer orderReservationTtlMinutes,
-        Boolean reserveStockOnlyAtPayment) {}
+        Boolean reserveStockOnlyAtPayment,
+        Integer idleTimeoutMinutes) {}

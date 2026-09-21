@@ -20,4 +20,5 @@ public record PublicConfigurationResponse(
         String loginBackgroundImageUrl,
         String loginPromoImageUrl,
         String loginPromoText,
-        String registrationImageUrl) {}
+        String registrationImageUrl,
+        Integer idleTimeoutMinutes) {}

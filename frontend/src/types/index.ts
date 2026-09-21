@@ -222,6 +222,14 @@ export interface SiteConfiguration {
    * admin-only-optionality reasoning as orderReservationTtlMinutes above.
    */
   reserveStockOnlyAtPayment?: boolean | null;
+  /**
+   * Minutes of inactivity before a session (customer, admin, or employee) is automatically
+   * logged out - admin-configurable (see AdminConfigurationForm), enforced server-side on
+   * every /auth/refresh call and mirrored by IdleSessionWatcher client-side. Present on both
+   * the public and admin shapes (unlike the two fields above), since the frontend's idle timer
+   * needs it even for a logged-out visitor.
+   */
+  idleTimeoutMinutes: number;
 }
 
 /**

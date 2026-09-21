@@ -20,7 +20,13 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
+  // Pre-filled from IdleSessionWatcher's redirect state when this page was reached via an
+  // idle-triggered auto-logout, rather than the user navigating here directly.
+  const [formError, setFormError] = useState<string | null>(
+    (location.state as { idleLogout?: boolean } | null)?.idleLogout
+      ? "You've been logged out due to inactivity. Please log in again."
+      : null,
+  )
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/'

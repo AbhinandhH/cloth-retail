@@ -34,6 +34,9 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
     // Backend requires a non-null value on save - default to its own "off" fallback, same
     // reasoning as orderReservationTtlMinutes above.
     reserveStockOnlyAtPayment: config?.reserveStockOnlyAtPayment ?? false,
+    // Always present on both the public and admin shapes (see SiteConfiguration type), but a
+    // fallback still guards a first-ever save before any config has loaded.
+    idleTimeoutMinutes: config?.idleTimeoutMinutes ?? 30,
   }
 }
 
@@ -315,6 +318,27 @@ export default function AdminConfigurationForm() {
               </span>
             </span>
           </label>
+        </section>
+
+        {/* Session timeout */}
+        <section className="mt-10 border-t border-zinc-200 pt-8">
+          <h2 className="text-lg font-semibold text-zinc-900">Session timeout</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Everyone signed in — customers, admins, and staff — is automatically logged out after
+            this many minutes of inactivity. Applies immediately, no restart needed.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <TextField
+              label="Idle timeout (minutes)"
+              type="number"
+              value={String(form.idleTimeoutMinutes)}
+              // Unlike orderReservationTtlMinutes, this field is never null in the type (see
+              // SiteConfiguration.idleTimeoutMinutes) - an emptied input falls back to the
+              // default rather than an invalid null value.
+              onChange={(v) => updateField('idleTimeoutMinutes', v === null || v.trim() === '' ? 30 : Number(v))}
+            />
+          </div>
         </section>
 
         {/* Login/registration visuals */}

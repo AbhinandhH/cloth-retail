@@ -46,11 +46,13 @@ import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import RequireAuth from './components/RequireAuth'
 import ScrollToTop from './components/ScrollToTop'
+import IdleSessionWatcher from './components/IdleSessionWatcher'
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
+      <IdleSessionWatcher />
       <Routes>
       {/* Admin area — conceptually separate from the customer app. */}
       <Route path="/admin/login" element={<AdminLogin />} />

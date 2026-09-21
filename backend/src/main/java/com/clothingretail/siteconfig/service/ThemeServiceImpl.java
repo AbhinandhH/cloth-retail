@@ -156,7 +156,8 @@ public class ThemeServiceImpl implements ThemeService {
                 config.getLoginBackgroundImageUrl(),
                 config.getLoginPromoImageUrl(),
                 config.getLoginPromoText(),
-                config.getRegistrationImageUrl());
+                config.getRegistrationImageUrl(),
+                config.getIdleTimeoutMinutes());
     }
 
     private ThemeResponse toThemeResponse(Theme theme) {
