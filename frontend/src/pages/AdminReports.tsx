@@ -13,6 +13,7 @@ import {
 } from '../api/reports'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import { downloadBlob } from '../lib/downloadBlob'
 import ProductCombobox from '../components/ProductCombobox'
 import CustomerCombobox from '../components/CustomerCombobox'
 import type {
@@ -82,17 +83,6 @@ function formatDate(value: string) {
   const d = new Date(value.length <= 10 ? `${value}T00:00:00` : value)
   if (Number.isNaN(d.getTime())) return value
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
 }
 
 /** Icon-only "back to admin home" affordance, matching the other admin screens' back links. */

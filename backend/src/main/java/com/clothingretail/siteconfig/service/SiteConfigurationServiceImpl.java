@@ -63,6 +63,8 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
         config.setOrderReservationTtlMinutes(request.orderReservationTtlMinutes());
         config.setReserveStockOnlyAtPayment(request.reserveStockOnlyAtPayment());
         config.setIdleTimeoutMinutes(request.idleTimeoutMinutes());
+        config.setGstin(request.gstin());
+        config.setRegisteredAddress(request.registeredAddress());
         config = repository.save(config);
         log.info("[1665] Site configuration updated: id={}, businessName={}", config.getId(), config.getBusinessName());
         return toAdminResponse(config);
@@ -118,7 +120,9 @@ public class SiteConfigurationServiceImpl implements SiteConfigurationService {
                 config.getRegistrationImageUrl(),
                 config.getOrderReservationTtlMinutes(),
                 config.getReserveStockOnlyAtPayment(),
-                config.getIdleTimeoutMinutes());
+                config.getIdleTimeoutMinutes(),
+                config.getGstin(),
+                config.getRegisteredAddress());
     }
 
     private ThemeResponse toThemeResponse(Theme theme) {

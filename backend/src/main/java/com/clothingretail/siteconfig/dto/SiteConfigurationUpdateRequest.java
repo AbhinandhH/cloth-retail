@@ -25,4 +25,6 @@ public record SiteConfigurationUpdateRequest(
                 @Max(value = 1440, message = "must not exceed 1440 minutes (24 hours)") Integer orderReservationTtlMinutes,
         @NotNull(message = "must not be null") Boolean reserveStockOnlyAtPayment,
         @NotNull(message = "must not be null") @Min(value = 1, message = "must be at least 1 minutes")
-                @Max(value = 1440, message = "must not exceed 1440 minutes (24 hours)") Integer idleTimeoutMinutes) {}
+                @Max(value = 1440, message = "must not exceed 1440 minutes (24 hours)") Integer idleTimeoutMinutes,
+        String gstin,
+        String registeredAddress) {}

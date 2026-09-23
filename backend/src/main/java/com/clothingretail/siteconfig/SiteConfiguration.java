@@ -105,4 +105,12 @@ public class SiteConfiguration extends BaseEntity {
      */
     @Column(name = "idle_timeout_minutes", nullable = false)
     private Integer idleTimeoutMinutes = 30;
+
+    /** Shown on generated order invoices as the seller's GSTIN - see OrderInvoiceService. Nullable: a store may not have configured its invoice details yet. */
+    @Column(length = 20)
+    private String gstin;
+
+    /** Free-text registered business address (multi-line), shown on generated order invoices. Same single-field convention as footerText. */
+    @Column(name = "registered_address", columnDefinition = "TEXT")
+    private String registeredAddress;
 }

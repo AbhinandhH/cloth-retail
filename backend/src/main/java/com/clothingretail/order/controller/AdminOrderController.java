@@ -15,9 +15,13 @@ import com.clothingretail.order.dto.AdminShipmentRequest;
 import com.clothingretail.order.dto.AdminShipmentResponse;
 import com.clothingretail.order.service.AdminOrderQueryService;
 import com.clothingretail.order.service.AdminOrderService;
+import com.clothingretail.order.service.OrderInvoiceService;
 import com.clothingretail.payment.PaymentStatus;
 import jakarta.validation.Valid;
 import java.time.Instant;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,10 +40,15 @@ public class AdminOrderController {
 
     private final AdminOrderQueryService adminOrderQueryService;
     private final AdminOrderService adminOrderService;
+    private final OrderInvoiceService orderInvoiceService;
 
-    public AdminOrderController(AdminOrderQueryService adminOrderQueryService, AdminOrderService adminOrderService) {
+    public AdminOrderController(
+            AdminOrderQueryService adminOrderQueryService,
+            AdminOrderService adminOrderService,
+            OrderInvoiceService orderInvoiceService) {
         this.adminOrderQueryService = adminOrderQueryService;
         this.adminOrderService = adminOrderService;
+        this.orderInvoiceService = orderInvoiceService;
     }
 
     @GetMapping
@@ -66,6 +75,15 @@ public class AdminOrderController {
     @GetMapping("/{id}")
     public AdminOrderDetailResponse detail(@PathVariable Long id) {
         return adminOrderQueryService.detail(id);
+    }
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> invoice(@PathVariable Long id) {
+        byte[] pdf = orderInvoiceService.renderAdminInvoice(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"invoice-" + id + ".pdf\"")
+                .body(pdf);
     }
 
     @PostMapping("/{id}/status")

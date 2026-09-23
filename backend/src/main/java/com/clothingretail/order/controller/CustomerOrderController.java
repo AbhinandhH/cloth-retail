@@ -4,8 +4,12 @@ import com.clothingretail.common.PageResponse;
 import com.clothingretail.order.dto.CreateOrderRequest;
 import com.clothingretail.order.dto.OrderDetailResponse;
 import com.clothingretail.order.dto.OrderSummaryResponse;
+import com.clothingretail.order.service.OrderInvoiceService;
 import com.clothingretail.order.service.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerOrderController {
 
     private final OrderService orderService;
+    private final OrderInvoiceService orderInvoiceService;
 
-    public CustomerOrderController(OrderService orderService) {
+    public CustomerOrderController(OrderService orderService, OrderInvoiceService orderInvoiceService) {
         this.orderService = orderService;
+        this.orderInvoiceService = orderInvoiceService;
     }
 
     @PostMapping
@@ -43,6 +49,15 @@ public class CustomerOrderController {
     @GetMapping("/{id}")
     public OrderDetailResponse getOrder(Authentication authentication, @PathVariable Long id) {
         return orderService.getOrder(userId(authentication), id);
+    }
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> invoice(Authentication authentication, @PathVariable Long id) {
+        byte[] pdf = orderInvoiceService.renderCustomerInvoice(userId(authentication), id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"invoice-" + id + ".pdf\"")
+                .body(pdf);
     }
 
     private Long userId(Authentication authentication) {

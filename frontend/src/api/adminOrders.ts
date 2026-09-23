@@ -88,3 +88,8 @@ export interface InitiateRefundPayload {
 export function initiateAdminOrderRefund(id: number | string, payload: InitiateRefundPayload) {
   return api.post<AdminOrderRefund>(`/admin/orders/${id}/refund`, payload).then((r) => r.data)
 }
+
+/** GET /api/admin/orders/{id}/invoice — a GST invoice PDF, only available once the order's payment is confirmed. */
+export function fetchAdminOrderInvoice(id: number | string) {
+  return api.get(`/admin/orders/${id}/invoice`, { responseType: 'blob' }).then((r) => r.data as Blob)
+}

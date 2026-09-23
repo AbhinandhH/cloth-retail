@@ -50,3 +50,9 @@ export async function createOrder(payload: CreateOrderRequest) {
   const r = await api.post<OrderDetail>("/orders", payload);
   return r.data;
 }
+
+/** GET /api/orders/{id}/invoice — a GST invoice PDF for the current customer's own order, only available once payment is confirmed. */
+export async function fetchOrderInvoice(id: number | string) {
+  const r = await api.get(`/orders/${id}/invoice`, { responseType: "blob" });
+  return r.data as Blob;
+}

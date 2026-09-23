@@ -6,16 +6,29 @@ import {
   addAdminOrderNote,
   cancelAdminOrder,
   fetchAdminOrderDetail,
+  fetchAdminOrderInvoice,
   initiateAdminOrderRefund,
   saveAdminOrderShipment,
   updateAdminOrderStatus,
 } from '../api/adminOrders'
 import { getErrorMessage, toMediaUrl } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import { downloadBlob } from '../lib/downloadBlob'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TextField from '../components/TextField'
 import TaxIncludedNote from '../components/TaxIncludedNote'
 import type { AdminOrderDetail as AdminOrderDetailType, AdminOrderPaymentStatus, AdminOrderStatus } from '../types'
+
+/** Mirrors the backend's SaleOrderStatuses.SALE_STATUSES - an invoice only exists once payment is actually confirmed. */
+const INVOICE_ELIGIBLE_STATUSES: AdminOrderStatus[] = [
+  'CONFIRMED',
+  'PROCESSING',
+  'PACKED',
+  'SHIPPED',
+  'DELIVERED',
+  'RETURNED',
+  'REFUNDED',
+]
 
 // Terminal statuses — no further transitions expected. The "Cancel order"
 // action is hidden once one of these is reached; everything else about the
@@ -175,6 +188,9 @@ function AdminOrderDetailContent() {
   const [order, setOrder] = useState<AdminOrderDetailType | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  const [invoiceDownloading, setInvoiceDownloading] = useState(false)
+  const [invoiceError, setInvoiceError] = useState<string | null>(null)
 
   const load = useCallback(() => {
     if (!id) return
@@ -345,6 +361,7 @@ function AdminOrderDetailContent() {
   }
 
   const canCancel = !TERMINAL_STATUSES.includes(order.status)
+  const canDownloadInvoice = INVOICE_ELIGIBLE_STATUSES.includes(order.status)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -360,8 +377,28 @@ function AdminOrderDetailContent() {
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <OrderStatusBadge status={order.status} />
-          {order.payment && <PaymentStatusBadge status={order.payment.status} />}
+          <div className="flex items-center gap-2">
+            <OrderStatusBadge status={order.status} />
+            {order.payment && <PaymentStatusBadge status={order.payment.status} />}
+          </div>
+          {canDownloadInvoice && (
+            <button
+              type="button"
+              onClick={() => {
+                setInvoiceError(null)
+                setInvoiceDownloading(true)
+                fetchAdminOrderInvoice(order.id)
+                  .then((blob) => downloadBlob(blob, `invoice-${order.orderNumber}.pdf`))
+                  .catch((err) => setInvoiceError(getErrorMessage(err)))
+                  .finally(() => setInvoiceDownloading(false))
+              }}
+              disabled={invoiceDownloading}
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+            >
+              {invoiceDownloading ? 'Preparing…' : 'Download invoice'}
+            </button>
+          )}
+          {invoiceError && <p className="text-xs text-rose-600">{invoiceError}</p>}
         </div>
       </div>
 

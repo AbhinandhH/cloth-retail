@@ -1,16 +1,28 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fetchOrderById } from '../api/orders'
+import { fetchOrderById, fetchOrderInvoice } from '../api/orders'
 import { fetchEligibleItems } from '../api/returns'
 import { getErrorMessage } from '../api/client'
 import { formatPrice } from '../lib/formatPrice'
+import { downloadBlob } from '../lib/downloadBlob'
 import { useCart } from '../context/CartContext'
 import TaxIncludedNote from '../components/TaxIncludedNote'
 import { OrderStatusBadge } from './OrderHistoryPage'
 import BackButton from '../components/BackButton'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import type { EligibleOrderItem, OrderDetail, PaymentStatus } from '../types'
+import type { EligibleOrderItem, OrderDetail, OrderStatus, PaymentStatus } from '../types'
+
+/** Mirrors the backend's SaleOrderStatuses.SALE_STATUSES - an invoice only exists once payment is actually confirmed. */
+const INVOICE_ELIGIBLE_STATUSES: OrderStatus[] = [
+  'CONFIRMED',
+  'PROCESSING',
+  'PACKED',
+  'SHIPPED',
+  'DELIVERED',
+  'RETURNED',
+  'REFUNDED',
+]
 
 const PAYMENT_STATUS_LABEL: Record<Exclude<PaymentStatus, null>, string> = {
   PENDING: 'Payment pending',
@@ -45,6 +57,9 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [invoiceDownloading, setInvoiceDownloading] = useState(false)
+  const [invoiceError, setInvoiceError] = useState<string | null>(null)
 
   const load = useCallback(() => {
     if (!id) return
@@ -156,6 +171,24 @@ export default function OrderDetailPage() {
         <div className="flex flex-col items-end gap-1.5">
           <OrderStatusBadge status={order.status} />
           <PaymentStatusBadge status={order.paymentStatus} />
+          {INVOICE_ELIGIBLE_STATUSES.includes(order.status) && (
+            <button
+              type="button"
+              onClick={() => {
+                setInvoiceError(null)
+                setInvoiceDownloading(true)
+                fetchOrderInvoice(order.id)
+                  .then((blob) => downloadBlob(blob, `invoice-${order.orderNumber}.pdf`))
+                  .catch((err) => setInvoiceError(getErrorMessage(err)))
+                  .finally(() => setInvoiceDownloading(false))
+              }}
+              disabled={invoiceDownloading}
+              className="text-xs font-medium text-zinc-600 underline hover:text-zinc-900 disabled:opacity-60"
+            >
+              {invoiceDownloading ? 'Preparing…' : 'Download invoice'}
+            </button>
+          )}
+          {invoiceError && <p className="text-xs text-rose-600">{invoiceError}</p>}
         </div>
       </div>
 

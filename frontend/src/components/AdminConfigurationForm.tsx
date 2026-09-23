@@ -37,6 +37,8 @@ function toFormState(config: AdminSiteConfiguration | SiteConfiguration | null):
     // Always present on both the public and admin shapes (see SiteConfiguration type), but a
     // fallback still guards a first-ever save before any config has loaded.
     idleTimeoutMinutes: config?.idleTimeoutMinutes ?? 30,
+    gstin: config?.gstin ?? null,
+    registeredAddress: config?.registeredAddress ?? null,
   }
 }
 
@@ -343,6 +345,27 @@ export default function AdminConfigurationForm() {
               // SiteConfiguration.idleTimeoutMinutes) - an emptied input falls back to the
               // default rather than an invalid null value.
               onChange={(v) => updateField('idleTimeoutMinutes', v === null || v.trim() === '' ? 30 : Number(v))}
+            />
+          </div>
+        </section>
+
+        {/* Invoice details */}
+        <section className="mt-10 border-t border-zinc-200 pt-8">
+          <h2 className="text-lg font-semibold text-zinc-900">Invoice details</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Shown on the GST invoice PDF generated for a completed order. Leave blank to omit them
+            from the invoice.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <TextField label="GSTIN" value={form.gstin ?? null} onChange={(v) => updateField('gstin', v)} />
+          </div>
+          <div className="mt-4">
+            <TextField
+              label="Registered address"
+              value={form.registeredAddress ?? null}
+              onChange={(v) => updateField('registeredAddress', v)}
+              textarea
             />
           </div>
         </section>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Invoice ' + ${model.orderNumber}">Invoice</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 16mm 18mm 16mm;
+        }
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            color: #262019;
+            font-size: 10.5pt;
+        }
+        .letterhead {
+            border-bottom: 2px solid #5c0011;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        .business-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #5c0011;
+            margin: 0 0 2px 0;
+        }
+        .invoice-title {
+            font-size: 13pt;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+            color: #262019;
+        }
+        .meta-line {
+            font-size: 9pt;
+            color: #6b6258;
+            margin: 0;
+        }
+        .parties {
+            display: table;
+            width: 100%;
+            margin: 14px 0;
+        }
+        .party {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+        }
+        .party-label {
+            font-size: 8.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #a4664b;
+            margin: 0 0 4px 0;
+        }
+        .party p {
+            margin: 0 0 2px 0;
+        }
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        table.data th {
+            background-color: #5c0011;
+            color: #ffffff;
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 9.5pt;
+            border: 1px solid #5c0011;
+        }
+        table.data td {
+            padding: 5px 8px;
+            border: 1px solid #ddd4c8;
+            font-size: 9.5pt;
+        }
+        table.data td.num {
+            text-align: right;
+        }
+        table.totals {
+            width: 100%;
+            max-width: 280px;
+            margin-left: auto;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        table.totals td {
+            padding: 4px 8px;
+            font-size: 9.5pt;
+        }
+        table.totals td.label {
+            color: #6b6258;
+        }
+        table.totals td.value {
+            text-align: right;
+        }
+        table.totals tr.grand-total td {
+            font-weight: bold;
+            font-size: 11pt;
+            border-top: 2px solid #5c0011;
+            padding-top: 8px;
+        }
+        .footer-note {
+            margin-top: 28px;
+            font-size: 8pt;
+            color: #9a9086;
+            border-top: 1px solid #ddd4c8;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="letterhead">
+        <p class="business-name" th:text="${model.businessName}">Business Name</p>
+        <p class="invoice-title">Tax Invoice</p>
+        <p class="meta-line" th:if="${model.gstin != null and !model.gstin.isEmpty()}" th:text="'GSTIN: ' + ${model.gstin}">GSTIN</p>
+        <p class="meta-line" th:if="${model.registeredAddress != null and !model.registeredAddress.isEmpty()}" th:text="${model.registeredAddress}">Registered address</p>
+        <p class="meta-line" th:text="'Generated ' + ${model.generatedAt}">Generated</p>
+    </div>
+
+    <div class="parties">
+        <div class="party">
+            <p class="party-label">Bill to</p>
+            <p th:text="${model.buyerName}">Buyer name</p>
+            <p th:text="${model.buyerEmail}">Buyer email</p>
+            <p th:if="${model.buyerPhone != null}" th:text="${model.buyerPhone}">Buyer phone</p>
+        </div>
+        <div class="party">
+            <p class="party-label">Ship to</p>
+            <p th:text="${model.shippingAddressLine1}">Address line 1</p>
+            <p th:if="${model.shippingAddressLine2 != null and !model.shippingAddressLine2.isEmpty()}" th:text="${model.shippingAddressLine2}">Address line 2</p>
+            <p th:text="${model.shippingCityStatePostal}">City, State Postal</p>
+            <p th:text="${model.shippingCountry}">Country</p>
+        </div>
+    </div>
+
+    <p class="meta-line">
+        <strong>Invoice / Order No.</strong> <span th:text="${model.orderNumber}">ORD-1</span>
+        &nbsp;&nbsp;
+        <strong>Date</strong> <span th:text="${model.orderDate}">1 Jan 2026</span>
+    </p>
+
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Color / Size</th>
+                <th class="num">Qty</th>
+                <th class="num">Unit price</th>
+                <th class="num">Line total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${model.items}">
+                <td th:text="${item.productName}">Product</td>
+                <td th:text="${item.sku}">SKU</td>
+                <td th:text="${item.colorSize}">Color / Size</td>
+                <td class="num" th:text="${item.quantity}">1</td>
+                <td class="num" th:text="${item.unitPrice}">Rs. 0</td>
+                <td class="num" th:text="${item.lineTotal}">Rs. 0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr>
+            <td class="label">Subtotal</td>
+            <td class="value" th:text="${model.subtotal}">Rs. 0</td>
+        </tr>
+        <tr th:if="${model.discountTotal != null}">
+            <td class="label">Discount</td>
+            <td class="value" th:text="'-' + ${model.discountTotal}">Rs. 0</td>
+        </tr>
+        <tr>
+            <td class="label" th:text="${model.cgstLabel}">CGST</td>
+            <td class="value" th:text="${model.cgstAmount}">Rs. 0</td>
+        </tr>
+        <tr>
+            <td class="label" th:text="${model.sgstLabel}">SGST</td>
+            <td class="value" th:text="${model.sgstAmount}">Rs. 0</td>
+        </tr>
+        <tr>
+            <td class="label">Shipping</td>
+            <td class="value" th:text="${model.shippingCharge}">Rs. 0</td>
+        </tr>
+        <tr class="grand-total">
+            <td>Total</td>
+            <td class="value" th:text="${model.totalAmount}">Rs. 0</td>
+        </tr>
+    </table>
+
+    <p class="footer-note">CGST/SGST shown are already included in the item prices above (tax-inclusive pricing), not added on top of the total. Generated automatically from live store data.</p>
+</body>
+</html>
