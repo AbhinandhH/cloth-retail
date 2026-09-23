@@ -13,6 +13,7 @@ const PRODUCT_MASTERS: MasterLink[] = [
   { to: '/admin/colors', name: 'Colors', description: 'Color swatches available for variants.' },
   { to: '/admin/sizes', name: 'Sizes', description: 'The full set of sizes available system-wide.' },
   { to: '/admin/size-groups', name: 'Size Groups', description: 'Scope which sizes apply to which categories.' },
+  { to: '/admin/size-charts', name: 'Size Charts', description: 'Reusable measurement tables assignable to products.' },
   { to: '/admin/brands', name: 'Brands', description: 'Brand options for products.' },
   { to: '/admin/materials', name: 'Materials', description: 'Fabric/material options for products.' },
   { to: '/admin/vendors', name: 'Vendors', description: 'Suppliers used for purchasing and sourcing.' },

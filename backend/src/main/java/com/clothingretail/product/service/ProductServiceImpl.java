@@ -16,6 +16,10 @@ import com.clothingretail.masterdata.Material;
 import com.clothingretail.masterdata.repository.MaterialRepository;
 import com.clothingretail.masterdata.Size;
 import com.clothingretail.masterdata.repository.SizeRepository;
+import com.clothingretail.masterdata.SizeChart;
+import com.clothingretail.masterdata.SizeChartRow;
+import com.clothingretail.masterdata.dto.SizeChartRowResponse;
+import com.clothingretail.masterdata.repository.SizeChartRepository;
 import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.repository.SubCategoryRepository;
 import com.clothingretail.masterdata.Vendor;
@@ -32,6 +36,7 @@ import com.clothingretail.product.dto.ProductAdminRequest;
 import com.clothingretail.product.dto.ProductAdminResponse;
 import com.clothingretail.product.dto.ProductAdminSummaryResponse;
 import com.clothingretail.product.dto.ProductDetailResponse;
+import com.clothingretail.product.dto.ProductSizeChartResponse;
 import com.clothingretail.product.dto.ProductSummaryResponse;
 import com.clothingretail.product.dto.VariantAdminRequest;
 import com.clothingretail.product.dto.VariantAdminResponse;
@@ -69,6 +74,7 @@ public class ProductServiceImpl implements ProductService {
     private final MaterialRepository materialRepository;
     private final VendorRepository vendorRepository;
     private final SizeRepository sizeRepository;
+    private final SizeChartRepository sizeChartRepository;
     private final ColorRepository colorRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final PurchaseItemRepository purchaseItemRepository;
@@ -84,6 +90,7 @@ public class ProductServiceImpl implements ProductService {
             MaterialRepository materialRepository,
             VendorRepository vendorRepository,
             SizeRepository sizeRepository,
+            SizeChartRepository sizeChartRepository,
             ColorRepository colorRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
             PurchaseItemRepository purchaseItemRepository,
@@ -97,6 +104,7 @@ public class ProductServiceImpl implements ProductService {
         this.materialRepository = materialRepository;
         this.vendorRepository = vendorRepository;
         this.sizeRepository = sizeRepository;
+        this.sizeChartRepository = sizeChartRepository;
         this.colorRepository = colorRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
         this.purchaseItemRepository = purchaseItemRepository;
@@ -272,6 +280,14 @@ public class ProductServiceImpl implements ProductService {
                     log.error("[1937] Vendor not found vendorId={}", request.vendorId());
                     return new NotFoundException("Vendor not found: " + request.vendorId());
                 });
+        SizeChart sizeChart = null;
+        if (request.sizeChartId() != null) {
+            sizeChart = sizeChartRepository.findById(request.sizeChartId())
+                    .orElseThrow(() -> {
+                        log.error("[2081] Size chart not found sizeChartId={}", request.sizeChartId());
+                        return new NotFoundException("Size chart not found: " + request.sizeChartId());
+                    });
+        }
         SubCategory subCategory = null;
         if (request.subCategoryId() != null) {
             subCategory = subCategoryRepository.findById(request.subCategoryId())
@@ -286,6 +302,7 @@ public class ProductServiceImpl implements ProductService {
         product.setBrand(brand);
         product.setMaterial(material);
         product.setVendor(vendor);
+        product.setSizeChart(sizeChart);
         product.setName(request.name());
         product.setSlug(request.slug());
         product.setDescription(request.description());
@@ -505,7 +522,19 @@ public class ProductServiceImpl implements ProductService {
                 product.getSubCategory() != null ? product.getSubCategory().getName() : null,
                 product.getBrand() != null ? product.getBrand().getName() : null,
                 product.getMaterial().getName(),
+                toProductSizeChartResponse(product.getSizeChart()),
                 variants);
+    }
+
+    private ProductSizeChartResponse toProductSizeChartResponse(SizeChart sizeChart) {
+        if (sizeChart == null) {
+            return null;
+        }
+        List<SizeChartRowResponse> rows = sizeChart.getRows().stream()
+                .sorted(Comparator.comparing(SizeChartRow::getDisplayOrder))
+                .map(r -> new SizeChartRowResponse(r.getId(), r.getSizeLabel(), List.copyOf(r.getValues()), r.getDisplayOrder()))
+                .toList();
+        return new ProductSizeChartResponse(sizeChart.getId(), sizeChart.getName(), List.copyOf(sizeChart.getColumns()), rows);
     }
 
     private VariantResponse toVariantResponse(ProductVariant v) {
@@ -539,6 +568,8 @@ public class ProductServiceImpl implements ProductService {
                 product.getMaterial().getName(),
                 product.getVendor() != null ? product.getVendor().getId() : null,
                 product.getVendor() != null ? product.getVendor().getName() : null,
+                product.getSizeChart() != null ? product.getSizeChart().getId() : null,
+                product.getSizeChart() != null ? product.getSizeChart().getName() : null,
                 product.getName(),
                 product.getSlug(),
                 product.getDescription(),

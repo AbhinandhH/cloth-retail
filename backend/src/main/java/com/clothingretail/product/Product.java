@@ -4,6 +4,7 @@ import com.clothingretail.common.BaseEntity;
 import com.clothingretail.masterdata.Brand;
 import com.clothingretail.masterdata.Category;
 import com.clothingretail.masterdata.Material;
+import com.clothingretail.masterdata.SizeChart;
 import com.clothingretail.masterdata.SubCategory;
 import com.clothingretail.masterdata.Vendor;
 import jakarta.persistence.CascadeType;
@@ -57,6 +58,11 @@ public class Product extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
+
+    /** Optional - a product may have no measurement chart assigned. Same shape as {@link #brand}. */
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "size_chart_id", nullable = true)
+    private SizeChart sizeChart;
 
     @Column(nullable = false, length = 200)
     private String name;

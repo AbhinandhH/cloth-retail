@@ -17,6 +17,8 @@ public record ProductAdminRequest(
         // Nullable at the DB/entity level (see Product.vendor's own doc comment) but required
         // here - every new product must specify a vendor.
         @NotNull(message = "must not be null") Long vendorId,
+        // Size chart is optional (see Product.sizeChart).
+        Long sizeChartId,
         @NotBlank(message = "must not be blank") String name,
         @NotBlank(message = "must not be blank") String slug,
         String description,

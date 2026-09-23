@@ -14,6 +14,7 @@ import type {
   AdminColorImages,
   AdminProductDetail,
   AdminProductVariant,
+  AdminSizeChart,
   AdminVendor,
   Brand,
   Material,
@@ -198,6 +199,7 @@ export default function AdminProductForm() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [vendors, setVendors] = useState<AdminVendor[]>([]);
+  const [sizeCharts, setSizeCharts] = useState<AdminSizeChart[]>([]);
   // Category-scoped sizes (GET /categories/{id}/available-sizes) — refetched
   // whenever the selected category changes, see the effect below.
   const [sizes, setSizes] = useState<Size[]>([]);
@@ -211,6 +213,7 @@ export default function AdminProductForm() {
   const [brandId, setBrandId] = useState("");
   const [materialId, setMaterialId] = useState("");
   const [vendorId, setVendorId] = useState("");
+  const [sizeChartId, setSizeChartId] = useState("");
   const [status, setStatus] = useState<ProductStatus>("DRAFT");
   const [baseSku, setBaseSku] = useState("");
   const [baseSellingPrice, setBaseSellingPrice] = useState("");
@@ -246,6 +249,10 @@ export default function AdminProductForm() {
       .fetchVendors()
       .then(setVendors)
       .catch(() => setVendors([]));
+    adminProductsApi
+      .fetchSizeCharts()
+      .then(setSizeCharts)
+      .catch(() => setSizeCharts([]));
   }, []);
 
   // Sub-categories depend on the chosen category.
@@ -305,6 +312,7 @@ export default function AdminProductForm() {
     setBrandId(product.brandId != null ? String(product.brandId) : "");
     setMaterialId(String(product.materialId));
     setVendorId(product.vendorId != null ? String(product.vendorId) : "");
+    setSizeChartId(product.sizeChartId != null ? String(product.sizeChartId) : "");
     setStatus(product.status);
     setBaseSku(product.baseSku ?? "");
     setBaseSellingPrice(
@@ -421,6 +429,7 @@ export default function AdminProductForm() {
     brandId: brandId ? Number(brandId) : null,
     materialId: Number(materialId),
     vendorId: Number(vendorId),
+    sizeChartId: sizeChartId ? Number(sizeChartId) : null,
     name,
     slug: slugify(name),
     description,
@@ -644,6 +653,17 @@ export default function AdminProductForm() {
                 }}
                 onVendorCreated={(v) => setVendors((prev) => [...prev, v])}
                 error={fieldErrors.vendorId}
+              />
+              <SelectField
+                label="Size chart"
+                value={sizeChartId}
+                onChange={setSizeChartId}
+                placeholder="— None —"
+                options={sizeCharts.map((c) => ({
+                  value: String(c.id),
+                  label: c.name,
+                }))}
+                error={fieldErrors.sizeChartId}
               />
             </div>
 

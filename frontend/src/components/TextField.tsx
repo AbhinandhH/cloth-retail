@@ -7,12 +7,14 @@ export default function TextField({
   onChange,
   type = 'text',
   textarea = false,
+  error,
 }: {
   label: string
   value: string | null
   onChange: (value: string | null) => void
   type?: string
   textarea?: boolean
+  error?: string
 }) {
   const id = useId()
   const commonProps = {
@@ -33,6 +35,7 @@ export default function TextField({
       ) : (
         <input type={type} {...commonProps} />
       )}
+      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   )
 }

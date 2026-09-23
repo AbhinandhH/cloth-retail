@@ -6,11 +6,13 @@ import type {
   AdminDamageReason,
   AdminMaterial,
   AdminSize,
+  AdminSizeChart,
   AdminSizeGroup,
   AdminSubCategory,
   AdminVendor,
   DamageReasonOption,
   Size,
+  SizeChartRequest,
   SizeGroupRequest,
 } from '../types'
 
@@ -95,6 +97,12 @@ export const fetchAdminSizeGroups = sizeGroupsCrud.list
 export const createSizeGroup = sizeGroupsCrud.create
 export const updateSizeGroup = sizeGroupsCrud.update
 export const deleteSizeGroup = sizeGroupsCrud.remove
+
+const sizeChartsCrud = masterCrud<AdminSizeChart, SizeChartRequest>('/admin/size-charts')
+export const fetchAdminSizeCharts = sizeChartsCrud.list
+export const createSizeChart = sizeChartsCrud.create
+export const updateSizeChart = sizeChartsCrud.update
+export const deleteSizeChart = sizeChartsCrud.remove
 
 /** Public, no auth — sizes scoped to a category's size group (falls back to a full list backend-side). */
 export function fetchAvailableSizesForCategory(categoryId: number | string) {

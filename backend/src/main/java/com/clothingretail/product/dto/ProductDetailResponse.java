@@ -11,4 +11,5 @@ public record ProductDetailResponse(
         String subCategoryName,
         String brand,
         String material,
+        ProductSizeChartResponse sizeChart,
         List<VariantResponse> variants) {}

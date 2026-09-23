@@ -13,10 +13,10 @@ import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonImage, SkeletonText } from '../components/Skeleton'
 import type { ProductDetail as ProductDetailType, ProductListItem, ProductVariant } from '../types'
 
-// Static, generic size-conversion reference — explicitly NOT per-product or
-// per-category data (no backend field exists for that, and none should be
-// added). Approximate inches, general guidance only.
-const SIZE_GUIDE_ROWS = [
+// Generic fallback shown only for a product with no size chart assigned (see
+// product.sizeChart, set via the admin Size Charts master + the product
+// form's "Size chart" field) — approximate inches, general guidance only.
+const FALLBACK_SIZE_GUIDE_ROWS = [
   { size: 'S', chest: '34–36"', waist: '28–30"' },
   { size: 'M', chest: '38–40"', waist: '32–34"' },
   { size: 'L', chest: '42–44"', waist: '36–38"' },
@@ -340,7 +340,9 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Size guide — static, general reference; not per-product data */}
+          {/* Size guide — the product's own assigned chart (admin-managed under
+              Masters → Size Charts) when it has one, otherwise the same generic
+              static reference every product used to show. */}
           <details className="group mt-4 rounded-lg border border-zinc-200">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-zinc-900">
               <span>Size guide</span>
@@ -355,29 +357,63 @@ export default function ProductDetail() {
               </svg>
             </summary>
             <div className="px-4 pb-4">
-              <p className="mb-2 text-xs text-zinc-500">
-                General size guide (approximate, inches). Fit may vary by style.
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-zinc-700">
-                  <thead>
-                    <tr className="border-b border-zinc-200 text-zinc-500">
-                      <th className="py-1.5 pr-3 font-medium">Size</th>
-                      <th className="py-1.5 pr-3 font-medium">Chest</th>
-                      <th className="py-1.5 font-medium">Waist</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {SIZE_GUIDE_ROWS.map((row) => (
-                      <tr key={row.size} className="border-b border-zinc-100 last:border-0">
-                        <td className="py-1.5 pr-3 font-medium text-zinc-900">{row.size}</td>
-                        <td className="py-1.5 pr-3">{row.chest}</td>
-                        <td className="py-1.5">{row.waist}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {product.sizeChart ? (
+                <>
+                  <p className="mb-2 text-xs text-zinc-500">{product.sizeChart.name}</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs text-zinc-700">
+                      <thead>
+                        <tr className="border-b border-zinc-200 text-zinc-500">
+                          <th className="py-1.5 pr-3 font-medium">Size</th>
+                          {product.sizeChart.columns.map((col) => (
+                            <th key={col} className="py-1.5 pr-3 font-medium">
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {product.sizeChart.rows.map((row) => (
+                          <tr key={row.id} className="border-b border-zinc-100 last:border-0">
+                            <td className="py-1.5 pr-3 font-medium text-zinc-900">{row.sizeLabel}</td>
+                            {row.values.map((value, i) => (
+                              <td key={i} className="py-1.5 pr-3">
+                                {value}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2 text-xs text-zinc-500">
+                    General size guide (approximate, inches). Fit may vary by style.
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs text-zinc-700">
+                      <thead>
+                        <tr className="border-b border-zinc-200 text-zinc-500">
+                          <th className="py-1.5 pr-3 font-medium">Size</th>
+                          <th className="py-1.5 pr-3 font-medium">Chest</th>
+                          <th className="py-1.5 font-medium">Waist</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {FALLBACK_SIZE_GUIDE_ROWS.map((row) => (
+                          <tr key={row.size} className="border-b border-zinc-100 last:border-0">
+                            <td className="py-1.5 pr-3 font-medium text-zinc-900">{row.size}</td>
+                            <td className="py-1.5 pr-3">{row.chest}</td>
+                            <td className="py-1.5">{row.waist}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           </details>
 

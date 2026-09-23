@@ -24,4 +24,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     long countByBrandId(Long brandId);
 
     long countByMaterialId(Long materialId);
+
+    long countBySizeChartId(Long sizeChartId);
 }

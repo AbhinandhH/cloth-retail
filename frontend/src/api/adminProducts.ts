@@ -2,6 +2,7 @@ import { api } from './client'
 import type {
   AdminProductDetail,
   AdminProductListResponse,
+  AdminSizeChart,
   AdminVendor,
   Brand,
   Material,
@@ -60,6 +61,10 @@ export function fetchMaterials() {
 
 export function fetchVendors() {
   return api.get<AdminVendor[]>('/admin/vendors').then((r) => r.data)
+}
+
+export function fetchSizeCharts() {
+  return api.get<AdminSizeChart[]>('/admin/size-charts').then((r) => r.data)
 }
 
 /** Public endpoint (no admin-specific sub-categories list exists) — filterable by categoryId. */
