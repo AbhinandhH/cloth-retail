@@ -148,6 +148,24 @@ function StaffIcon() {
   );
 }
 
+function ActivityLogIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <circle cx="12" cy="12" r="8" strokeWidth={1.75} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l2.5 2.5" />
+    </svg>
+  );
+}
+
+function SubscriptionIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <rect x="3.5" y="5" width="17" height="14" rx="2" strokeWidth={1.75} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3.5 9.5h17M7 14h4" />
+    </svg>
+  );
+}
+
 interface AdminModuleTile {
   to: string;
   label: string;
@@ -170,8 +188,10 @@ const MODULES: AdminModuleTile[] = [
   { to: "/admin/reports", label: "Reports", description: "Sales, stock & GST reports", icon: <ReportsIcon />, module: "REPORTS" },
   { to: "/admin/masters", label: "Masters", description: "Shared reference data", icon: <MastersIcon />, module: "MASTERS" },
   { to: "/admin/staff", label: "Staff", description: "Admin & employee accounts", icon: <StaffIcon />, governance: true },
+  { to: "/admin/activity-log", label: "Activity Log", description: "Who changed what, and when", icon: <ActivityLogIcon />, governance: true },
   { to: "/admin/configuration", label: "Site configuration", description: "Branding & theme", icon: <ConfigurationIcon />, governance: true },
   { to: "/admin/notifications", label: "Notifications", description: "Email/SMS OTP on-off switches", icon: <NotificationsIcon />, governance: true },
+  { to: "/admin/subscription", label: "Subscription", description: "Billing between you and the software owner", icon: <SubscriptionIcon />, governance: true },
 ];
 
 function ModuleCard({ mod }: { mod: AdminModuleTile }) {

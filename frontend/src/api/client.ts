@@ -28,6 +28,15 @@ export function registerUnauthorizedHandler(handler: LogoutHandler | null) {
   onUnauthorized = handler
 }
 
+// Called when the server reports the site is locked out (subscription unpaid past its due
+// date). LockoutProvider registers this on mount - see SubscriptionAccessFilter on the backend.
+type LockoutHandler = () => void
+let onLockedOut: LockoutHandler | null = null
+
+export function registerLockoutHandler(handler: LockoutHandler | null) {
+  onLockedOut = handler
+}
+
 // Attach bearer token to every outgoing request.
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -87,6 +96,10 @@ api.interceptors.response.use(
       // just render logged-out state; only auth-required requests propagate
       // as an error a caller might redirect on.
       onUnauthorized?.()
+    }
+
+    if (error.response?.status === 402) {
+      onLockedOut?.()
     }
 
     return Promise.reject(error)

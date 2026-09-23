@@ -146,6 +146,7 @@ export interface ProductDetail {
   subCategoryName: string;
   brand: string;
   material: string;
+  sizeChart: ProductSizeChart | null;
   variants: ProductVariant[];
 }
 
@@ -230,6 +231,10 @@ export interface SiteConfiguration {
    * needs it even for a logged-out visitor.
    */
   idleTimeoutMinutes: number;
+  /** Shown on generated order invoices as the seller's GSTIN - admin-only, never on the public /configuration response. */
+  gstin?: string | null;
+  /** Free-text registered business address shown on generated order invoices. Same admin-only-optionality reasoning as gstin above. */
+  registeredAddress?: string | null;
 }
 
 /**
@@ -345,6 +350,8 @@ export interface AdminProductDetail {
   materialName: string;
   vendorId: number | string | null;
   vendorName: string | null;
+  sizeChartId: number | string | null;
+  sizeChartName: string | null;
   name: string;
   slug: string;
   description: string;
@@ -388,6 +395,7 @@ export interface ProductAdminRequest {
   brandId: number | string | null;
   materialId: number | string;
   vendorId: number | string;
+  sizeChartId: number | string | null;
   name: string;
   slug: string;
   description: string;
@@ -478,6 +486,18 @@ export interface InventoryDamageRow {
   reason: string;
   notes: string | null;
   reportedByName: string | null;
+  createdAt: string;
+}
+
+/** One row of the admin console's general-purpose "who changed what, when" trail — see AdminActivityLog.tsx. */
+export interface ActivityLogRow {
+  id: number | string;
+  actorId: number | string | null;
+  actorName: string | null;
+  httpMethod: string;
+  path: string;
+  module: string;
+  statusCode: number;
   createdAt: string;
 }
 
@@ -616,6 +636,48 @@ export interface SizeGroupRequest {
   categoryIds: (number | string)[];
   /** Ordered — display order of the group's sizes follows this array's order. */
   sizeIds: (number | string)[];
+}
+
+/** One size's row of measurements within a SizeChart — values[i] is this row's value for columns[i] on the parent chart. */
+export interface SizeChartRowRef {
+  id: number | string;
+  sizeLabel: string;
+  values: string[];
+  displayOrder: number;
+}
+
+export interface AdminSizeChart extends MasterAuditFields {
+  id: number | string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  active: boolean;
+  /** Ordered measurement column labels (e.g. ["Chest", "Waist", "Length"]) — every row's values must match this length/order. */
+  columns: string[];
+  rows: SizeChartRowRef[];
+}
+
+export interface SizeChartRowRequest {
+  sizeLabel: string;
+  /** Positionally aligned to the parent request's columns — must be the same length. */
+  values: string[];
+}
+
+export interface SizeChartRequest {
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  active: boolean;
+  columns: string[];
+  rows: SizeChartRowRequest[];
+}
+
+/** The public, customer-facing shape of a product's assigned size chart — see ProductDetail.sizeChart. */
+export interface ProductSizeChart {
+  id: number | string;
+  name: string;
+  columns: string[];
+  rows: SizeChartRowRef[];
 }
 
 // --- Customer orders ---------------------------------------------------
@@ -1176,4 +1238,29 @@ export interface AdminStaffRow {
   email: string;
   role: "ADMIN" | "EMPLOYEE";
   enabled: boolean;
+}
+
+// --- Subscription billing (software owner <-> store owner) ----------------------
+// /api/admin/subscription — see SubscriptionBilling.java. A due date in the past while unpaid
+// locks the entire site (SubscriptionAccessFilter) for everyone except SUPER_ADMIN.
+
+export interface SubscriptionStatusResponse {
+  monthlyAmount: number | null;
+  dueDate: string | null;
+  paid: boolean;
+  locked: boolean;
+  daysUntilDue: number | null;
+}
+
+export interface SubscriptionPayInitiationResponse {
+  gatewayOrderId: string;
+  keyId: string | null;
+  amount: number;
+}
+
+export interface SubscriptionPaymentRow {
+  id: number | string;
+  amount: number;
+  status: "PENDING" | "SUCCESS" | "FAILED";
+  createdAt: string;
 }

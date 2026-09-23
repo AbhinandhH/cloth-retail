@@ -14,6 +14,9 @@ public interface PaymentGateway {
     /** Starts a payment attempt for {@code order} and returns a reference to look it up by later. */
     PaymentInitiation initiate(Order order);
 
+    /** Starts a payment attempt for an arbitrary amount not tied to a customer Order - e.g. a subscription billing charge (see subscription.SubscriptionBillingService). */
+    PaymentInitiation initiateForAmount(BigDecimal amount, String receipt);
+
     /** Verifies that {@code signature} is a valid signature of {@code payload}, produced by this gateway. */
     boolean verifySignature(String payload, String signature);
 

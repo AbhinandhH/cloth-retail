@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminConfiguration from './pages/AdminConfiguration'
 import AdminNotificationSettings from './pages/AdminNotificationSettings'
 import AdminStaff from './pages/AdminStaff'
+import AdminActivityLog from './pages/AdminActivityLog'
 import AdminProfile from './pages/AdminProfile'
 import AdminTaxSettings from './pages/AdminTaxSettings'
 import AdminProductList from './pages/AdminProductList'
@@ -24,6 +25,7 @@ import AdminSubCategories from './pages/AdminSubCategories'
 import AdminColors from './pages/AdminColors'
 import AdminSizes from './pages/AdminSizes'
 import AdminSizeGroups from './pages/AdminSizeGroups'
+import AdminSizeCharts from './pages/AdminSizeCharts'
 import AdminBrands from './pages/AdminBrands'
 import AdminMaterials from './pages/AdminMaterials'
 import AdminVendors from './pages/AdminVendors'
@@ -44,15 +46,18 @@ import OrderDetailPage from './pages/OrderDetailPage'
 import ReturnRequestPage from './pages/ReturnRequestPage'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
+import AdminSubscriptionBilling from './pages/AdminSubscriptionBilling'
 import RequireAuth from './components/RequireAuth'
 import ScrollToTop from './components/ScrollToTop'
 import IdleSessionWatcher from './components/IdleSessionWatcher'
+import LockoutGate from './components/LockoutGate'
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
       <IdleSessionWatcher />
+      <LockoutGate>
       <Routes>
       {/* Admin area — conceptually separate from the customer app. */}
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -93,6 +98,22 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminStaff />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/activity-log"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminActivityLog />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/subscription"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminSubscriptionBilling />
           </RequireAuth>
         }
       />
@@ -205,6 +226,14 @@ export default function App() {
         element={
           <RequireAuth redirectTo="/admin/login" requireAdmin>
             <AdminSizeGroups />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/size-charts"
+        element={
+          <RequireAuth redirectTo="/admin/login" requireAdmin>
+            <AdminSizeCharts />
           </RequireAuth>
         }
       />
@@ -371,6 +400,7 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
       </Routes>
+      </LockoutGate>
     </>
   )
 }

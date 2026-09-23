@@ -85,11 +85,20 @@ public class RazorpayPaymentGateway implements PaymentGateway {
 
     @Override
     public PaymentInitiation initiate(Order order) {
-        long amountPaise = toPaise(order.getTotalAmount());
+        return createOrder(toPaise(order.getTotalAmount()), order.getOrderNumber(), "orderId=" + order.getId());
+    }
+
+    @Override
+    public PaymentInitiation initiateForAmount(BigDecimal amount, String receipt) {
+        return createOrder(toPaise(amount), receipt, "receipt=" + receipt);
+    }
+
+    /** Shared HTTP-call logic behind both {@link #initiate} and {@link #initiateForAmount} - only the amount/receipt/log-context differ. */
+    private PaymentInitiation createOrder(long amountPaise, String receipt, String logContext) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("amount", amountPaise);
         body.put("currency", "INR");
-        body.put("receipt", order.getOrderNumber());
+        body.put("receipt", receipt);
         try {
             HttpRequest request = HttpRequest.newBuilder(ORDERS_URI)
                     .timeout(HTTP_TIMEOUT)
@@ -99,14 +108,14 @@ public class RazorpayPaymentGateway implements PaymentGateway {
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() / 100 != 2) {
-                log.error("[1871] Razorpay order creation failed orderId={} status={} body={}", order.getId(), response.statusCode(), response.body());
+                log.error("[1871] Razorpay order creation failed {} status={} body={}", logContext, response.statusCode(), response.body());
                 throw new IllegalStateException("Razorpay order creation failed: " + extractError(response.body()));
             }
             String razorpayOrderId = objectMapper.readTree(response.body()).get("id").asText();
-            log.info("[1872] Razorpay order created orderId={} razorpayOrderId={} amountPaise={}", order.getId(), razorpayOrderId, amountPaise);
+            log.info("[1872] Razorpay order created {} razorpayOrderId={} amountPaise={}", logContext, razorpayOrderId, amountPaise);
             return new PaymentInitiation(razorpayOrderId);
         } catch (Exception ex) {
-            log.error("[1873] Razorpay order creation errored orderId={} error={}", order.getId(), ex.getMessage());
+            log.error("[1873] Razorpay order creation errored {} error={}", logContext, ex.getMessage());
             throw new IllegalStateException("Unable to reach Razorpay", ex);
         }
     }

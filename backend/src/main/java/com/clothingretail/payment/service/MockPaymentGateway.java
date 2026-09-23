@@ -51,6 +51,11 @@ public class MockPaymentGateway implements PaymentGateway {
     }
 
     @Override
+    public PaymentInitiation initiateForAmount(BigDecimal amount, String receipt) {
+        return new PaymentInitiation("mock_" + UUID.randomUUID());
+    }
+
+    @Override
     public RefundInitiation refund(Payment payment, BigDecimal amount) {
         // Entirely fake, same as initiate() - an immediate simulated success, no network call.
         return new RefundInitiation("mock_refund_" + UUID.randomUUID());

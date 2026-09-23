@@ -2,16 +2,14 @@ package com.clothingretail.config;
 
 import com.clothingretail.auth.service.JwtAuthenticationFilter;
 import com.clothingretail.auth.service.JwtService;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.Instant;
+import com.clothingretail.common.HttpErrorResponses;
+import com.clothingretail.subscription.repository.SubscriptionBillingRepository;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,10 +31,15 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final String allowedOrigin;
+    private final SubscriptionBillingRepository subscriptionBillingRepository;
 
-    public SecurityConfig(JwtService jwtService, @Value("${app.cors.allowed-origin}") String allowedOrigin) {
+    public SecurityConfig(
+            JwtService jwtService,
+            @Value("${app.cors.allowed-origin}") String allowedOrigin,
+            SubscriptionBillingRepository subscriptionBillingRepository) {
         this.jwtService = jwtService;
         this.allowedOrigin = allowedOrigin;
+        this.subscriptionBillingRepository = subscriptionBillingRepository;
     }
 
     @Bean
@@ -109,26 +112,13 @@ public class SecurityConfig {
                 // what keep such responses in the same ApiError JSON shape as everything else.
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
-                                writeApiError(response, 401, "Unauthorized", "Authentication is required", request.getRequestURI()))
+                                HttpErrorResponses.write(response, 401, "Unauthorized", "Authentication is required", request.getRequestURI()))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
-                                writeApiError(response, 403, "Forbidden", "You do not have permission to perform this action", request.getRequestURI())))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                                HttpErrorResponses.write(response, 403, "Forbidden", "You do not have permission to perform this action", request.getRequestURI())))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new SubscriptionAccessFilter(subscriptionBillingRepository), JwtAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    private static void writeApiError(HttpServletResponse response, int status, String error, String message, String path)
-            throws IOException {
-        response.setStatus(status);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        String json = """
-                {"timestamp":"%s","status":%d,"error":"%s","message":"%s","path":"%s"}""".formatted(
-                Instant.now(), status, error, escapeJson(message), escapeJson(path));
-        response.getWriter().write(json);
-    }
-
-    private static String escapeJson(String value) {
-        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Bean
