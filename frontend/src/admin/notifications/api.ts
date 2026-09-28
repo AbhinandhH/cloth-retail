@@ -1,5 +1,13 @@
 import { api } from '@/shared/api/client'
-import type { SmtpSettings, SmtpSettingsUpdate, SmtpTestResult } from '@/shared/types'
+import type { NotificationSettings, SmtpSettings, SmtpSettingsUpdate, SmtpTestResult } from '@/shared/types'
+
+export function fetchNotificationSettings() {
+  return api.get<NotificationSettings>('/admin/notification-settings').then((r) => r.data)
+}
+
+export function updateNotificationSettings(payload: NotificationSettings) {
+  return api.put<NotificationSettings>('/admin/notification-settings', payload).then((r) => r.data)
+}
 
 export function fetchSmtpSettings() {
   return api.get<SmtpSettings>('/admin/smtp-settings').then((r) => r.data)
