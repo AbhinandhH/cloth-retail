@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import * as cartApi from '../api/cart'
+import * as cartApi from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { useAuth } from '@/shared/context/AuthContext'
 import type { Cart } from '@/shared/types'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
+import { useCart } from './CartContext'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import BackButton from '@/customer/components/BackButton'

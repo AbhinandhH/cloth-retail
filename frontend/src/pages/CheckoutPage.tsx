@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCart } from "@/customer/cart/CartContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import * as addressesApi from "../api/addresses";
 import * as ordersApi from "../api/orders";

@@ -6,7 +6,7 @@ import App from './App.tsx'
 import { AuthProvider } from '@/shared/context/AuthContext'
 import { SiteConfigProvider } from '@/shared/context/SiteConfigContext'
 import { MasterDataProvider } from '@/shared/context/MasterDataContext'
-import { CartProvider } from './context/CartContext'
+import { CartProvider } from './customer/cart/CartContext'
 import { WishlistProvider } from './customer/wishlist/WishlistContext'
 import { LockoutProvider } from '@/shared/context/LockoutContext'
 
