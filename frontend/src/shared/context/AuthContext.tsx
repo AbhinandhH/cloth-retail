@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import * as authApi from '../api/auth'
-import { fetchMyPermissions } from '@/api/adminStaff'
+import { fetchMyPermissions } from '@/admin/staff/api'
 import { registerUnauthorizedHandler, setAccessToken } from '../api/client'
 import type { AdminModule, AuthResponse, ModulePermissionRow, OtpChannel, User, VerificationStatusResponse } from '../types'
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchMyProfile, updateMyProfile } from '../api/adminStaff'
+import { fetchMyProfile, updateMyProfile } from '@/admin/staff/api'
 import { getErrorMessage } from '@/shared/api/client'
 
 /** Icon-only "back to admin home" affordance, matching the other admin screens' back links. */

@@ -8,7 +8,7 @@ import {
   fetchStaffPermissions,
   setStaffStatus,
   updateStaffPermissions,
-} from '../api/adminStaff'
+} from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import type { AdminModule, AdminStaffRow, ModulePermissionRow } from '@/shared/types'
 
