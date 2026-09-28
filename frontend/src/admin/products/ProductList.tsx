@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import * as adminProductsApi from '../api/adminProducts'
+import * as adminProductsApi from './api'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCategories } from '@/shared/context/MasterDataContext'

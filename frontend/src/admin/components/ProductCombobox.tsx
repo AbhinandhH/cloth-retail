@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchAdminProducts } from '@/api/adminProducts';
+import { fetchAdminProducts } from '@/admin/products/api';
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import type { AdminProductListItem } from "@/shared/types";
 
