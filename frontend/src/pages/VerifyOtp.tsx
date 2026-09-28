@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getErrorMessage } from '@/shared/api/client'
-import BackButton from '../components/BackButton'
+import BackButton from '@/customer/components/BackButton'
 import type { OtpChannel } from '@/shared/types'
 
 interface VerifyOtpState {

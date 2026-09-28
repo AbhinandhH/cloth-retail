@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useSiteConfig } from '@/shared/context/SiteConfigContext'
 import { getErrorMessage, getFieldErrors, toMediaUrl } from '@/shared/api/client'
-import BackButton from '../components/BackButton'
+import BackButton from '@/customer/components/BackButton'
 
 export default function Login() {
   const { login } = useAuth()

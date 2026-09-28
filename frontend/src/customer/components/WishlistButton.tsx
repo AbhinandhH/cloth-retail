@@ -3,7 +3,7 @@ import type { MouseEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '@/shared/api/client'
 import { useAuth } from '@/shared/context/AuthContext'
-import { useWishlist } from '../context/WishlistContext'
+import { useWishlist } from '@/context/WishlistContext'
 
 export function HeartIcon({ filled, className = 'h-4 w-4' }: { filled: boolean; className?: string }) {
   return (

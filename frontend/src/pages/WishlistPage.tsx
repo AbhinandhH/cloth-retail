@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchWishlistProducts } from '../api/wishlist'
 import { getErrorMessage } from '@/shared/api/client'
-import ProductCard from '../components/ProductCard'
-import EmptyState from '../components/EmptyState'
-import ErrorState from '../components/ErrorState'
-import { SkeletonImage } from '../components/Skeleton'
+import ProductCard from '@/customer/components/ProductCard'
+import EmptyState from '@/customer/components/EmptyState'
+import ErrorState from '@/customer/components/ErrorState'
+import { SkeletonImage } from '@/customer/components/Skeleton'
 import type { ProductListItem } from '@/shared/types'
 
 function HeartOutlineIcon() {

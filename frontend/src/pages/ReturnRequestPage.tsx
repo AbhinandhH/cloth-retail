@@ -7,10 +7,10 @@ import {
   requestSizeExchange,
 } from '../api/returns'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
-import BackButton from '../components/BackButton'
-import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import ConfirmDialog from '../components/customer/ConfirmDialog'
-import TextField from '../components/customer/TextField'
+import BackButton from '@/customer/components/BackButton'
+import { SkeletonBlock, SkeletonText } from '@/customer/components/Skeleton'
+import ConfirmDialog from '@/customer/components/ConfirmDialog'
+import TextField from '@/customer/components/TextField'
 import type { EligibleOrderItem, ReturnRequestDetail } from '@/shared/types'
 
 type Mode = 'choose' | 'exchange' | 'damage'

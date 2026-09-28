@@ -8,10 +8,10 @@ import * as ordersApi from "../api/orders";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
 import { randomUUID } from "../lib/uuid";
-import BackButton from "../components/BackButton";
-import { SkeletonBlock } from "../components/Skeleton";
+import BackButton from "@/customer/components/BackButton";
+import { SkeletonBlock } from "@/customer/components/Skeleton";
 import TaxIncludedNote from "@/shared/components/TaxIncludedNote";
-import TextField from "../components/customer/TextField";
+import TextField from "@/customer/components/TextField";
 import type { Address, AddressRequest } from "@/shared/types";
 
 const EMPTY_ADDRESS: AddressRequest = {

@@ -5,7 +5,7 @@ import { useSiteConfig } from '@/shared/context/SiteConfigContext'
 import { useCart } from '../context/CartContext'
 import BrandMark from '@/shared/components/BrandMark'
 import Sheet from './Sheet'
-import { HeartIcon } from './WishlistButton'
+import { HeartIcon } from '@/customer/components/WishlistButton'
 
 function CartIcon() {
   return (

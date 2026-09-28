@@ -8,9 +8,9 @@ import { downloadBlob } from '@/shared/lib/downloadBlob'
 import { useCart } from '../context/CartContext'
 import TaxIncludedNote from '@/shared/components/TaxIncludedNote'
 import { OrderStatusBadge } from './OrderHistoryPage'
-import BackButton from '../components/BackButton'
-import ErrorState from '../components/ErrorState'
-import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
+import BackButton from '@/customer/components/BackButton'
+import ErrorState from '@/customer/components/ErrorState'
+import { SkeletonBlock, SkeletonText } from '@/customer/components/Skeleton'
 import type { EligibleOrderItem, OrderDetail, OrderStatus, PaymentStatus } from '@/shared/types'
 
 /** Mirrors the backend's SaleOrderStatuses.SALE_STATUSES - an invoice only exists once payment is actually confirmed. */
