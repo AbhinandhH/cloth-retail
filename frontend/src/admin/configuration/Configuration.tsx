@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import AdminConfigurationForm from '../components/AdminConfigurationForm'
+import AdminConfigurationForm from './ConfigurationForm'
 
 export default function AdminConfiguration() {
   // Site configuration is store-governance, ADMIN-only (the store owner) - SUPER_ADMIN (the
