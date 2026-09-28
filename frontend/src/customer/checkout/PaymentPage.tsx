@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as ordersApi from '@/customer/orders/api'
-import * as paymentsApi from '../api/payments'
+import * as paymentsApi from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { useCart } from '@/customer/cart/CartContext'
 import { formatPrice } from '@/shared/lib/formatPrice'

@@ -7,7 +7,7 @@ import * as addressesApi from "@/customer/account/api";
 import * as ordersApi from "@/customer/orders/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
-import { randomUUID } from "../lib/uuid";
+import { randomUUID } from "./uuid";
 import BackButton from "@/customer/components/BackButton";
 import { SkeletonBlock } from "@/customer/components/Skeleton";
 import TaxIncludedNote from "@/shared/components/TaxIncludedNote";
