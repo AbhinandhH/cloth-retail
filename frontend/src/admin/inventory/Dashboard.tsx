@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import { fetchInventoryDashboard } from '../api/adminInventory'
+import { fetchInventoryDashboard } from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import type { InventoryDashboard } from '@/shared/types'
 

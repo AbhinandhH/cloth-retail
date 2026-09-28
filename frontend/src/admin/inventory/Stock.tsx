@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import { fetchInventoryVariants } from '../api/adminInventory'
-import type { VariantQuery } from '../api/adminInventory'
+import { fetchInventoryVariants } from './api'
+import type { VariantQuery } from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCategories, useColors, useSizes } from '@/shared/context/MasterDataContext'
-import StockAdjustmentModal from '../components/StockAdjustmentModal'
-import MarkDamagedModal from '../components/MarkDamagedModal'
+import StockAdjustmentModal from './components/StockAdjustmentModal'
+import MarkDamagedModal from './components/MarkDamagedModal'
 import type { InventoryVariantRow, ProductStatus, StockStatus } from '@/shared/types'
 
 const PAGE_SIZE = 20

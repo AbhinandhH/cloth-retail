@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { adjustStock } from '../api/adminInventory'
+import { adjustStock } from '../api'
 import { getErrorMessage } from '@/shared/api/client'
 import type { InventoryVariantRow } from '@/shared/types'
 

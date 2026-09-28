@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { markDamaged } from '../api/adminInventory'
+import { markDamaged } from '../api'
 import { getErrorMessage } from '@/shared/api/client'
 import { useDamageReasons } from '@/shared/context/MasterDataContext'
 import type { InventoryVariantRow } from '@/shared/types'
