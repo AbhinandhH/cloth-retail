@@ -10,7 +10,7 @@ import {
   initiateReturnRefund,
   rejectReturnRequest,
   uploadReturnEvidence,
-} from '../api/adminReturns'
+} from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import ConfirmDialog from '@/admin/components/ConfirmDialog'
