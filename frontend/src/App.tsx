@@ -47,10 +47,10 @@ import ReturnRequestPage from './pages/ReturnRequestPage'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import AdminSubscriptionBilling from './pages/AdminSubscriptionBilling'
-import RequireAuth from './components/RequireAuth'
-import ScrollToTop from './components/ScrollToTop'
-import IdleSessionWatcher from './components/IdleSessionWatcher'
-import LockoutGate from './components/LockoutGate'
+import RequireAuth from '@/shared/components/RequireAuth'
+import ScrollToTop from '@/shared/components/ScrollToTop'
+import IdleSessionWatcher from '@/shared/components/IdleSessionWatcher'
+import LockoutGate from '@/shared/components/LockoutGate'
 
 export default function App() {
   return (

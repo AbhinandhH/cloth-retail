@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/shared/context/AuthContext";
 import { fetchAdminCustomer, fetchAdminCustomerOrders, updateAdminCustomerStatus } from "../api/adminCustomers";
 import { orderStatusBadgeClasses, orderStatusLabel } from "./AdminOrderDashboard";
-import { getErrorMessage } from "../api/client";
-import { formatPrice } from "../lib/formatPrice";
+import { getErrorMessage } from "@/shared/api/client";
+import { formatPrice } from "@/shared/lib/formatPrice";
 import ConfirmDialog from "../components/ConfirmDialog";
-import type { AdminCustomerDetail as AdminCustomerDetailType, AdminOrderSummary } from "../types";
+import type { AdminCustomerDetail as AdminCustomerDetailType, AdminOrderSummary } from "@/shared/types";
 
 const ORDERS_PAGE_SIZE = 10;
 

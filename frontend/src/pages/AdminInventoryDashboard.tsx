@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchInventoryDashboard } from '../api/adminInventory'
-import { getErrorMessage } from '../api/client'
-import type { InventoryDashboard } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import type { InventoryDashboard } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance - no text, matching AdminProductForm/AdminProductList's back links. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {

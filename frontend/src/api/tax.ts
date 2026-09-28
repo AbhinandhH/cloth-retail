@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { TaxSettings, TaxSettingsUpdate } from '../types'
+import { api } from '@/shared/api/client'
+import type { TaxSettings, TaxSettingsUpdate } from '@/shared/types'
 
 export function fetchTaxSettings() {
   return api.get<TaxSettings>('/admin/tax-settings').then((r) => r.data)

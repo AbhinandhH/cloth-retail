@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { SmtpSettings, SmtpSettingsUpdate, SmtpTestResult } from '../types'
+import { api } from '@/shared/api/client'
+import type { SmtpSettings, SmtpSettingsUpdate, SmtpTestResult } from '@/shared/types'
 
 export function fetchSmtpSettings() {
   return api.get<SmtpSettings>('/admin/smtp-settings').then((r) => r.data)

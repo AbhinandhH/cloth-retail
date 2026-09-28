@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchMyOrders } from '../api/orders'
-import { getErrorMessage } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
+import { getErrorMessage } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import BackButton from '../components/BackButton'
 import EmptyState from '../components/EmptyState'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import type { OrderListItem, OrderStatus } from '../types'
+import type { OrderListItem, OrderStatus } from '@/shared/types'
 
 const PAGE_SIZE = 10
 

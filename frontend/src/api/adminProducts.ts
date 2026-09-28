@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/shared/api/client'
 import type {
   AdminProductDetail,
   AdminProductListResponse,
@@ -9,7 +9,7 @@ import type {
   ProductAdminRequest,
   ProductStatus,
   SubCategory,
-} from '../types'
+} from '@/shared/types'
 
 export interface AdminProductQuery {
   page?: number

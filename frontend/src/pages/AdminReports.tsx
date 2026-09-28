@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useCategories } from '../context/MasterDataContext'
+import { useAuth } from '@/shared/context/AuthContext'
+import { useCategories } from '@/shared/context/MasterDataContext'
 import {
   exportReportPdf,
   fetchCategorySales,
@@ -11,9 +11,9 @@ import {
   fetchSalesSummary,
   fetchStockReport,
 } from '../api/reports'
-import { getErrorMessage } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
-import { downloadBlob } from '../lib/downloadBlob'
+import { getErrorMessage } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
+import { downloadBlob } from '@/shared/lib/downloadBlob'
 import ProductCombobox from '../components/ProductCombobox'
 import CustomerCombobox from '../components/CustomerCombobox'
 import type {
@@ -24,7 +24,7 @@ import type {
   ProductSalesRow,
   SalesSummaryRow,
   StockStatus,
-} from '../types'
+} from '@/shared/types'
 
 const PAGE_SIZE = 20
 

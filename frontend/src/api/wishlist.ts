@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { ProductListItem, Wishlist } from '../types'
+import { api } from '@/shared/api/client'
+import type { ProductListItem, Wishlist } from '@/shared/types'
 
 /** GET /api/customer/wishlist — the full current set of wishlisted product ids. */
 export function fetchWishlist() {

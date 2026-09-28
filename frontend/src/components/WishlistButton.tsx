@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { MouseEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { getErrorMessage } from '../api/client'
-import { useAuth } from '../context/AuthContext'
+import { getErrorMessage } from '@/shared/api/client'
+import { useAuth } from '@/shared/context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
 
 export function HeartIcon({ filled, className = 'h-4 w-4' }: { filled: boolean; className?: string }) {

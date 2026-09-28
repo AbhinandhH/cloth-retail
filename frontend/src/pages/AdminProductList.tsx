@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import * as adminProductsApi from '../api/adminProducts'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import { useCategories } from '../context/MasterDataContext'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import { useCategories } from '@/shared/context/MasterDataContext'
 import ConfirmDialog from '../components/ConfirmDialog'
 import SelectField from '../components/SelectField'
-import type { AdminProductListItem, ProductStatus } from '../types'
+import type { AdminProductListItem, ProductStatus } from '@/shared/types'
 
 const PAGE_SIZE = 20
 

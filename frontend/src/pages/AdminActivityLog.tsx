@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchActivityLog } from '../api/adminActivityLog'
 import type { ActivityLogQuery } from '../api/adminActivityLog'
-import { getErrorMessage } from '../api/client'
-import type { ActivityLogRow } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import type { ActivityLogRow } from '@/shared/types'
 
 const PAGE_SIZE = 20
 

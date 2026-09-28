@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import * as addressesApi from '../api/addresses'
-import { getErrorMessage } from '../api/client'
+import { getErrorMessage } from '@/shared/api/client'
 import BackButton from '../components/BackButton'
 import EmptyState from '../components/EmptyState'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
 import TextField from '../components/customer/TextField'
 import ConfirmDialog from '../components/customer/ConfirmDialog'
-import type { Address, AddressRequest } from '../types'
+import type { Address, AddressRequest } from '@/shared/types'
 
 const EMPTY_ADDRESS: AddressRequest = {
   label: null,

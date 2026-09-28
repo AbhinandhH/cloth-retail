@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useSiteConfig } from "../context/SiteConfigContext";
+import { useSiteConfig } from "@/shared/context/SiteConfigContext";
 
 // Local, theme-derived tokens (same color-mix pattern as AmbientBackground/
 // BrandHero) scoped to .footer-surface so Tailwind's arbitrary-value syntax

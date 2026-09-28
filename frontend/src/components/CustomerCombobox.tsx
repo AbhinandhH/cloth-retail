@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchAdminCustomers } from "../api/adminCustomers";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import type { AdminCustomerRow } from "../types";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import type { AdminCustomerRow } from "@/shared/types";
 
 /** Search-as-you-type customer picker for report filters - same shape/reasoning as ProductCombobox. */
 export default function CustomerCombobox({

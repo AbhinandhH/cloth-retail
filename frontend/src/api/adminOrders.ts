@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/shared/api/client'
 import type {
   AdminOrderDashboardData,
   AdminOrderDetail,
@@ -9,7 +9,7 @@ import type {
   AdminOrderStatus,
   AdminOrderSummary,
   PageResponse,
-} from '../types'
+} from '@/shared/types'
 
 // NOTE: this file is shared with the admin Order List/Dashboard screen (built
 // in parallel) — list/dashboard fetchers may live alongside these. Keep

@@ -2,17 +2,17 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/shared/context/AuthContext";
 import * as addressesApi from "../api/addresses";
 import * as ordersApi from "../api/orders";
-import { getErrorMessage } from "../api/client";
-import { formatPrice } from "../lib/formatPrice";
+import { getErrorMessage } from "@/shared/api/client";
+import { formatPrice } from "@/shared/lib/formatPrice";
 import { randomUUID } from "../lib/uuid";
 import BackButton from "../components/BackButton";
 import { SkeletonBlock } from "../components/Skeleton";
-import TaxIncludedNote from "../components/TaxIncludedNote";
+import TaxIncludedNote from "@/shared/components/TaxIncludedNote";
 import TextField from "../components/customer/TextField";
-import type { Address, AddressRequest } from "../types";
+import type { Address, AddressRequest } from "@/shared/types";
 
 const EMPTY_ADDRESS: AddressRequest = {
   label: null,

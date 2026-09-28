@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { toMediaUrl } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
+import { toMediaUrl } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import { useInView } from '../hooks/useInView'
 import WishlistButton from './WishlistButton'
-import type { ProductListItem } from '../types'
+import type { ProductListItem } from '@/shared/types'
 
 // Tasteful, capped stagger — a 20-item grid should feel like a gentle ripple,
 // not a slow cascading reveal. index is just the item's position in whatever

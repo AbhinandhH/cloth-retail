@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { AuthProvider } from './context/AuthContext'
-import { SiteConfigProvider } from './context/SiteConfigContext'
-import { MasterDataProvider } from './context/MasterDataContext'
+import { AuthProvider } from '@/shared/context/AuthContext'
+import { SiteConfigProvider } from '@/shared/context/SiteConfigContext'
+import { MasterDataProvider } from '@/shared/context/MasterDataContext'
 import { CartProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
-import { LockoutProvider } from './context/LockoutContext'
+import { LockoutProvider } from '@/shared/context/LockoutContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

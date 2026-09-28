@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import * as wishlistApi from '../api/wishlist'
-import { useAuth } from './AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 
 interface WishlistContextValue {
   isLoading: boolean

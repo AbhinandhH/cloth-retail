@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { uploadMedia } from '../api/configuration'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { uploadMedia } from '@/shared/api/configuration'
 
 interface ImageUploadFieldProps {
   label: string

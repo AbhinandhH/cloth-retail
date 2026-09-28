@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useSiteConfig } from '../context/SiteConfigContext'
+import { useAuth } from '@/shared/context/AuthContext'
+import { useSiteConfig } from '@/shared/context/SiteConfigContext'
 import { useCart } from '../context/CartContext'
-import BrandMark from './BrandMark'
+import BrandMark from '@/shared/components/BrandMark'
 import Sheet from './Sheet'
 import { HeartIcon } from './WishlistButton'
 

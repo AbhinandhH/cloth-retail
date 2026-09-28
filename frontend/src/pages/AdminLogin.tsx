@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useSiteConfig } from '../context/SiteConfigContext'
-import { getErrorMessage, getFieldErrors, toMediaUrl } from '../api/client'
+import { useAuth } from '@/shared/context/AuthContext'
+import { useSiteConfig } from '@/shared/context/SiteConfigContext'
+import { getErrorMessage, getFieldErrors, toMediaUrl } from '@/shared/api/client'
 
 export default function AdminLogin() {
   const { loginAsAdmin } = useAuth()

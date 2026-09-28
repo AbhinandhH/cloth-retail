@@ -1,10 +1,10 @@
-import { api } from "./client";
+import { api } from "@/shared/api/client";
 import type {
   EligibleOrderItem,
   PageResponse,
   ReturnRequestDetail,
   ReturnRequestSummary,
-} from "../types";
+} from "@/shared/types";
 
 /** GET /returns/orders/{orderId}/eligible-items — which of this delivered order's items can still be exchanged/reported, and (for exchange) which replacement sizes are actually in stock right now. */
 export function fetchEligibleItems(orderId: number | string) {

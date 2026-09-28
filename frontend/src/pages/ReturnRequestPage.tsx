@@ -6,12 +6,12 @@ import {
   reportDamagedProduct,
   requestSizeExchange,
 } from '../api/returns'
-import { getErrorMessage, toMediaUrl } from '../api/client'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import BackButton from '../components/BackButton'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
 import ConfirmDialog from '../components/customer/ConfirmDialog'
 import TextField from '../components/customer/TextField'
-import type { EligibleOrderItem, ReturnRequestDetail } from '../types'
+import type { EligibleOrderItem, ReturnRequestDetail } from '@/shared/types'
 
 type Mode = 'choose' | 'exchange' | 'damage'
 

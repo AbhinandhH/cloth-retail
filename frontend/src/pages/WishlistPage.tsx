@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchWishlistProducts } from '../api/wishlist'
-import { getErrorMessage } from '../api/client'
+import { getErrorMessage } from '@/shared/api/client'
 import ProductCard from '../components/ProductCard'
 import EmptyState from '../components/EmptyState'
 import ErrorState from '../components/ErrorState'
 import { SkeletonImage } from '../components/Skeleton'
-import type { ProductListItem } from '../types'
+import type { ProductListItem } from '@/shared/types'
 
 function HeartOutlineIcon() {
   return (

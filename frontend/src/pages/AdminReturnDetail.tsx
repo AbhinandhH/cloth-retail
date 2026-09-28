@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import {
   approveDamageClaim,
   approveExchange,
@@ -11,11 +11,11 @@ import {
   rejectReturnRequest,
   uploadReturnEvidence,
 } from '../api/adminReturns'
-import { getErrorMessage } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
+import { getErrorMessage } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TextField from '../components/TextField'
-import type { AdminReturnDetail as AdminReturnDetailType, EvidenceStatus, ReturnRequestStatus } from '../types'
+import type { AdminReturnDetail as AdminReturnDetailType, EvidenceStatus, ReturnRequestStatus } from '@/shared/types'
 
 const STATUS_LABELS: Record<ReturnRequestStatus, string> = {
   PENDING: 'Pending review',

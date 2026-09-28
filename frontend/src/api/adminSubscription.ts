@@ -1,9 +1,9 @@
-import { api } from './client'
+import { api } from '@/shared/api/client'
 import type {
   SubscriptionPayInitiationResponse,
   SubscriptionPaymentRow,
   SubscriptionStatusResponse,
-} from '../types'
+} from '@/shared/types'
 
 export function fetchSubscriptionStatus() {
   return api.get<SubscriptionStatusResponse>('/admin/subscription/status').then((r) => r.data)

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchDamages, fetchTransactions } from '../api/adminInventory'
 import type { DamageQuery, TransactionQuery } from '../api/adminInventory'
-import { getErrorMessage } from '../api/client'
-import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import type { InventoryDamageRow, InventoryTransactionRow, InventoryTransactionType } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import type { InventoryDamageRow, InventoryTransactionRow, InventoryTransactionType } from '@/shared/types'
 
 const PAGE_SIZE = 20
 

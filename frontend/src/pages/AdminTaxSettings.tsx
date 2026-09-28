@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import * as taxApi from '../api/tax'
-import { getErrorMessage } from '../api/client'
+import { getErrorMessage } from '@/shared/api/client'
 import TextField from '../components/TextField'
 
 /** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchAdminReturns } from '../api/adminReturns'
 import type { AdminReturnQuery } from '../api/adminReturns'
-import { getErrorMessage } from '../api/client'
-import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import type { AdminReturnRow, EvidenceStatus, ReturnRequestStatus, ReturnRequestType } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import type { AdminReturnRow, EvidenceStatus, ReturnRequestStatus, ReturnRequestType } from '@/shared/types'
 
 const PAGE_SIZE = 20
 

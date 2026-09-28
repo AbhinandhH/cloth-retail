@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { adjustStock } from '../api/adminInventory'
-import { getErrorMessage } from '../api/client'
-import type { InventoryVariantRow } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import type { InventoryVariantRow } from '@/shared/types'
 
 interface StockAdjustmentModalProps {
   /** The variant being adjusted, or null to keep the modal closed/unmounted. */

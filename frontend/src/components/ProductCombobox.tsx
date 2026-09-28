@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchAdminProducts } from "../api/adminProducts";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import type { AdminProductListItem } from "../types";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import type { AdminProductListItem } from "@/shared/types";
 
 /**
  * Search-as-you-type product picker for report filters. Unlike VendorCombobox (which filters a

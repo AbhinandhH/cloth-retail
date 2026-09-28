@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { AdminCustomerDetail, AdminCustomerRow, AdminOrderSummary, PageResponse } from '../types'
+import { api } from '@/shared/api/client'
+import type { AdminCustomerDetail, AdminCustomerRow, AdminOrderSummary, PageResponse } from '@/shared/types'
 
 export interface AdminCustomerQuery {
   page?: number

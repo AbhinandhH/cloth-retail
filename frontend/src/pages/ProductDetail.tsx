@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { fetchProductBySlug, fetchProducts } from '../api/products'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
-import { useAuth } from '../context/AuthContext'
+import { fetchProductBySlug, fetchProducts } from '@/shared/api/products'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
+import { useAuth } from '@/shared/context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { useCategories } from '../context/MasterDataContext'
+import { useCategories } from '@/shared/context/MasterDataContext'
 import BackButton from '../components/BackButton'
 import ProductCard from '../components/ProductCard'
 import WishlistButton from '../components/WishlistButton'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonImage, SkeletonText } from '../components/Skeleton'
-import type { ProductDetail as ProductDetailType, ProductListItem, ProductVariant } from '../types'
+import type { ProductDetail as ProductDetailType, ProductListItem, ProductVariant } from '@/shared/types'
 
 // Generic fallback shown only for a product with no size chart assigned (see
 // product.sizeChart, set via the admin Size Charts master + the product

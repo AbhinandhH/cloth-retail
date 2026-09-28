@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { createVendor } from "../api/adminMasters";
-import { getErrorMessage } from "../api/client";
-import type { AdminVendor } from "../types";
+import { getErrorMessage } from "@/shared/api/client";
+import type { AdminVendor } from "@/shared/types";
 
 // Same phone pattern as the backend's VendorAdminRequest - kept in sync by hand since there's
 // no shared validation layer between the two, so a typo here just means a false-negative UX

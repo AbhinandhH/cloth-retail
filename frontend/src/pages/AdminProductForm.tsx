@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/shared/context/AuthContext";
 import * as adminProductsApi from "../api/adminProducts";
 import * as adminMastersApi from "../api/adminMasters";
-import { getErrorMessage, getFieldErrors, toMediaUrl } from "../api/client";
-import { useCategories, useColors } from "../context/MasterDataContext";
+import { getErrorMessage, getFieldErrors, toMediaUrl } from "@/shared/api/client";
+import { useCategories, useColors } from "@/shared/context/MasterDataContext";
 import ImageUploadField from "../components/ImageUploadField";
 import SelectField from "../components/SelectField";
 import TextField from "../components/TextField";
@@ -22,7 +22,7 @@ import type {
   ProductStatus,
   Size,
   SubCategory,
-} from "../types";
+} from "@/shared/types";
 
 type TabKey = "details" | "variants" | "images";
 

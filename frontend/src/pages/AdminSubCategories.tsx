@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import * as adminMastersApi from '../api/adminMasters'
-import { useCategories, useRefreshMaster } from '../context/MasterDataContext'
+import { useCategories, useRefreshMaster } from '@/shared/context/MasterDataContext'
 import MasterCrudPage from '../components/MasterCrudPage'
 import type { MasterCrudConfig } from '../components/MasterCrudPage'
-import type { AdminSubCategory } from '../types'
+import type { AdminSubCategory } from '@/shared/types'
 
 /**
  * Spec calls this page out as "bespoke — not generic" because it needs a

@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { AdminStaffRow, ModulePermissionRow, User } from '../types'
+import { api } from '@/shared/api/client'
+import type { AdminStaffRow, ModulePermissionRow, User } from '@/shared/types'
 
 export interface CreateAdminPayload {
   fullName: string

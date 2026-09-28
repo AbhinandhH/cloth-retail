@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import type { AdminModule as ModulePermissionModule } from "../types";
-import { useSiteConfig } from "../context/SiteConfigContext";
-import AmbientBackground from "../components/AmbientBackground";
-import BrandHero from "../components/BrandHero";
-import BrandMark from "../components/BrandMark";
+import { useAuth } from "@/shared/context/AuthContext";
+import type { AdminModule as ModulePermissionModule } from "@/shared/types";
+import { useSiteConfig } from "@/shared/context/SiteConfigContext";
+import AmbientBackground from "@/shared/components/AmbientBackground";
+import BrandHero from "@/shared/components/BrandHero";
+import BrandMark from "@/shared/components/BrandMark";
 
 const MODULES_ANCHOR_ID = "admin-modules";
 // Set once the admin home page has been shown this session, so a later return trip (e.g. opening

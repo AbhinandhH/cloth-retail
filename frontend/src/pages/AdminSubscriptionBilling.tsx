@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import * as subscriptionApi from '../api/adminSubscription'
-import { getErrorMessage } from '../api/client'
-import { loadRazorpayCheckout, openRazorpayCheckout } from '../lib/razorpay'
-import { formatPrice } from '../lib/formatPrice'
+import { getErrorMessage } from '@/shared/api/client'
+import { loadRazorpayCheckout, openRazorpayCheckout } from '@/shared/lib/razorpay'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import TextField from '../components/TextField'
-import type { SubscriptionPaymentRow, SubscriptionStatusResponse } from '../types'
+import type { SubscriptionPaymentRow, SubscriptionStatusResponse } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance - matches the other governance screens (Tax, etc). */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {

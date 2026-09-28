@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import * as adminMastersApi from '../api/adminMasters'
-import { useRefreshMaster } from '../context/MasterDataContext'
+import { useRefreshMaster } from '@/shared/context/MasterDataContext'
 import MasterCrudPage from '../components/MasterCrudPage'
 import type { MasterCrudConfig } from '../components/MasterCrudPage'
-import type { AdminSize } from '../types'
+import type { AdminSize } from '@/shared/types'
 
 export default function AdminSizes() {
   const refreshMaster = useRefreshMaster()

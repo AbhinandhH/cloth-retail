@@ -1,5 +1,5 @@
-import { api } from "./client";
-import type { Address, AddressRequest } from "../types";
+import { api } from "@/shared/api/client";
+import type { Address, AddressRequest } from "@/shared/types";
 
 /** GET /api/customer/addresses — the current customer's saved addresses. */
 export async function fetchAddresses() {

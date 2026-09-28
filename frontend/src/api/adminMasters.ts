@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/shared/api/client'
 import type {
   AdminBrand,
   AdminCategory,
@@ -14,7 +14,7 @@ import type {
   Size,
   SizeChartRequest,
   SizeGroupRequest,
-} from '../types'
+} from '@/shared/types'
 
 export interface MasterQuery {
   q?: string

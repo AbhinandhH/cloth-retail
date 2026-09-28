@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import FilterFields from './FilterFields'
 import type { FilterValues } from './FilterFields'
-import type { Category, Color, Size } from '../types'
+import type { Category, Color, Size } from '@/shared/types'
 
 interface FilterSheetProps {
   open: boolean

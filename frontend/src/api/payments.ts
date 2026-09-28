@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { PaymentConfig, PaymentInitiateResponse, PaymentOutcome, PaymentSimulateResponse } from '../types'
+import { api } from '@/shared/api/client'
+import type { PaymentConfig, PaymentInitiateResponse, PaymentOutcome, PaymentSimulateResponse } from '@/shared/types'
 
 /** GET /api/payments/config — public, unauthenticated. Which checkout UI to render (mock dev panel vs real Razorpay checkout). */
 export function fetchPaymentConfig() {

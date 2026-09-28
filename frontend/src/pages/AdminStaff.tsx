@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import {
   createAdmin,
   fetchStaff,
@@ -9,8 +9,8 @@ import {
   setStaffStatus,
   updateStaffPermissions,
 } from '../api/adminStaff'
-import { getErrorMessage } from '../api/client'
-import type { AdminModule, AdminStaffRow, ModulePermissionRow } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import type { AdminModule, AdminStaffRow, ModulePermissionRow } from '@/shared/types'
 
 const MODULE_LABELS: Record<AdminModule, string> = {
   DASHBOARD: 'Dashboard',

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { markDamaged } from '../api/adminInventory'
-import { getErrorMessage } from '../api/client'
-import { useDamageReasons } from '../context/MasterDataContext'
-import type { InventoryVariantRow } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import { useDamageReasons } from '@/shared/context/MasterDataContext'
+import type { InventoryVariantRow } from '@/shared/types'
 
 interface MarkDamagedModalProps {
   /** The variant being marked damaged, or null to keep the modal closed/unmounted. */

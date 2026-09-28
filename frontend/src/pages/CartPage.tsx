@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import BackButton from '../components/BackButton'
 import EmptyState from '../components/EmptyState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import TaxIncludedNote from '../components/TaxIncludedNote'
+import TaxIncludedNote from '@/shared/components/TaxIncludedNote'
 import ConfirmDialog from '../components/customer/ConfirmDialog'
-import type { CartItem } from '../types'
+import type { CartItem } from '@/shared/types'
 
 function CartIcon() {
   return (

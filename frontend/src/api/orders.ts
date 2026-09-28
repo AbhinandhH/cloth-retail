@@ -1,10 +1,10 @@
-import { api } from "./client";
+import { api } from "@/shared/api/client";
 import type {
   CreateOrderRequest,
   OrderDetail,
   OrderListItem,
   PageResponse,
-} from "../types";
+} from "@/shared/types";
 
 // NOTE: this file is shared with the Cart/Checkout/Payment flow (built in
 // parallel by another agent) — both sides need order-fetching functions.

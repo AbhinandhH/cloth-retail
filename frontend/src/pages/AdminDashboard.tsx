@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchAdminDashboard } from '../api/adminDashboard'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
 import { orderStatusBadgeClasses, orderStatusLabel } from './AdminOrderDashboard'
-import type { AdminDashboardData } from '../types'
+import type { AdminDashboardData } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance - matching AdminInventoryDashboard/AdminOrderDashboard's own copy of this. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {

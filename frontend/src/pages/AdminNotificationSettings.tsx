@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import * as adminNotificationsApi from '../api/adminNotifications'
 import * as adminSmtpApi from '../api/adminSmtp'
-import { getErrorMessage } from '../api/client'
+import { getErrorMessage } from '@/shared/api/client'
 import Switch from '../components/Switch'
 import TextField from '../components/TextField'
-import type { NotificationSettings, SmtpSettings } from '../types'
+import type { NotificationSettings, SmtpSettings } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance, matching the other admin screens' back links. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {

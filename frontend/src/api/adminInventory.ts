@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/shared/api/client'
 import type {
   InventoryDamageRow,
   InventoryDashboard,
@@ -7,7 +7,7 @@ import type {
   MarkDamagedResult,
   PageResponse,
   StockAdjustResult,
-} from '../types'
+} from '@/shared/types'
 
 function cleanParams<T extends object>(query: T) {
   const params: Record<string, string | number> = {}

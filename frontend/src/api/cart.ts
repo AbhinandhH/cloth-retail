@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { Cart } from '../types'
+import { api } from '@/shared/api/client'
+import type { Cart } from '@/shared/types'
 
 /** GET /api/cart — empty `items` if the customer has no cart yet (no separate create step). */
 export function fetchCart() {

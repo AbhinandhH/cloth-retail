@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { NotificationSettings } from '../types'
+import { api } from '@/shared/api/client'
+import type { NotificationSettings } from '@/shared/types'
 
 export function fetchNotificationSettings() {
   return api.get<NotificationSettings>('/admin/notification-settings').then((r) => r.data)

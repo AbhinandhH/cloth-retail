@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { fetchAdminOrderDashboard, fetchAdminOrders } from '../api/adminOrders'
 import type { AdminOrderQuery } from '../api/adminOrders'
-import { getErrorMessage } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
-import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import type { AdminOrderDashboardData, AdminOrderStatus, AdminOrderSummary, PaymentStatus } from '../types'
+import { getErrorMessage } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import type { AdminOrderDashboardData, AdminOrderStatus, AdminOrderSummary, PaymentStatus } from '@/shared/types'
 
 const PAGE_SIZE = 20
 

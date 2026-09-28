@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import {
   addAdminOrderNote,
   cancelAdminOrder,
@@ -11,13 +11,13 @@ import {
   saveAdminOrderShipment,
   updateAdminOrderStatus,
 } from '../api/adminOrders'
-import { getErrorMessage, toMediaUrl } from '../api/client'
-import { formatPrice } from '../lib/formatPrice'
-import { downloadBlob } from '../lib/downloadBlob'
+import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
+import { formatPrice } from '@/shared/lib/formatPrice'
+import { downloadBlob } from '@/shared/lib/downloadBlob'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TextField from '../components/TextField'
-import TaxIncludedNote from '../components/TaxIncludedNote'
-import type { AdminOrderDetail as AdminOrderDetailType, AdminOrderPaymentStatus, AdminOrderStatus } from '../types'
+import TaxIncludedNote from '@/shared/components/TaxIncludedNote'
+import type { AdminOrderDetail as AdminOrderDetailType, AdminOrderPaymentStatus, AdminOrderStatus } from '@/shared/types'
 
 /** Mirrors the backend's SaleOrderStatuses.SALE_STATUSES - an invoice only exists once payment is actually confirmed. */
 const INVOICE_ELIGIBLE_STATUSES: AdminOrderStatus[] = [

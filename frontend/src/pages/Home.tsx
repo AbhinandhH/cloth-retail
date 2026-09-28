@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchProducts } from "../api/products";
-import { getErrorMessage } from "../api/client";
+import { fetchProducts } from "@/shared/api/products";
+import { getErrorMessage } from "@/shared/api/client";
 import ProductCard from "../components/ProductCard";
 import FilterFields from "../components/FilterFields";
 import FilterSheet from "../components/FilterSheet";
 import type { FilterValues } from "../components/FilterFields";
 import { SkeletonImage } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
-import AmbientBackground from "../components/AmbientBackground";
-import BrandHero from "../components/BrandHero";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import AmbientBackground from "@/shared/components/AmbientBackground";
+import BrandHero from "@/shared/components/BrandHero";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import {
   useCategories,
   useColors,
   useSizes,
-} from "../context/MasterDataContext";
-import { useSiteConfig } from "../context/SiteConfigContext";
-import type { ProductListItem } from "../types";
+} from "@/shared/context/MasterDataContext";
+import { useSiteConfig } from "@/shared/context/SiteConfigContext";
+import type { ProductListItem } from "@/shared/types";
 
 const PAGE_SIZE = 20;
 const RESULTS_ANCHOR_ID = "shop-results";

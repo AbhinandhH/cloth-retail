@@ -1,5 +1,5 @@
-import { api } from './client'
-import type { ActivityLogRow, PageResponse } from '../types'
+import { api } from '@/shared/api/client'
+import type { ActivityLogRow, PageResponse } from '@/shared/types'
 
 function cleanParams<T extends object>(query: T) {
   const params: Record<string, string | number> = {}

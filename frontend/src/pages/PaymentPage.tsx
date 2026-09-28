@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as ordersApi from '../api/orders'
 import * as paymentsApi from '../api/payments'
-import { getErrorMessage } from '../api/client'
+import { getErrorMessage } from '@/shared/api/client'
 import { useCart } from '../context/CartContext'
-import { formatPrice } from '../lib/formatPrice'
-import { loadRazorpayCheckout, openRazorpayCheckout } from '../lib/razorpay'
+import { formatPrice } from '@/shared/lib/formatPrice'
+import { loadRazorpayCheckout, openRazorpayCheckout } from '@/shared/lib/razorpay'
 import BackButton from '../components/BackButton'
 import ErrorState from '../components/ErrorState'
 import { SkeletonBlock, SkeletonText } from '../components/Skeleton'
-import type { OrderDetail, PaymentConfig, PaymentInitiateResponse } from '../types'
+import type { OrderDetail, PaymentConfig, PaymentInitiateResponse } from '@/shared/types'
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>()

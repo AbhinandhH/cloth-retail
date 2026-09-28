@@ -1,5 +1,5 @@
 import FilterSelect from './FilterSelect'
-import type { Category, Color, Size } from '../types'
+import type { Category, Color, Size } from '@/shared/types'
 
 export interface FilterValues {
   categoryId: string
