@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/customer/cart/CartContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import * as addressesApi from "@/customer/account/api";
-import * as ordersApi from "../api/orders";
+import * as ordersApi from "@/customer/orders/api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
 import { randomUUID } from "../lib/uuid";

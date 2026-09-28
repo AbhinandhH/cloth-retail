@@ -5,7 +5,7 @@ import {
   fetchMyReturnRequest,
   reportDamagedProduct,
   requestSizeExchange,
-} from '../api/returns'
+} from './api'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import BackButton from '@/customer/components/BackButton'
 import { SkeletonBlock, SkeletonText } from '@/customer/components/Skeleton'

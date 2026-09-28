@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchMyOrders } from '../api/orders'
+import { fetchMyOrders } from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import BackButton from '@/customer/components/BackButton'
