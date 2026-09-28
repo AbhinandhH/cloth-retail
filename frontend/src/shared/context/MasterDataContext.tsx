@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { fetchCategories, fetchColors, fetchSizes } from '../api/products'
-import * as mastersApi from '@/api/adminMasters'
+import * as mastersApi from '@/admin/masters/api'
 import { getErrorMessage } from '../api/client'
 import type { AdminBrand, AdminMaterial, AdminVendor, Category, Color, DamageReasonOption, Size } from '../types'
 

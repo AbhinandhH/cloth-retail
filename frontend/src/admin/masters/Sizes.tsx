@@ -1,31 +1,31 @@
 import { useMemo } from 'react'
-import * as adminMastersApi from '../api/adminMasters'
+import * as adminMastersApi from './api'
 import { useRefreshMaster } from '@/shared/context/MasterDataContext'
-import MasterCrudPage from '../components/MasterCrudPage'
-import type { MasterCrudConfig } from '../components/MasterCrudPage'
-import type { AdminBrand } from '@/shared/types'
+import MasterCrudPage from './components/MasterCrudPage'
+import type { MasterCrudConfig } from './components/MasterCrudPage'
+import type { AdminSize } from '@/shared/types'
 
-export default function AdminBrands() {
+export default function AdminSizes() {
   const refreshMaster = useRefreshMaster()
 
-  const config = useMemo<MasterCrudConfig<AdminBrand>>(
+  const config = useMemo<MasterCrudConfig<AdminSize>>(
     () => ({
-      title: 'Brands',
-      description: 'The brand options available when creating or editing a product.',
-      fetchList: (params) => adminMastersApi.fetchAdminBrands(params),
+      title: 'Sizes',
+      description: 'The full set of sizes available system-wide — group them under Size Groups to scope by category.',
+      fetchList: (params) => adminMastersApi.fetchAdminSizes(params),
       create: async (payload) => {
-        const created = await adminMastersApi.createBrand(payload)
-        refreshMaster('brands')
+        const created = await adminMastersApi.createSize(payload)
+        refreshMaster('sizes')
         return created
       },
       update: async (id, payload) => {
-        const updated = await adminMastersApi.updateBrand(id, payload)
-        refreshMaster('brands')
+        const updated = await adminMastersApi.updateSize(id, payload)
+        refreshMaster('sizes')
         return updated
       },
       remove: async (id) => {
-        await adminMastersApi.deleteBrand(id)
-        refreshMaster('brands')
+        await adminMastersApi.deleteSize(id)
+        refreshMaster('sizes')
       },
       rowLabel: (row) => row.name,
       fields: [

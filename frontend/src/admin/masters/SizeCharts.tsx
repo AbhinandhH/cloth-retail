@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import * as adminMastersApi from '../api/adminMasters'
+import * as adminMastersApi from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import ConfirmDialog from '@/admin/components/ConfirmDialog'

@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import * as adminMastersApi from '../api/adminMasters'
+import * as adminMastersApi from './api'
 import { useCategories, useRefreshMaster } from '@/shared/context/MasterDataContext'
-import MasterCrudPage from '../components/MasterCrudPage'
-import type { MasterCrudConfig } from '../components/MasterCrudPage'
+import MasterCrudPage from './components/MasterCrudPage'
+import type { MasterCrudConfig } from './components/MasterCrudPage'
 import type { AdminSubCategory } from '@/shared/types'
 
 /**

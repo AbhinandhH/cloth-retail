@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/shared/context/AuthContext";
 import * as adminProductsApi from "./api";
-import * as adminMastersApi from "@/api/adminMasters";
+import * as adminMastersApi from "@/admin/masters/api";
 import { getErrorMessage, getFieldErrors, toMediaUrl } from "@/shared/api/client";
 import { useCategories, useColors } from "@/shared/context/MasterDataContext";
 import ImageUploadField from "@/admin/components/ImageUploadField";
