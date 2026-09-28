@@ -10,7 +10,7 @@ import {
   initiateAdminOrderRefund,
   saveAdminOrderShipment,
   updateAdminOrderStatus,
-} from '../api/adminOrders'
+} from './api'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import { downloadBlob } from '@/shared/lib/downloadBlob'

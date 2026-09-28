@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/shared/context/AuthContext";
 import { fetchAdminCustomer, fetchAdminCustomerOrders, updateAdminCustomerStatus } from "./api";
-import { orderStatusBadgeClasses, orderStatusLabel } from "@/pages/AdminOrderDashboard";
+import { orderStatusBadgeClasses, orderStatusLabel } from "@/admin/orders/Dashboard";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
 import ConfirmDialog from "@/admin/components/ConfirmDialog";

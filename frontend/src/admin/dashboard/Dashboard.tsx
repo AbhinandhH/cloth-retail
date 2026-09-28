@@ -5,7 +5,7 @@ import { useAuth } from '@/shared/context/AuthContext'
 import { fetchAdminDashboard } from './api'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
-import { orderStatusBadgeClasses, orderStatusLabel } from '@/pages/AdminOrderDashboard'
+import { orderStatusBadgeClasses, orderStatusLabel } from '@/admin/orders/Dashboard'
 import type { AdminDashboardData } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance - matching AdminInventoryDashboard/AdminOrderDashboard's own copy of this. */
