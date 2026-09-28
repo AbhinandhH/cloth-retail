@@ -16,6 +16,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path alias - mirrored in vite.config.ts's resolve.alias. No baseUrl needed: paths
+       entries resolve relative to this file's own directory under "bundler" moduleResolution. */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

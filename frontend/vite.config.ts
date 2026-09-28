@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
@@ -5,6 +6,14 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // "@" -> src/, so a deeply-nested module (e.g. admin/products/ProductForm.tsx) can import
+    // shared code as "@/shared/components/TextField" instead of a fragile "../../../..." chain.
+    // Mirrored in tsconfig.app.json's compilerOptions.paths for editor/type-checker resolution.
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   server: {
     // Lets a single tunnel (e.g. one ngrok domain pointed at this dev server) serve the
     // whole app: the page itself plus /api and /media, all same-origin from the browser's
