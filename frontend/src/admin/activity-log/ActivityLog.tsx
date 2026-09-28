@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import { fetchActivityLog } from '../api/adminActivityLog'
-import type { ActivityLogQuery } from '../api/adminActivityLog'
+import { fetchActivityLog } from './api'
+import type { ActivityLogQuery } from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import type { ActivityLogRow } from '@/shared/types'
 
