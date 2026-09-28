@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/shared/context/AuthContext";
-import { fetchAdminCustomers } from "../api/adminCustomers";
-import type { AdminCustomerQuery } from "../api/adminCustomers";
+import { fetchAdminCustomers } from "./api";
+import type { AdminCustomerQuery } from "./api";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";

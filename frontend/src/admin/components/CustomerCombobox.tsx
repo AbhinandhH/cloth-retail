@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchAdminCustomers } from '@/api/adminCustomers';
+import { fetchAdminCustomers } from '@/admin/customers/api';
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import type { AdminCustomerRow } from "@/shared/types";
 
