@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useSiteConfig } from '@/shared/context/SiteConfigContext'
 import { getErrorMessage, getFieldErrors, toMediaUrl } from '@/shared/api/client'
-import Field from '../components/Field'
+import Field from './Field'
 import BackButton from '@/customer/components/BackButton'
 
 export default function Register() {
