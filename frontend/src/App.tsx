@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './customer/shell/Layout'
 import Home from './customer/home/Home'
-import ProductDetail from './pages/ProductDetail'
+import ProductDetail from './customer/product/ProductDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import VerifyOtp from './pages/VerifyOtp'
