@@ -6,7 +6,7 @@ import * as adminNotificationsApi from '../api/adminNotifications'
 import * as adminSmtpApi from '../api/adminSmtp'
 import { getErrorMessage } from '@/shared/api/client'
 import Switch from '../components/Switch'
-import TextField from '../components/TextField'
+import TextField from '@/admin/components/TextField'
 import type { NotificationSettings, SmtpSettings } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance, matching the other admin screens' back links. */

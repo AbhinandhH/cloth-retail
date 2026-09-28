@@ -14,8 +14,8 @@ import {
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import { downloadBlob } from '@/shared/lib/downloadBlob'
-import ConfirmDialog from '../components/ConfirmDialog'
-import TextField from '../components/TextField'
+import ConfirmDialog from '@/admin/components/ConfirmDialog'
+import TextField from '@/admin/components/TextField'
 import TaxIncludedNote from '@/shared/components/TaxIncludedNote'
 import type { AdminOrderDetail as AdminOrderDetailType, AdminOrderPaymentStatus, AdminOrderStatus } from '@/shared/types'
 

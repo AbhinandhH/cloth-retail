@@ -5,8 +5,8 @@ import * as adminProductsApi from '../api/adminProducts'
 import { getErrorMessage, toMediaUrl } from '@/shared/api/client'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { useCategories } from '@/shared/context/MasterDataContext'
-import ConfirmDialog from '../components/ConfirmDialog'
-import SelectField from '../components/SelectField'
+import ConfirmDialog from '@/admin/components/ConfirmDialog'
+import SelectField from '@/admin/components/SelectField'
 import type { AdminProductListItem, ProductStatus } from '@/shared/types'
 
 const PAGE_SIZE = 20

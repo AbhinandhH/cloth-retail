@@ -13,8 +13,8 @@ import {
 } from '../api/adminReturns'
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
-import ConfirmDialog from '../components/ConfirmDialog'
-import TextField from '../components/TextField'
+import ConfirmDialog from '@/admin/components/ConfirmDialog'
+import TextField from '@/admin/components/TextField'
 import type { AdminReturnDetail as AdminReturnDetailType, EvidenceStatus, ReturnRequestStatus } from '@/shared/types'
 
 const STATUS_LABELS: Record<ReturnRequestStatus, string> = {

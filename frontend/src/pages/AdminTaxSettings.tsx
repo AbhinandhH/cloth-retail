@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import * as taxApi from '../api/tax'
 import { getErrorMessage } from '@/shared/api/client'
-import TextField from '../components/TextField'
+import TextField from '@/admin/components/TextField'
 
 /** Icon-only "back to admin home" affordance - no text, matching the other admin screens' back links. */
 function AdminHomeBackLink({ className = '' }: { className?: string }) {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { createVendor } from "../api/adminMasters";
+import { createVendor } from '@/api/adminMasters';
 import { getErrorMessage } from "@/shared/api/client";
 import type { AdminVendor } from "@/shared/types";
 

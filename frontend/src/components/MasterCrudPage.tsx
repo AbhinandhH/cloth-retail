@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getErrorMessage } from '@/shared/api/client'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
-import ConfirmDialog from './ConfirmDialog'
-import SelectField from './SelectField'
-import TextField from './TextField'
+import ConfirmDialog from '@/admin/components/ConfirmDialog'
+import SelectField from '@/admin/components/SelectField'
+import TextField from '@/admin/components/TextField'
 
 /** Icon-only back affordance - no text, matching the other admin screens' back links. Target is this page's own `backTo` (usually /admin/masters), not always the same place. */
 function MasterBackLink({ to, className = '' }: { to: string; className?: string }) {

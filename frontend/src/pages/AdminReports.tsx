@@ -14,8 +14,8 @@ import {
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import { downloadBlob } from '@/shared/lib/downloadBlob'
-import ProductCombobox from '../components/ProductCombobox'
-import CustomerCombobox from '../components/CustomerCombobox'
+import ProductCombobox from '@/admin/components/ProductCombobox'
+import CustomerCombobox from '@/admin/components/CustomerCombobox'
 import type {
   CategorySalesRow,
   CustomerSalesRow,

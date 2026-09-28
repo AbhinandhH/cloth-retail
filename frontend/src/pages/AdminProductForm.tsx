@@ -6,10 +6,10 @@ import * as adminProductsApi from "../api/adminProducts";
 import * as adminMastersApi from "../api/adminMasters";
 import { getErrorMessage, getFieldErrors, toMediaUrl } from "@/shared/api/client";
 import { useCategories, useColors } from "@/shared/context/MasterDataContext";
-import ImageUploadField from "../components/ImageUploadField";
-import SelectField from "../components/SelectField";
-import TextField from "../components/TextField";
-import VendorCombobox from "../components/VendorCombobox";
+import ImageUploadField from "@/admin/components/ImageUploadField";
+import SelectField from "@/admin/components/SelectField";
+import TextField from "@/admin/components/TextField";
+import VendorCombobox from "@/admin/components/VendorCombobox";
 import type {
   AdminColorImages,
   AdminProductDetail,

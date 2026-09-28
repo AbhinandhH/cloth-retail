@@ -4,9 +4,9 @@ import { useAuth } from '@/shared/context/AuthContext'
 import * as adminMastersApi from '../api/adminMasters'
 import { getErrorMessage } from '@/shared/api/client'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
-import ConfirmDialog from '../components/ConfirmDialog'
-import SelectField from '../components/SelectField'
-import TextField from '../components/TextField'
+import ConfirmDialog from '@/admin/components/ConfirmDialog'
+import SelectField from '@/admin/components/SelectField'
+import TextField from '@/admin/components/TextField'
 import type { AdminSizeChart, SizeChartRequest } from '@/shared/types'
 
 /** Icon-only "back to masters" affordance - no text, matching the other admin screens' back links. */

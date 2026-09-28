@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchAdminProducts } from "../api/adminProducts";
+import { fetchAdminCustomers } from '@/api/adminCustomers';
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import type { AdminProductListItem } from "@/shared/types";
+import type { AdminCustomerRow } from "@/shared/types";
 
-/**
- * Search-as-you-type product picker for report filters. Unlike VendorCombobox (which filters a
- * small, fully-preloaded vendor list client-side), the product catalog can be large, so this
- * queries GET /admin/products?q=... on each debounced keystroke instead - same combobox shape
- * and interaction otherwise (outside-click closes the dropdown, typing away from the selected
- * name clears the selection).
- */
-export default function ProductCombobox({
+/** Search-as-you-type customer picker for report filters - same shape/reasoning as ProductCombobox. */
+export default function CustomerCombobox({
   value,
   label,
   onChange,
@@ -23,7 +17,7 @@ export default function ProductCombobox({
 }) {
   const [query, setQuery] = useState(label ?? "");
   const [open, setOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<AdminProductListItem[]>([]);
+  const [suggestions, setSuggestions] = useState<AdminCustomerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -49,7 +43,7 @@ export default function ProductCombobox({
     }
     let cancelled = false;
     setLoading(true);
-    fetchAdminProducts({ q: debouncedQuery.trim(), size: 8 })
+    fetchAdminCustomers({ q: debouncedQuery.trim(), size: 8 })
       .then((res) => {
         if (!cancelled) setSuggestions(res.content);
       })
@@ -61,9 +55,9 @@ export default function ProductCombobox({
     };
   }, [debouncedQuery, open]);
 
-  const handleSelect = (product: AdminProductListItem) => {
-    onChange(product.id, product.name);
-    setQuery(product.name);
+  const handleSelect = (customer: AdminCustomerRow) => {
+    onChange(customer.id, customer.fullName);
+    setQuery(customer.fullName);
     setOpen(false);
   };
 
@@ -77,14 +71,14 @@ export default function ProductCombobox({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-zinc-700">Product</label>
+      <label className="block text-sm font-medium text-zinc-700">Customer</label>
       <div className="relative mt-1" ref={containerRef}>
         <input
           type="text"
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => setOpen(true)}
-          placeholder="All products"
+          placeholder="All customers"
           autoComplete="off"
           className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none"
         />
@@ -92,18 +86,18 @@ export default function ProductCombobox({
           <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg">
             {loading && <li className="px-3 py-2 text-sm text-zinc-500">Searching…</li>}
             {!loading && suggestions.length === 0 && (
-              <li className="px-3 py-2 text-sm text-zinc-500">No products match &ldquo;{query.trim()}&rdquo;.</li>
+              <li className="px-3 py-2 text-sm text-zinc-500">No customers match &ldquo;{query.trim()}&rdquo;.</li>
             )}
             {!loading &&
-              suggestions.map((p) => (
-                <li key={p.id}>
+              suggestions.map((c) => (
+                <li key={c.id}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(p)}
+                    onClick={() => handleSelect(c)}
                     className="block w-full px-3 py-2 text-left text-sm hover:bg-zinc-50"
                   >
-                    {p.name}
-                    <span className="ml-1 text-xs text-zinc-400">{p.baseSku}</span>
+                    {c.fullName}
+                    <span className="ml-1 text-xs text-zinc-400">{c.email}</span>
                   </button>
                 </li>
               ))}

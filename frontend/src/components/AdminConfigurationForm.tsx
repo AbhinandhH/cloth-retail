@@ -5,9 +5,9 @@ import { useSiteConfig } from '@/shared/context/SiteConfigContext'
 import * as configApi from '@/shared/api/configuration'
 import { getErrorMessage } from '@/shared/api/client'
 import type { AdminSiteConfiguration, SiteConfiguration, Theme } from '@/shared/types'
-import ImageUploadField from './ImageUploadField'
+import ImageUploadField from '@/admin/components/ImageUploadField'
 import Swatch from './Swatch'
-import TextField from './TextField'
+import TextField from '@/admin/components/TextField'
 
 type BrandingFormState = configApi.SiteConfigurationUpdate
 

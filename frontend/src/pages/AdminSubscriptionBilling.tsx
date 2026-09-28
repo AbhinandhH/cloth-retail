@@ -6,7 +6,7 @@ import * as subscriptionApi from '../api/adminSubscription'
 import { getErrorMessage } from '@/shared/api/client'
 import { loadRazorpayCheckout, openRazorpayCheckout } from '@/shared/lib/razorpay'
 import { formatPrice } from '@/shared/lib/formatPrice'
-import TextField from '../components/TextField'
+import TextField from '@/admin/components/TextField'
 import type { SubscriptionPaymentRow, SubscriptionStatusResponse } from '@/shared/types'
 
 /** Icon-only "back to admin home" affordance - matches the other governance screens (Tax, etc). */

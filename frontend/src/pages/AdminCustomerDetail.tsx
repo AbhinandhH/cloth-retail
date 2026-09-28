@@ -5,7 +5,7 @@ import { fetchAdminCustomer, fetchAdminCustomerOrders, updateAdminCustomerStatus
 import { orderStatusBadgeClasses, orderStatusLabel } from "./AdminOrderDashboard";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
-import ConfirmDialog from "../components/ConfirmDialog";
+import ConfirmDialog from "@/admin/components/ConfirmDialog";
 import type { AdminCustomerDetail as AdminCustomerDetailType, AdminOrderSummary } from "@/shared/types";
 
 const ORDERS_PAGE_SIZE = 10;
