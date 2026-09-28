@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/customer/cart/CartContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import * as addressesApi from "../api/addresses";
+import * as addressesApi from "@/customer/account/api";
 import * as ordersApi from "../api/orders";
 import { getErrorMessage } from "@/shared/api/client";
 import { formatPrice } from "@/shared/lib/formatPrice";
