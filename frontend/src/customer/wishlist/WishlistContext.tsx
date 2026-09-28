@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import * as wishlistApi from '../api/wishlist'
+import * as wishlistApi from './api'
 import { useAuth } from '@/shared/context/AuthContext'
 
 interface WishlistContextValue {

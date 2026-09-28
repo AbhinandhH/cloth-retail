@@ -7,7 +7,7 @@ import { AuthProvider } from '@/shared/context/AuthContext'
 import { SiteConfigProvider } from '@/shared/context/SiteConfigContext'
 import { MasterDataProvider } from '@/shared/context/MasterDataContext'
 import { CartProvider } from './context/CartContext'
-import { WishlistProvider } from './context/WishlistContext'
+import { WishlistProvider } from './customer/wishlist/WishlistContext'
 import { LockoutProvider } from '@/shared/context/LockoutContext'
 
 createRoot(document.getElementById('root')!).render(

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchWishlistProducts } from '../api/wishlist'
+import { fetchWishlistProducts } from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import ProductCard from '@/customer/components/ProductCard'
 import EmptyState from '@/customer/components/EmptyState'
