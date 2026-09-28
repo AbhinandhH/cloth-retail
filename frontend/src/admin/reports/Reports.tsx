@@ -10,7 +10,7 @@ import {
   fetchProductSales,
   fetchSalesSummary,
   fetchStockReport,
-} from '../api/reports'
+} from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import { formatPrice } from '@/shared/lib/formatPrice'
 import { downloadBlob } from '@/shared/lib/downloadBlob'
