@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/context/AuthContext'
-import * as taxApi from '../api/tax'
+import * as taxApi from './api'
 import { getErrorMessage } from '@/shared/api/client'
 import TextField from '@/admin/components/TextField'
 
